@@ -29,7 +29,7 @@ public class MusicGenerator {
 		this.outputDir = outputDir;
 
 		workDir = new Directory("work");
-		workDir.create();
+		workDir.clear();
 	}
 
 	public void addDrumsToSong(File originalSong) {
@@ -76,8 +76,8 @@ public class MusicGenerator {
 			// TODO
 
 			// actually put them into the song
-			addDrum(wavDataLeft, 5000);
-			addDrum(wavDataRight, 5000);
+			addDrum(wavDataLeft, 3000);
+			addDrum(wavDataRight, 3000);
 
 		// save the new song as audio
 		wav.setLeftData(wavDataLeft);
@@ -115,13 +115,13 @@ public class MusicGenerator {
 	 * this time is occurring in the song data
 	 */
 	private int millisToBytePos(int posInMillis) {
-		return (posInMillis * byteRate) / bytesPerSample;
+		return (posInMillis * byteRate) / (1000 * bytesPerSample);
 	}
 
 	private int[] generateDrum() {
 
-		// duration: 1 second
-		int durationMillis = 1000;
+		// duration: 2 seconds
+		int durationMillis = 2000;
 
 		// frequency: 50 Hz
 		double frequency = 50;
@@ -130,6 +130,7 @@ public class MusicGenerator {
 		int amplitude = 8*16*16*16;
 
 		int[] data = new int[millisToBytePos(durationMillis)];
+		int bytesPerSecond = millisToBytePos(1000);
 
 		for (int i = 0; i < data.length; i++) {
 			double inout = 1.0;
@@ -139,7 +140,7 @@ public class MusicGenerator {
 			if (i > data.length / 2) {
 				inout = 2 - ((2.0 * i) / data.length);
 			}
-			data[i] = (int) (inout * amplitude * Math.sin((6.2831853 * i) / (frequency * 1000)));
+			data[i] = (int) (inout * amplitude * Math.sin((12.56637 * i * frequency) / bytesPerSecond));
 		}
 
 		return data;
