@@ -38,4 +38,5 @@ config
 *.csv
 *.json
 input
+work
 output

@@ -34,12 +34,6 @@ public class AssMusician {
 			}
 		}
 
-		Directory inputDir = new Directory("input");
-		inputDir.create();
-
-		Directory outputDir = new Directory("output");
-		outputDir.create();
-
 		System.out.println("Loading database...");
 
 		Database database = new Database();
@@ -48,8 +42,14 @@ public class AssMusician {
 
 		database.save();
 
-		MusicGenerator musicGenny = new MusicGenerator();
-		boolean recursively = true;
+		Directory inputDir = new Directory("input");
+		inputDir.create();
+
+		Directory outputDir = new Directory("output");
+		outputDir.create();
+
+		MusicGenerator musicGenny = new MusicGenerator(database, inputDir, outputDir);
+		boolean recursively = false;
 
 		for (File songFile : inputDir.getAllFiles(recursively)) {
 			musicGenny.addDrumsToSong(songFile);

@@ -4,15 +4,45 @@
  */
 package com.asofterspace.assMusician;
 
+import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
+import com.asofterspace.toolbox.io.IoUtils;
 
 
 public class MusicGenerator {
 
+	private Database database;
+
+	private Directory inputDir;
+	private Directory outputDir;
+	private Directory workDir;
+
+
+	public MusicGenerator(Database database, Directory inputDir, Directory outputDir) {
+		this.database = database;
+		this.inputDir = inputDir;
+		this.outputDir = outputDir;
+
+		workDir = new Directory("work");
+		workDir.create();
+	}
+
 	public void addDrumsToSong(File originalSong) {
 
+		System.out.println("Adding drums to " + originalSong.getLocalFilename());
+
+		String ffmpegPath = database.getRoot().getString("ffmpegPath");
+		File workSong = new File(workDir, "song.wav");
+
 		// extract the audio of the original song (e.g. in case the original is a music video)
-		// TODO
+		String ffmpegInvocation = ffmpegPath;
+		ffmpegInvocation += " -i \"";
+		ffmpegInvocation += originalSong.getAbsoluteFilename();
+		ffmpegInvocation += "\" -ab 192000 -ar 22050 -acodec pcm_s16le -vn \"";
+		ffmpegInvocation += workSong.getAbsoluteFilename();
+		ffmpegInvocation += "\"";
+		System.out.println("Executing " + ffmpegInvocation);
+		IoUtils.execute(ffmpegInvocation);
 
 		// load the extracted audio
 		// TODO
