@@ -7,6 +7,8 @@ package com.asofterspace.assMusician;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
+import com.asofterspace.toolbox.io.TextFile;
+import com.asofterspace.toolbox.io.WavFile;
 
 
 public class MusicGenerator {
@@ -46,7 +48,15 @@ public class MusicGenerator {
 		IoUtils.execute(ffmpegInvocation);
 
 		// load the extracted audio
-		// TODO
+		WavFile wav = new WavFile(workSong);
+		int[] wavDataLeft = wav.getLeftData();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < wavDataLeft.length; i++) {
+			sb.append(""+wavDataLeft[i]);
+			sb.append("\n");
+		}
+		TextFile outfile = new TextFile(workDir, "debug.txt");
+		outfile.saveContent(sb);
 
 		// add drums
 
