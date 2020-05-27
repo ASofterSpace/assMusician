@@ -106,7 +106,13 @@ public class MusicGenerator {
 		}
 
 		for (int i = 0; i < len; i++) {
-			songData[pos + i] = drumData[i];
+			long newVal = songData[pos + i] + drumData[i];
+			if (newVal > Integer.MAX_VALUE) {
+				newVal = Integer.MAX_VALUE;
+			} else if (newVal < Integer.MIN_VALUE) {
+				newVal = Integer.MIN_VALUE;
+			}
+			songData[pos + i] = (int) newVal;
 		}
 	}
 
@@ -126,8 +132,8 @@ public class MusicGenerator {
 		// frequency: 50 Hz
 		double frequency = 50;
 
-		// max is 8*16*16*16
-		int amplitude = 8*16*16*16;
+		// max is 8*16*16*16 - we take half that
+		int amplitude = 4*16*16*16;
 
 		int[] data = new int[millisToBytePos(durationMillis)];
 		int bytesPerSecond = millisToBytePos(1000);
