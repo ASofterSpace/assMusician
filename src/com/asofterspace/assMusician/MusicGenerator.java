@@ -38,7 +38,8 @@ public class MusicGenerator {
 		String ffmpegInvocation = ffmpegPath;
 		ffmpegInvocation += " -i \"";
 		ffmpegInvocation += originalSong.getAbsoluteFilename();
-		ffmpegInvocation += "\" -ab 192000 -ar 22050 -acodec pcm_s16le -vn \"";
+		// bit rate 192 kbps, sample rate 22050 Hz, audio channels: 1 (mono), audio codec: PCM 16, no video
+		ffmpegInvocation += "\" -ab 192000 -ar 22050 -ac 1 -acodec pcm_s16le -vn \"";
 		ffmpegInvocation += workSong.getAbsoluteFilename();
 		ffmpegInvocation += "\"";
 		System.out.println("Executing " + ffmpegInvocation);
