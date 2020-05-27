@@ -37,3 +37,5 @@ config
 *.txt
 *.csv
 *.json
+input
+output

@@ -4,15 +4,8 @@
  */
 package com.asofterspace.assMusician;
 
+import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
-import com.asofterspace.toolbox.io.JSON;
-import com.asofterspace.toolbox.io.JsonFile;
-import com.asofterspace.toolbox.io.JsonParseException;
-import com.asofterspace.toolbox.io.SimpleFile;
-import com.asofterspace.toolbox.io.TextFile;
-import com.asofterspace.toolbox.utils.DateUtils;
-import com.asofterspace.toolbox.utils.Record;
-import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.Utils;
 
 
@@ -41,6 +34,12 @@ public class AssMusician {
 			}
 		}
 
+		Directory inputDir = new Directory("input");
+		inputDir.create();
+
+		Directory outputDir = new Directory("output");
+		outputDir.create();
+
 		System.out.println("Loading database...");
 
 		Database database = new Database();
@@ -48,6 +47,13 @@ public class AssMusician {
 		System.out.println("Saving database...");
 
 		database.save();
+
+		MusicGenerator musicGenny = new MusicGenerator();
+		boolean recursively = true;
+
+		for (File songFile : inputDir.getAllFiles(recursively)) {
+			musicGenny.addDrumsToSong(songFile);
+		}
 
 		System.out.println("Done! Have a nice day! :)");
 	}
