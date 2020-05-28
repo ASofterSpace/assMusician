@@ -13,6 +13,13 @@ import com.asofterspace.toolbox.Utils;
 
 public class MusicGenerator {
 
+	private final WavFile WAV_REV_DRUM;
+	private final WavFile WAV_SNR_DRUM;
+	private final WavFile WAV_TOM1_DRUM;
+	private final WavFile WAV_TOM2_DRUM;
+	private final WavFile WAV_TOM3_DRUM;
+	private final WavFile WAV_TOM4_DRUM;
+
 	private Database database;
 
 	private Directory inputDir;
@@ -31,12 +38,26 @@ public class MusicGenerator {
 		this.outputDir = outputDir;
 
 		workDir = new Directory("work");
-		workDir.clear();
+
+		// rev drum for the beginning of each (!) song, as a unifying feature :)
+		WAV_REV_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-RevCrash.wav");
+
+		// snr drum, kind of reminding us of Fun - Some Nights...
+		WAV_SNR_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-Snr01.wav");
+
+		// deep drum sounds
+		WAV_TOM1_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-Tom01.wav");
+		WAV_TOM2_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-Tom02.wav");
+		WAV_TOM3_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-Tom03.wav");
+		WAV_TOM4_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-Tom04.wav");
+
 	}
 
 	public void addDrumsToSong(File originalSong) {
 
 		System.out.println("Adding drums to " + originalSong.getLocalFilename());
+
+		workDir.clear();
 
 		String ffmpegPath = database.getRoot().getString("ffmpegPath");
 		File workSong = new File(workDir, "song.wav");
@@ -64,9 +85,14 @@ public class MusicGenerator {
 		addDrums();
 
 		// save the new song as audio
-		wav.setLeftData(wavDataLeft);
-		wav.setRightData(wavDataRight);
-		wav.save();
+		WavFile newSongFile = new WavFile(outputDir, originalSong.getLocalFilenameWithoutType() + ".wav");
+		newSongFile.setNumberOfChannels(2);
+		newSongFile.setSampleRate(wav.getSampleRate());
+		newSongFile.setByteRate(wav.getByteRate());
+		newSongFile.setBitsPerSample(2);
+		newSongFile.setLeftData(wavDataLeft);
+		newSongFile.setRightData(wavDataRight);
+		newSongFile.save();
 
 		// generate a video for the song
 		// TODO
@@ -81,7 +107,7 @@ public class MusicGenerator {
 	private void addDrums() {
 
 		// add rev sound at the beginning at double volume
-		addWav(new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-RevCrash.wav"), 0, 4);
+		addWav(WAV_REV_DRUM, 0, 4);
 
 		// find the beat in the loaded song
 		// TODO
