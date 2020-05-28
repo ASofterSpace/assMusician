@@ -50,7 +50,6 @@ public class MusicGenerator {
 		WAV_TOM2_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-Tom02.wav");
 		WAV_TOM3_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-Tom03.wav");
 		WAV_TOM4_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-Tom04.wav");
-
 	}
 
 	public void addDrumsToSong(File originalSong) {
@@ -101,16 +100,44 @@ public class MusicGenerator {
 		// TODO
 
 		// upload it to youtube
+		// (and in the description, link to the original song)
 		// TODO
 	}
 
 	private void addDrums() {
 
 		// add rev sound at the beginning at double volume
-		addWav(WAV_REV_DRUM, 0, 4);
+		addWavMono(WAV_REV_DRUM, 0, 4);
 
-		// find the beat in the loaded song
-		// TODO
+		// find the beat in the loaded song - by sliding a window of several samples,
+		// and only when all samples within the window are increasing, calling it
+		// a maximum
+		int windowLength = 64;
+		int addTimes = 0;
+		for (int i = 0; i < wavDataLeft.length - windowLength; i++) {
+
+			boolean continuousInWindow = true;
+
+			for (int w = i+1; w < i + windowLength; w++) {
+				if (wavDataLeft[w - 1] > wavDataLeft[w]) {
+					continuousInWindow = false;
+					break;
+				}
+			}
+
+			if (continuousInWindow) {
+
+				addWavMono(WAV_TOM1_DRUM, i, 1);
+
+				// jump ahead 200 ms (so that we do not identify this exact maximum
+				// again as new maximum a second time)
+				i += millisToBytePos(2000);
+
+				addTimes++;
+			}
+		}
+
+		System.out.println("We added " + addTimes + " drum sounds!");
 
 		// determine which drums sounds to add where
 		// TODO
@@ -121,16 +148,17 @@ public class MusicGenerator {
 	}
 
 	/**
-	 * Add a WAV file by mixing it in left and right at a given position in milliseconds
+	 * Add a WAV file by mixing it in left and right at a given position (expressed as sample byte number!)
 	 */
-	private void addWav(WavFile wav, int posInMillis, int wavVolume) {
+	private void addWav(WavFile wav, int samplePos, int wavVolume) {
 
 		wav.normalizeTo16Bits();
 
 		int[] newLeft = wav.getLeftData();
 		int[] newRight = wav.getRightData();
 
-		int pos = millisToBytePos(posInMillis);
+		// int pos = millisToBytePos(posInMillis);
+		int pos = samplePos;
 
 		int len = newLeft.length;
 		if (len + pos > wavDataLeft.length) {
@@ -140,6 +168,30 @@ public class MusicGenerator {
 		for (int i = 0; i < len; i++) {
 			wavDataLeft[i+pos] = mixin(wavDataLeft[i+pos], wavVolume * newLeft[i]);
 			wavDataRight[i+pos] = mixin(wavDataRight[i+pos], wavVolume * newRight[i]);
+		}
+	}
+
+	/**
+	 * Add a WAV file by mixing it in left and right at a given position (expressed as sample byte number!),
+	 * but taking the new WAV file as mono, not as stereo file!
+	 */
+	private void addWavMono(WavFile wav, int samplePos, int wavVolume) {
+
+		wav.normalizeTo16Bits();
+
+		int[] newMono = wav.getMonoData();
+
+		// int pos = millisToBytePos(posInMillis);
+		int pos = samplePos;
+
+		int len = newMono.length;
+		if (len + pos > wavDataLeft.length) {
+			len = wavDataLeft.length - pos;
+		}
+
+		for (int i = 0; i < len; i++) {
+			wavDataLeft[i+pos] = mixin(wavDataLeft[i+pos], wavVolume * newMono[i]);
+			wavDataRight[i+pos] = mixin(wavDataRight[i+pos], wavVolume * newMono[i]);
 		}
 	}
 
