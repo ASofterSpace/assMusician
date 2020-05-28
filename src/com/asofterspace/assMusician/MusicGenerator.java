@@ -19,6 +19,7 @@ public class MusicGenerator {
 	private final WavFile WAV_TOM2_DRUM;
 	private final WavFile WAV_TOM3_DRUM;
 	private final WavFile WAV_TOM4_DRUM;
+	private final WavFile WAV_SMALL_F_TIMPANI;
 
 	private Database database;
 
@@ -50,6 +51,9 @@ public class MusicGenerator {
 		WAV_TOM2_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-Tom02.wav");
 		WAV_TOM3_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-Tom03.wav");
 		WAV_TOM4_DRUM = new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-Tom04.wav");
+
+		// timpanis
+		WAV_SMALL_F_TIMPANI = new WavFile(inputDir, "noiiz/timpani/TimpaniSmall_F_395_SP.wav");
 	}
 
 	public void addDrumsToSong(File originalSong) {
@@ -127,7 +131,8 @@ public class MusicGenerator {
 
 			if (continuousInWindow) {
 
-				addWavMono(WAV_TOM1_DRUM, i, 1);
+				addWavMono(WAV_TOM1_DRUM, i, 2);
+				// addWavMono(WAV_SMALL_F_TIMPANI, i, 2);
 
 				// jump ahead 200 ms (so that we do not identify this exact maximum
 				// again as new maximum a second time)
