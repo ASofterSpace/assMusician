@@ -21,6 +21,8 @@ public class MusicGenerator {
 
 	private int byteRate;
 	private int bytesPerSample;
+	private int[] wavDataLeft;
+	private int[] wavDataRight;
 
 
 	public MusicGenerator(Database database, Directory inputDir, Directory outputDir) {
@@ -43,8 +45,8 @@ public class MusicGenerator {
 		String ffmpegInvocation = ffmpegPath;
 		ffmpegInvocation += " -i \"";
 		ffmpegInvocation += originalSong.getAbsoluteFilename();
-		// bit rate 192 kbps, sample rate 22050 Hz, audio channels: 2 (stereo), audio codec: PCM 16, no video
-		ffmpegInvocation += "\" -ab 192000 -ar 22050 -ac 2 -acodec pcm_s16le -vn \"";
+		// bit rate 192 kbps, sample rate 44100 Hz, audio channels: 2 (stereo), audio codec: PCM 16, no video
+		ffmpegInvocation += "\" -ab 192000 -ar 44100 -ac 2 -acodec pcm_s16le -vn \"";
 		ffmpegInvocation += workSong.getAbsoluteFilename();
 		ffmpegInvocation += "\"";
 		System.out.println("Executing " + ffmpegInvocation);
@@ -55,29 +57,11 @@ public class MusicGenerator {
 		WavFile wav = new WavFile(workSong);
 		this.byteRate = wav.getByteRate();
 		this.bytesPerSample = wav.getBitsPerSample() / 8;
-		int[] wavDataLeft = wav.getLeftData();
-		int[] wavDataRight = wav.getRightData();
-		/*
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < wavDataLeft.length; i++) {
-			sb.append(""+wavDataLeft[i]);
-			sb.append("\n");
-		}
-		TextFile outfile = new TextFile(workDir, "debugLeft.txt");
-		outfile.saveContent(sb);
-		*/
+		wavDataLeft = wav.getLeftData();
+		wavDataRight = wav.getRightData();
 
 		// add drums
-
-			// find the beat in the loaded song
-			// TODO
-
-			// determine which drums sounds to add where
-			// TODO
-
-			// actually put them into the song
-			addDrum(wavDataLeft, 3000);
-			addDrum(wavDataRight, 3000);
+		addDrums();
 
 		// save the new song as audio
 		wav.setLeftData(wavDataLeft);
@@ -94,6 +78,55 @@ public class MusicGenerator {
 		// TODO
 	}
 
+	private void addDrums() {
+
+		// add rev sound at the beginning at double volume
+		addWav(new WavFile(inputDir, "drums/Drum Kits/Kurzweil Kit 01/CYCdh_Kurz01-RevCrash.wav"), 0, 4);
+
+		// find the beat in the loaded song
+		// TODO
+
+		// determine which drums sounds to add where
+		// TODO
+
+		// actually put them into the song
+		addDrum(wavDataLeft, 3000);
+		addDrum(wavDataRight, 3000);
+	}
+
+	/**
+	 * Add a WAV file by mixing it in left and right at a given position in milliseconds
+	 */
+	private void addWav(WavFile wav, int posInMillis, int wavVolume) {
+
+		wav.normalizeTo16Bits();
+
+		int[] newLeft = wav.getLeftData();
+		int[] newRight = wav.getRightData();
+
+		int pos = millisToBytePos(posInMillis);
+
+		int len = newLeft.length;
+		if (len + pos > wavDataLeft.length) {
+			len = wavDataLeft.length - pos;
+		}
+
+		for (int i = 0; i < len; i++) {
+			wavDataLeft[i+pos] = mixin(wavDataLeft[i+pos], wavVolume * newLeft[i]);
+			wavDataRight[i+pos] = mixin(wavDataRight[i+pos], wavVolume * newRight[i]);
+		}
+	}
+
+	private int mixin(int one, int two) {
+		long newVal = one + two;
+		if (newVal > Integer.MAX_VALUE) {
+			newVal = Integer.MAX_VALUE;
+		} else if (newVal < Integer.MIN_VALUE) {
+			newVal = Integer.MIN_VALUE;
+		}
+		return (int) newVal;
+	}
+
 	private void addDrum(int[] songData, int posInMillis) {
 
 		int[] drumData = generateDrum();
@@ -106,13 +139,7 @@ public class MusicGenerator {
 		}
 
 		for (int i = 0; i < len; i++) {
-			long newVal = songData[pos + i] + drumData[i];
-			if (newVal > Integer.MAX_VALUE) {
-				newVal = Integer.MAX_VALUE;
-			} else if (newVal < Integer.MIN_VALUE) {
-				newVal = Integer.MIN_VALUE;
-			}
-			songData[pos + i] = (int) newVal;
+			songData[pos + i] = mixin(songData[pos + i], drumData[i]);
 		}
 	}
 
