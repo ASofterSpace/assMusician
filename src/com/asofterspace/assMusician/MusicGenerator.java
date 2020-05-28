@@ -83,6 +83,7 @@ public class MusicGenerator {
 		this.bytesPerSample = wav.getBitsPerSample() / 8;
 		wavDataLeft = wav.getLeftData();
 		wavDataRight = wav.getRightData();
+		scale(0.5);
 
 		// add drums
 		addDrums();
@@ -108,6 +109,9 @@ public class MusicGenerator {
 		// TODO
 	}
 
+	// TODO: idea for a better algorithm:
+	// try to get heights first (kind of like here), then make up several predictions over when
+	// the next height should happen, and check which one of those ends up being the best one...
 	private void addDrums() {
 
 		// add rev sound at the beginning at double volume
@@ -116,8 +120,10 @@ public class MusicGenerator {
 		// find the beat in the loaded song - by sliding a window of several samples,
 		// and only when all samples within the window are increasing, calling it
 		// a maximum
-		int windowLength = 64;
+		int windowLength = 32;
 		int addTimes = 0;
+		int instrumentRing = 0;
+
 		for (int i = 0; i < wavDataLeft.length - windowLength; i++) {
 
 			boolean continuousInWindow = true;
@@ -131,12 +137,33 @@ public class MusicGenerator {
 
 			if (continuousInWindow) {
 
-				addWavMono(WAV_TOM1_DRUM, i, 2);
-				// addWavMono(WAV_SMALL_F_TIMPANI, i, 2);
+				switch (instrumentRing) {
+					case 0:
+						addWavMono(WAV_TOM1_DRUM, i, 2);
+						break;
+					case 1:
+						addWavMono(WAV_TOM2_DRUM, i, 2);
+						break;
+					case 2:
+						addWavMono(WAV_TOM3_DRUM, i, 2);
+						break;
+					case 3:
+						addWavMono(WAV_TOM4_DRUM, i, 2);
+						break;
+					case 4:
+						addWavMono(WAV_SMALL_F_TIMPANI, i, 1);
+						break;
+					default:
+						break;
+				}
+				instrumentRing++;
+				if (instrumentRing > 4) {
+					instrumentRing = 0;
+				}
 
 				// jump ahead 200 ms (so that we do not identify this exact maximum
 				// again as new maximum a second time)
-				i += millisToBytePos(2000);
+				i += millisToBytePos(200);
 
 				addTimes++;
 			}
@@ -197,6 +224,13 @@ public class MusicGenerator {
 		for (int i = 0; i < len; i++) {
 			wavDataLeft[i+pos] = mixin(wavDataLeft[i+pos], wavVolume * newMono[i]);
 			wavDataRight[i+pos] = mixin(wavDataRight[i+pos], wavVolume * newMono[i]);
+		}
+	}
+
+	private void scale(double scaleFactor) {
+		for (int i = 0; i < wavDataLeft.length; i++) {
+			wavDataLeft[i] = (int) (scaleFactor * wavDataLeft[i]);
+			wavDataRight[i] = (int) (scaleFactor * wavDataRight[i]);
 		}
 	}
 
