@@ -130,8 +130,24 @@ public class MusicGenerator {
 		int totalFrameAmount = calcTotalFrameAmount();
 		for (int i = 0; i < totalFrameAmount; i++) {
 			ColorRGB black = new ColorRGB(0, 0, 0);
+			ColorRGB blue = new ColorRGB(0, 128, 255);
 			Image img = new Image(width, height);
+			// background
 			img.drawRectangle(0, 0, width-1, height-1, black);
+			// horizon
+			img.drawLine(0, height/2, width-1, height/2, blue);
+			// street
+			img.drawLine(width/2, height/2, width/4, height-1, blue);
+			img.drawLine(width/2, height/2, (3*width)/4, height-1, blue);
+			// moving elements
+			double movBy = (height * (double) i) / (100 * frameRate);
+			double scaleTo = height/2;
+			while (movBy > scaleTo) {
+				movBy -= scaleTo;
+			}
+			double movByPerc = movBy / scaleTo;
+			img.drawLine((width/2)-(int)((movByPerc*width)/4), (height/2) + (int)movBy, (width/2)+(int)((movByPerc*width)/4), (height/2) + (int)movBy, blue);
+
 			DefaultImageFile curImgFile = new DefaultImageFile(
 				workDir.getAbsoluteDirname() + "/pic" + StrUtils.leftPad0(i, 5) + ".png"
 			);
@@ -140,9 +156,17 @@ public class MusicGenerator {
 		}
 
 		// splice the generated audio together with the generated video
-		// TODO
-
-		// WavFile newSongFile = new WavFile(outputDir, originalSong.getLocalFilenameWithoutType() + ".wav");
+		File outputFile = new File(outputDir, originalSong.getLocalFilenameWithoutType() + ".mp4");
+		ffmpegInvocation = ffmpegPath;
+		ffmpegInvocation += " -i \"" + workDir.getAbsoluteDirname() + "\\pic%05d.png\"";
+		ffmpegInvocation += " -i \"";
+		ffmpegInvocation += newSongFile.getAbsoluteFilename();
+		ffmpegInvocation += "\" -c:v libx264 -vf \"fps=" + frameRate + ",format=yuv420p,";
+		ffmpegInvocation += "scale=" + width + ":" + height + "\" -c:a aac -map 0:v:0 -map 1:a:0 \"";
+		ffmpegInvocation += outputFile.getAbsoluteFilename();
+		ffmpegInvocation += "\"";
+		System.out.println("Executing " + ffmpegInvocation);
+		IoUtils.execute(ffmpegInvocation);
 
 		// upload it to youtube
 		// (and in the description, link to the original song)
