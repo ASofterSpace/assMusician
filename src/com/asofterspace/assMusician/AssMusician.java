@@ -1,6 +1,5 @@
 /**
- * Unlicensed code created by A Softer Space, 2020
- * www.asofterspace.com/licenses/unlicense.txt
+ * Code created by A Softer Space, 2020
  */
 package com.asofterspace.assMusician;
 
@@ -12,8 +11,8 @@ import com.asofterspace.toolbox.Utils;
 public class AssMusician {
 
 	public final static String PROGRAM_TITLE = "assMusician";
-	public final static String VERSION_NUMBER = "0.0.0.1(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "27. May 2020 - 27. May 2020";
+	public final static String VERSION_NUMBER = "0.0.0.2(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "27. May 2020 - 29. May 2020";
 
 	public static void main(String[] args) {
 

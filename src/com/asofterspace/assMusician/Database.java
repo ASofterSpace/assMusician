@@ -1,6 +1,5 @@
 /**
- * Unlicensed code created by A Softer Space, 2020
- * www.asofterspace.com/licenses/unlicense.txt
+ * Code created by A Softer Space, 2020
  */
 package com.asofterspace.assMusician;
 
@@ -8,9 +7,6 @@ import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonFile;
 import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.utils.Record;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class Database {
