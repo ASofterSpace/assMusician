@@ -41,9 +41,9 @@ public class MusicGenerator {
 	private int[] wavDataRight;
 
 	// width (px), height (px) and frame rate (fps) of the resulting video
-	private int width = 640;
-	private int height = 360;
-	private int frameRate = 30;
+	private int width = 1920;
+	private int height = 1080;
+	private int frameRate = 60;
 
 
 	public MusicGenerator(Database database, Directory inputDir, Directory outputDir) {
@@ -146,6 +146,8 @@ public class MusicGenerator {
 			double step = ((double) i) / (10 * frameRate);
 
 			Image img = new Image(width, height);
+			img.setLineWidth(3);
+
 			// background
 			img.drawRectangle(0, 0, width-1, height-1, black);
 			// horizon
@@ -154,18 +156,30 @@ public class MusicGenerator {
 			img.drawLine(width/2, height/2, width/4, height-1, blue);
 			img.drawLine(width/2, height/2, (3*width)/4, height-1, blue);
 			// moving elements
-			double movBy = height * step;
-			double scaleTo = height/2;
-			while (movBy > scaleTo) {
-				movBy -= scaleTo;
+			double movBy = step * 4;
+			while (movBy > 2) {
+				movBy -= 2;
 			}
-			double movByPerc = movBy / scaleTo;
+			movBy = movBy * movBy * movBy * movBy * movBy;
+			movBy = movBy / 32;
+			double movByPerc = movBy;
+			double scaleTo = height/2;
+			movBy *= scaleTo;
 			img.drawLine((width/2)-(int)((movByPerc*width)/4), (height/2) + (int)movBy, (width/2)+(int)((movByPerc*width)/4), (height/2) + (int)movBy, blue);
 
 			for (Star star : stars) {
 				star.calcFrame(step);
 				if (star.getBrightness() > 0.001) {
-					img.setPixel(star.getX(), star.getY(), ColorRGB.intermix(blue, black, star.getBrightness()));
+					ColorRGB starColor = ColorRGB.intermix(blue, black, star.getBrightness());
+					img.setPixelSafely(star.getX(), star.getY(), starColor);
+					img.setPixelSafely(star.getX()-1, star.getY(), starColor);
+					img.setPixelSafely(star.getX()-2, star.getY(), starColor);
+					img.setPixelSafely(star.getX()+1, star.getY(), starColor);
+					img.setPixelSafely(star.getX()+2, star.getY(), starColor);
+					img.setPixelSafely(star.getX(), star.getY()-1, starColor);
+					img.setPixelSafely(star.getX(), star.getY()-2, starColor);
+					img.setPixelSafely(star.getX(), star.getY()+1, starColor);
+					img.setPixelSafely(star.getX(), star.getY()+2, starColor);
 				}
 			}
 
@@ -178,7 +192,9 @@ public class MusicGenerator {
 
 		// splice the generated audio together with the generated video
 		File outputFile = new File(outputDir, originalSong.getLocalFilenameWithoutType() + ".mp4");
+		outputFile.delete();
 		ffmpegInvocation = ffmpegPath;
+		ffmpegInvocation += " -framerate " + frameRate;
 		ffmpegInvocation += " -i \"" + workDir.getAbsoluteDirname() + "\\pic%05d.png\"";
 		ffmpegInvocation += " -i \"";
 		ffmpegInvocation += newSongFile.getAbsoluteFilename();
