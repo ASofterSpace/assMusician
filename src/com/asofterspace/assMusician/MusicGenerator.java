@@ -150,6 +150,24 @@ public class MusicGenerator {
 
 			// background
 			img.drawRectangle(0, 0, width-1, height-1, black);
+
+			// stars
+			for (Star star : stars) {
+				star.calcFrame(step);
+				if (star.getBrightness() > 0.001) {
+					ColorRGB starColor = ColorRGB.intermix(blue, black, star.getBrightness());
+					img.setPixelSafely(star.getX(), star.getY(), starColor);
+					img.setPixelSafely(star.getX()-1, star.getY(), starColor);
+					img.setPixelSafely(star.getX()-2, star.getY(), starColor);
+					img.setPixelSafely(star.getX()+1, star.getY(), starColor);
+					img.setPixelSafely(star.getX()+2, star.getY(), starColor);
+					img.setPixelSafely(star.getX(), star.getY()-1, starColor);
+					img.setPixelSafely(star.getX(), star.getY()-2, starColor);
+					img.setPixelSafely(star.getX(), star.getY()+1, starColor);
+					img.setPixelSafely(star.getX(), star.getY()+2, starColor);
+				}
+			}
+
 			// horizon
 			img.drawLine(0, height/2, width-1, height/2, blue);
 			// street
@@ -166,22 +184,6 @@ public class MusicGenerator {
 			double scaleTo = height/2;
 			movBy *= scaleTo;
 			img.drawLine((width/2)-(int)((movByPerc*width)/4), (height/2) + (int)movBy, (width/2)+(int)((movByPerc*width)/4), (height/2) + (int)movBy, blue);
-
-			for (Star star : stars) {
-				star.calcFrame(step);
-				if (star.getBrightness() > 0.001) {
-					ColorRGB starColor = ColorRGB.intermix(blue, black, star.getBrightness());
-					img.setPixelSafely(star.getX(), star.getY(), starColor);
-					img.setPixelSafely(star.getX()-1, star.getY(), starColor);
-					img.setPixelSafely(star.getX()-2, star.getY(), starColor);
-					img.setPixelSafely(star.getX()+1, star.getY(), starColor);
-					img.setPixelSafely(star.getX()+2, star.getY(), starColor);
-					img.setPixelSafely(star.getX(), star.getY()-1, starColor);
-					img.setPixelSafely(star.getX(), star.getY()-2, starColor);
-					img.setPixelSafely(star.getX(), star.getY()+1, starColor);
-					img.setPixelSafely(star.getX(), star.getY()+2, starColor);
-				}
-			}
 
 			DefaultImageFile curImgFile = new DefaultImageFile(
 				workDir.getAbsoluteDirname() + "/pic" + StrUtils.leftPad0(i, 5) + ".png"
