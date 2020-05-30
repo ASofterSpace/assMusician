@@ -16,9 +16,12 @@ import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.Utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.TreeMap;
 
 
 public class MusicGenerator {
@@ -101,6 +104,9 @@ public class MusicGenerator {
 
 		// add drums
 		addDrums();
+
+		// handle the overflow by normalizing the entire song
+		normalize();
 
 		// save the new song as audio
 		WavFile newSongFile = new WavFile(workDir, "our_song.wav");
@@ -241,13 +247,15 @@ public class MusicGenerator {
 		// add rev sound at the beginning at double volume
 		addWavMono(WAV_REV_DRUM, 0, 4);
 
+		int addTimes = 0;
+
 		/*
 		// ALGORITHM 1
 
 		// actually put them into the song
 		addDrum(wavDataLeft, 3000);
 		addDrum(wavDataRight, 3000);
-		int addTimes = 2;
+		addTimes = 2;
 		*/
 
 		/*
@@ -257,7 +265,6 @@ public class MusicGenerator {
 		// and only when all samples within the window are increasing, calling it
 		// a maximum
 		int windowLength = 32;
-		int addTimes = 0;
 		int instrumentRing = 0;
 
 		for (int i = 0; i < wavDataLeft.length - windowLength; i++) {
@@ -329,40 +336,137 @@ public class MusicGenerator {
 			}
 		}
 		for (int i = potentialMaximumPositions.size() - 1; i > 1; i--) {
+
+				// if the previous maximum is smaller
 			if ((wavDataLeft[potentialMaximumPositions.get(i-1)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
-				(wavDataLeft[potentialMaximumPositions.get(i-2)] < wavDataLeft[potentialMaximumPositions.get(i)])) {
+				// and the previous-previous maximum is smaller
+				(wavDataLeft[potentialMaximumPositions.get(i-2)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
+				// and this maximum is above volume 1/16
+				(wavDataLeft[potentialMaximumPositions.get(i)] > 16*16*16)) {
+
+				// then we actually fully accept it as maximum :)
 				maximumPositions.add(potentialMaximumPositions.get(i));
 			}
 		}
-		int addTimes = 0;
+
+		/*
 		int instrumentRing = 0;
 		for (Integer maxPos : maximumPositions) {
-			/*
-			switch (instrumentRing) {
-				case 0:
-					addWavMono(WAV_TOM1_DRUM, maxPos, 1);
-					break;
-				case 1:
-					addWavMono(WAV_TOM2_DRUM, maxPos, 1);
-					break;
-				case 2:
-					addWavMono(WAV_TOM3_DRUM, maxPos, 1);
-					break;
-				case 3:
-					addWavMono(WAV_TOM4_DRUM, maxPos, 1);
-					break;
-				default:
-					break;
-			}
-			instrumentRing++;
-			if (instrumentRing > 3) {
-				instrumentRing = 0;
-			}
-			*/
 
 			addWavMono(WAV_TOM1_DRUM, maxPos, 1);
 
 			addTimes++;
+		}
+		*/
+
+		// ALGORITHM 3.5
+
+		// We take algorithm 3 as basis, but now after having found our maxima we try to space them around equi-distant
+		// However, we cannot just do this across the whole song, so instead we try to first split up the song into
+		// larger areas (by getting the distances between maxima, and taking the 16 largest distances as split locations),
+		// and then we equi-distantize the maxima across these song parts
+		// Map<Integer, Integer> maxPosToDistance = new HashMap<>();
+		TreeMap<Integer, Integer> distanceToMaxPos = new TreeMap<>();
+		// maxPosToDistance.put(maximumPositions.get(0), 0);
+		distanceToMaxPos.put(0, maximumPositions.get(0));
+		for (int i = 1; i < maximumPositions.size(); i++) {
+			distanceToMaxPos.put(maximumPositions.get(i) - maximumPositions.get(i-1), maximumPositions.get(i));
+			// maxPosToDistance.put(maximumPositions.get(i), maximumPositions.get(i) - maximumPositions.get(i-1));
+		}
+		// get the highest distances:
+		List<Integer> highestDist = new ArrayList<>();
+		Collection<Integer> distances = distanceToMaxPos.values();
+		List<Integer> distanceList = new ArrayList<>(distances);
+		for (int i = distanceList.size() - 16; i < distanceList.size(); i++) {
+			if (i >= 0) {
+				highestDist.add(distanceList.get(i)+1);
+			}
+		}
+		Collections.sort(highestDist);
+		Collections.sort(maximumPositions);
+
+		// now for each song part...
+		int j = 0;
+		for (int i = 0; i < highestDist.size(); i++) {
+			// ... assemble all the beats that we found
+			System.out.println("Song part " + i + " at " + highestDist.get(i) + ", beats:");
+			List<Integer> partBeats = new ArrayList<>();
+			List<Integer> newBeats = new ArrayList<>();
+			for (; j < maximumPositions.size(); j++) {
+				if (maximumPositions.get(j) < highestDist.get(i)) {
+					partBeats.add(maximumPositions.get(j));
+					System.out.println(maximumPositions.get(j));
+				} else {
+					break;
+				}
+			}
+			// now actually equidistantize the beats in these song parts...
+			// first of all, fill beat gaps - so if we detected X X   X X, make it into X X X X X
+			// for that, get the average distance between beats in this song part:
+			int avgDist = 0;
+			for (int k = 1; k < partBeats.size(); k++) {
+				avgDist += partBeats.get(k) - partBeats.get(k-1);
+			}
+			avgDist /= partBeats.size() - 1;
+			// give at least 200 ms between beats (at least for the ones we are adding in between now...)
+			if (avgDist < millisToChannelPos(200)) {
+				avgDist = millisToChannelPos(200);
+			}
+			// now, check if between any two beats there is twice that much space, or three times, etc.
+			for (int k = 1; k < partBeats.size(); k++) {
+				int curDist = partBeats.get(k) - partBeats.get(k-1);
+				if (curDist > avgDist) {
+					if (curDist > 2 * avgDist) {
+						if (curDist > 3 * avgDist) {
+							newBeats.add((partBeats.get(k) + partBeats.get(k-1)) / 4);
+							newBeats.add(((partBeats.get(k) + partBeats.get(k-1)) * 2) / 4);
+							newBeats.add(((partBeats.get(k) + partBeats.get(k-1)) * 3) / 4);
+						} else {
+							newBeats.add((partBeats.get(k) + partBeats.get(k-1)) / 3);
+							newBeats.add(((partBeats.get(k) + partBeats.get(k-1)) * 2) / 3);
+						}
+					} else {
+						newBeats.add((partBeats.get(k) + partBeats.get(k-1)) / 2);
+					}
+				}
+			}
+
+			partBeats.addAll(newBeats);
+			Collections.sort(partBeats);
+
+			int instrumentRing = 0;
+			for (Integer maxPos : partBeats) {
+				/*
+				switch (instrumentRing) {
+					case 0:
+						addWavMono(WAV_TOM1_DRUM, maxPos, 1);
+						break;
+					case 1:
+						addWavMono(WAV_TOM2_DRUM, maxPos, 1);
+						break;
+					case 2:
+						addWavMono(WAV_TOM3_DRUM, maxPos, 1);
+						break;
+					case 3:
+						addWavMono(WAV_TOM4_DRUM, maxPos, 1);
+						break;
+					default:
+						break;
+				}
+				instrumentRing++;
+				if (instrumentRing > 3) {
+					instrumentRing = 0;
+				}
+				*/
+
+				addWavMono(WAV_TOM1_DRUM, maxPos, 1);
+				addWavMono(WAV_TOM1_DRUM, maxPos + (avgDist / 8), 1);
+				addWavMono(WAV_TOM2_DRUM, maxPos + ((2 * avgDist) / 8), 1);
+				addWavMono(WAV_TOM3_DRUM, maxPos + ((3 * avgDist) / 8), 1);
+				addWavMono(WAV_TOM4_DRUM, maxPos + ((4 * avgDist) / 8), 1);
+
+				addTimes++;
+			}
 		}
 
 		System.out.println("We added " + addTimes + " drum sounds!");
@@ -411,6 +515,12 @@ public class MusicGenerator {
 		}
 
 		for (int i = 0; i < len; i++) {
+			if (i+pos >= wavDataLeft.length) {
+				return;
+			}
+			if ((i+pos < 0) || (i < 0)) {
+				return;
+			}
 			wavDataLeft[i+pos] = mixin(wavDataLeft[i+pos], wavVolume * newMono[i]);
 			wavDataRight[i+pos] = mixin(wavDataRight[i+pos], wavVolume * newMono[i]);
 		}
@@ -424,19 +534,58 @@ public class MusicGenerator {
 	}
 
 	private int mixin(int one, int two) {
-		/*
-		if (one > two) {
-			return one;
+
+		// add the two values, handle the overflow later:
+		return one + two;
+	}
+
+	/*
+	private int handleOverflow(int val) {
+
+		// now handle overflow - not Integer overflow, but two-byte-overflow,
+		// so 16*16*16*16 overflow
+		// (the way how we handle it: maximum both one and two are at max value,
+		// so the sum is 2*16*16*16*16... so if the sum is over 8*16*16*16, then
+		// we just smush the remainder up to 2*... into the space until 16*16*16*16)
+		if (val > 8*16*16*16) {
+			val -= 8*16*16*16;
+			val /= 2;
+			val += 8*16*16*16;
+		} else if (val < -8*16*16*16) {
+			val += 8*16*16*16;
+			val /= 2;
+			val -= 8*16*16*16;
 		}
-		return two;
-		*/
-		long newVal = one + two;
-		if (newVal > Integer.MAX_VALUE) {
-			newVal = Integer.MAX_VALUE;
-		} else if (newVal < Integer.MIN_VALUE) {
-			newVal = Integer.MIN_VALUE;
+		if (val > 16*16*16*16) {
+			val = 16*16*16*16;
+		} else if (val < -16*16*16*16) {
+			val = -16*16*16*16;
 		}
-		return (int) newVal;
+		return val;
+	}
+	*/
+
+	private void normalize() {
+
+		int max = 0;
+		for (int i = 0; i < wavDataLeft.length; i++) {
+			if (wavDataLeft[i] > max) {
+				max = wavDataLeft[i];
+			}
+			if (-wavDataLeft[i] > max) {
+				max = -wavDataLeft[i];
+			}
+			if (wavDataRight[i] > max) {
+				max = wavDataRight[i];
+			}
+			if (-wavDataRight[i] > max) {
+				max = -wavDataRight[i];
+			}
+		}
+		for (int i = 0; i < wavDataLeft.length; i++) {
+			wavDataLeft[i] = (int) ((wavDataLeft[i] * (long) 8*16*16*16) / max);
+			wavDataRight[i] = (int) ((wavDataRight[i] * (long) 8*16*16*16) / max);
+		}
 	}
 
 	private void addDrum(int[] songData, int posInMillis) {
