@@ -11,10 +11,12 @@ import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
 import com.asofterspace.toolbox.io.WavFile;
+import com.asofterspace.toolbox.utils.DateUtils;
 import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.Utils;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -71,7 +73,7 @@ public class MusicGenerator {
 
 	public void addDrumsToSong(File originalSong) {
 
-		System.out.println("Adding drums to " + originalSong.getLocalFilename());
+		System.out.println("[" + DateUtils.serializeDateTime(new Date()) + "] Adding drums to " + originalSong.getLocalFilename());
 
 		workDir.clear();
 
@@ -86,9 +88,8 @@ public class MusicGenerator {
 		ffmpegInvocation += "\" -ab 192000 -ar 44100 -ac 2 -acodec pcm_s16le -vn \"";
 		ffmpegInvocation += workSong.getAbsoluteFilename();
 		ffmpegInvocation += "\"";
-		System.out.println("Executing " + ffmpegInvocation);
+		System.out.println("[" + DateUtils.serializeDateTime(new Date()) + "] Executing " + ffmpegInvocation);
 		IoUtils.execute(ffmpegInvocation);
-		Utils.sleep(1000);
 
 		// load the extracted audio
 		WavFile wav = new WavFile(workSong);
@@ -204,12 +205,14 @@ public class MusicGenerator {
 		ffmpegInvocation += "scale=" + width + ":" + height + "\" -c:a aac -map 0:v:0 -map 1:a:0 \"";
 		ffmpegInvocation += outputFile.getAbsoluteFilename();
 		ffmpegInvocation += "\"";
-		System.out.println("Executing " + ffmpegInvocation);
+		System.out.println("[" + DateUtils.serializeDateTime(new Date()) + "] Executing " + ffmpegInvocation);
 		IoUtils.execute(ffmpegInvocation);
 
 		// upload it to youtube
 		// (and in the description, link to the original song)
 		// TODO
+
+		System.out.println("[" + DateUtils.serializeDateTime(new Date()) + "] " + originalSong.getLocalFilename() + " done!");
 	}
 
 	// TODO: idea for a better algorithm:

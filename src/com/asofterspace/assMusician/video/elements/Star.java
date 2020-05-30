@@ -47,9 +47,9 @@ public class Star {
 			case 1:
 				brightness += step / 64;
 				if (brightness > 1) {
+					visibleUntil = rand.nextInt(320);
 					mode = 3;
 					brightness = 1;
-					visibleUntil = rand.nextInt(32);
 				}
 				break;
 			case 2:
