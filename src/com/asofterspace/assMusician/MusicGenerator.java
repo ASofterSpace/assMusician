@@ -412,9 +412,9 @@ public class MusicGenerator {
 			// now, check if between any two beats there is twice that much space, or three times, etc.
 			for (int k = 1; k < partBeats.size(); k++) {
 				int curDist = partBeats.get(k) - partBeats.get(k-1);
-				if (curDist > avgDist) {
-					if (curDist > 2 * avgDist) {
-						if (curDist > 3 * avgDist) {
+				if (curDist > (3 * avgDist) / 2) {
+					if (curDist > (5 * avgDist) / 2) {
+						if (curDist > (7 * avgDist) / 2) {
 							newBeats.add((partBeats.get(k) + partBeats.get(k-1)) / 4);
 							newBeats.add(((partBeats.get(k) + partBeats.get(k-1)) * 2) / 4);
 							newBeats.add(((partBeats.get(k) + partBeats.get(k-1)) * 3) / 4);
