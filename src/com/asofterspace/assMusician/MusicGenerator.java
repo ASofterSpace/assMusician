@@ -100,7 +100,7 @@ public class MusicGenerator {
 		this.bytesPerSample = wav.getBitsPerSample() / 8;
 		wavDataLeft = wav.getLeftData();
 		wavDataRight = wav.getRightData();
-		scale(0.5);
+		// scale(0.5);
 
 		// add drums
 		addDrums();
@@ -243,9 +243,6 @@ public class MusicGenerator {
 	//   ... then let all of them be generated, and manually choose the best music out of maybe
 	//   ten that have been generated and upload that one :)
 	private void addDrums() {
-
-		// add rev sound at the beginning at double volume
-		addWavMono(WAV_REV_DRUM, 0, 4);
 
 		int addTimes = 0;
 
@@ -468,19 +465,23 @@ public class MusicGenerator {
 					if (partBeats.get(k+1) - curBeat < curBeatLen) {
 						curBeatLen = partBeats.get(k+1) - curBeat;
 					}
-					addWavMono(WAV_TOM1_DRUM, curBeat, 1);
-					addWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 1);
-					addWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 1);
-					addWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 1);
-					addWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 1);
+					addWavMono(WAV_TOM1_DRUM, curBeat, 2);
+					addWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 2);
+					addWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 2);
+					addWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 2);
+					addWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 2);
 				} else {
 					// at the end of each segment, a big wooosh!
-					addWavMono(WAV_SMALL_F_TIMPANI, curBeat, 2);
+					addWavMono(WAV_SMALL_F_TIMPANI, curBeat, 4);
 				}
 
 				addTimes++;
 			}
 		}
+
+		// add rev sound at the beginning at high volume
+		addWavMono(WAV_REV_DRUM, 0, 8);
+		addTimes++;
 
 		System.out.println("We added " + addTimes + " drum sounds!");
 	}
