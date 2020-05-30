@@ -332,13 +332,15 @@ public class MusicGenerator {
 				localMaxPos = i;
 			}
 		}
-		for (int i = potentialMaximumPositions.size() - 1; i > 1; i--) {
+		for (int i = potentialMaximumPositions.size() - 1; i > 2; i--) {
 
 				// if the previous maximum is smaller
 			if ((wavDataLeft[potentialMaximumPositions.get(i-1)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
 				// and the previous-previous maximum is smaller
 				(wavDataLeft[potentialMaximumPositions.get(i-2)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
-				// and this maximum is above volume 1/16
+				// and the previous-previous-previous maximum is smaller
+				(wavDataLeft[potentialMaximumPositions.get(i-3)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
+				// and this maximum is above volume 1/8
 				(wavDataLeft[potentialMaximumPositions.get(i)] > 16*16*16)) {
 
 				// then we actually fully accept it as maximum :)
