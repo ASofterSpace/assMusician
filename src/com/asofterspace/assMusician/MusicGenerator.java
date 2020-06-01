@@ -395,8 +395,14 @@ public class MusicGenerator {
 
 				// then we actually fully accept it as maximum :)
 				maximumPositions.add(potentialMaximumPositions.get(i));
+
+				wavGraphImg.drawVerticalLineAt(potentialMaximumPositions.get(i), new ColorRGB(255, 0, 0));
 			}
 		}
+
+		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_detection.png");
+		wavImgFile.assign(wavGraphImg);
+		wavImgFile.save();
 
 		/*
 		int instrumentRing = 0;
@@ -470,12 +476,18 @@ public class MusicGenerator {
 							newBeats.add((partBeats.get(k) + partBeats.get(k-1)) / 4);
 							newBeats.add(((partBeats.get(k) + partBeats.get(k-1)) * 2) / 4);
 							newBeats.add(((partBeats.get(k) + partBeats.get(k-1)) * 3) / 4);
+							wavGraphImg.drawVerticalLineAt((partBeats.get(k) + partBeats.get(k-1)) / 4, new ColorRGB(128, 128, 0));
+							wavGraphImg.drawVerticalLineAt(((partBeats.get(k) + partBeats.get(k-1)) * 2) / 4, new ColorRGB(128, 128, 0));
+							wavGraphImg.drawVerticalLineAt(((partBeats.get(k) + partBeats.get(k-1)) * 3) / 4, new ColorRGB(128, 128, 0));
 						} else {
 							newBeats.add((partBeats.get(k) + partBeats.get(k-1)) / 3);
 							newBeats.add(((partBeats.get(k) + partBeats.get(k-1)) * 2) / 3);
+							wavGraphImg.drawVerticalLineAt((partBeats.get(k) + partBeats.get(k-1)) / 3, new ColorRGB(128, 128, 0));
+							wavGraphImg.drawVerticalLineAt(((partBeats.get(k) + partBeats.get(k-1)) * 2) / 3, new ColorRGB(128, 128, 0));
 						}
 					} else {
 						newBeats.add((partBeats.get(k) + partBeats.get(k-1)) / 2);
+						wavGraphImg.drawVerticalLineAt((partBeats.get(k) + partBeats.get(k-1)) / 2, new ColorRGB(128, 128, 0));
 					}
 				}
 			}
@@ -525,11 +537,16 @@ public class MusicGenerator {
 				} else {
 					// at the end of each segment, a big wooosh!
 					addWavMono(WAV_SMALL_F_TIMPANI, curBeat, 4);
+					wavGraphImg.drawVerticalLineAt(curBeat, new ColorRGB(0, 255, 255));
 				}
 
 				addTimes++;
 			}
 		}
+
+		wavImgFile = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition.png");
+		wavImgFile.assign(wavGraphImg);
+		wavImgFile.save();
 
 		// add rev sound at the beginning at high volume
 		addWavMono(WAV_REV_DRUM, 0, 8);
