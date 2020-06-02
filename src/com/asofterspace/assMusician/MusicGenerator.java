@@ -117,7 +117,8 @@ public class MusicGenerator {
 		// scale(0.5);
 
 		// the visual output graph gets 600 px width per minute of song
-		wavGraphImg = new GraphImage(channelPosToMillis(wavDataLeft.length) / 100, graphImageHeight);
+		wavGraphImg = new GraphImage();
+		wavGraphImg.setInnerWidthAndHeight(channelPosToMillis(wavDataLeft.length) / 100, graphImageHeight);
 
 		List<GraphDataPoint> wavData = new ArrayList<>();
 		int position = 0;
