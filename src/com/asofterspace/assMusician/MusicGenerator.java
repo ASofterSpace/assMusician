@@ -371,7 +371,7 @@ public class MusicGenerator {
 		List<Integer> potentialMaximumPositions = new ArrayList<>();
 		int localMaxPos = 0;
 		int localMax = 0;
-		int regionSize = millisToChannelPos(200);
+		int regionSize = millisToChannelPos(100);
 		for (int i = 0; i < wavDataLeft.length; i++) {
 			if (wavDataLeft[i] > localMax) {
 				localMax = wavDataLeft[i];
@@ -396,9 +396,44 @@ public class MusicGenerator {
 
 				// then we actually fully accept it as maximum :)
 				maximumPositions.add(potentialMaximumPositions.get(i));
-
-				wavGraphImg.drawVerticalLineAt(potentialMaximumPositions.get(i), new ColorRGB(255, 0, 0));
 			}
+		}
+
+		Collections.sort(maximumPositions);
+
+		// now iterate over all the found maximum positions, and whenever the distance between some is small-ish
+		// (let's say 0.5s), we mush them together into one
+		int smooshSize = millisToChannelPos(500);
+		List<Integer> smooshedMaximumPositions = new ArrayList<>();
+
+		for (int i = maximumPositions.size() - 1; i >= 0; i--) {
+			int j = i - 1;
+			int smooshedVal = maximumPositions.get(i);
+			while (j >= 0) {
+				if (maximumPositions.get(i) - maximumPositions.get(j) < smooshSize) {
+					smooshedVal += maximumPositions.get(j);
+					j--;
+				} else {
+					break;
+				}
+			}
+			int amountSmooshed = i - j;
+			j++;
+			i = j;
+			smooshedMaximumPositions.add(smooshedVal / amountSmooshed);
+		}
+
+		maximumPositions = smooshedMaximumPositions;
+
+		Collections.sort(maximumPositions);
+
+		for (int i = 0; i < maximumPositions.size(); i++) {
+			wavGraphImg.drawVerticalLineAt(maximumPositions.get(i), new ColorRGB(255, 0, 0));
+
+			// DEBUG
+			DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_detection_" + StrUtils.leftPad0(i, 3) + ".png");
+			wavImgFile.assign(wavGraphImg);
+			wavImgFile.save();
 		}
 
 		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_detection.png");
@@ -463,7 +498,11 @@ public class MusicGenerator {
 			for (int k = 1; k < partBeats.size(); k++) {
 				avgDist += partBeats.get(k) - partBeats.get(k-1);
 			}
-			avgDist /= partBeats.size() - 1;
+			if (partBeats.size() - 1 > 0) {
+				avgDist /= partBeats.size() - 1;
+			} else {
+				avgDist = 0;
+			}
 			// give at least 200 ms between beats (at least for the ones we are adding in between now...)
 			if (avgDist < millisToChannelPos(200)) {
 				avgDist = millisToChannelPos(200);
