@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.TreeMap;
 
 
 public class MusicGenerator {
@@ -427,18 +426,18 @@ public class MusicGenerator {
 
 		maximumPositions = smooshedMaximumPositions;
 
-		/*
-		// DEBUG beat detection visualization
 		Collections.sort(maximumPositions);
 
 		for (int i = 0; i < maximumPositions.size(); i++) {
 			wavGraphImg.drawVerticalLineAt(maximumPositions.get(i), new ColorRGB(255, 0, 0));
 
+			/*
+			// DEBUG beat detection visualization
 			DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_detection_" + StrUtils.leftPad0(i, 3) + ".png");
 			wavImgFile.assign(wavGraphImg);
 			wavImgFile.save();
+			*/
 		}
-		*/
 
 		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_detection.png");
 		wavImgFile.assign(wavGraphImg);
@@ -456,7 +455,7 @@ public class MusicGenerator {
 
 		// ALGORITHM 3.6
 
-		// We try to actually get one number for the overall bpm (beats per minute) of this song
+		// We take algorithm 3 as basis and try to get one number for the song's overall bpm (beats per minute)
 		// To do so, we look at all pairs of detected maxima, and their distances as raw beat lengths
 		// We then scale the raw beat lengths (by doubling or halfing againd again) until they all fall
 		// into our preferred bpm band - that is, we would like to have between 90 and 180 bpm (we have
@@ -467,24 +466,34 @@ public class MusicGenerator {
 
 		Collections.sort(maximumPositions);
 
-		// each bpm candidate is an int representing a bpm value times 100 (so that we have a bit more accuracy),
+		// each bpm candidate is an int representing a bpm value times 10 (so that we have a bit more accuracy),
 		// mapping to an int which represents how many values we have put into this bucket
+		int BUCKET_ACCURACY_FACTOR = 10;
 		Map<Integer, Integer> bpmCandidates = new HashMap<>();
 
 		for (int i = 0; i < maximumPositions.size(); i++) {
-			for (int j = 0; j < i; j++) {
+			// actually, instead of looking at all pairs...
+			// for (int j = 0; j < i; j++) {
+			// we just want to look at the closest two other beats!
+			// TODO 1 :: give out a histogram of the buckets so that we can see what is going on;
+			// the demo song seems to be around 120 bpm, but we often detect other nonsense too,
+			// so after looking at the histogram maybe we can figure out what is going on
+			for (int j = i-2; j < i; j++) {
+				if (j < 0) {
+					continue;
+				}
 				int curDist = maximumPositions.get(i) - maximumPositions.get(j);
 				int curDiffInMs = channelPosToMillis(curDist);
 
 				// a difference of 1 ms means that there are 60*1000 beats per minute,
 				// and we have the additional *100 to get more accuracy
-				int curBpm = (60*1000*100) / curDiffInMs;
+				int curBpm = (60*1000*BUCKET_ACCURACY_FACTOR) / curDiffInMs;
 
 				// scale the bpm into the range that we are interested in
-				while (curBpm < 90*1000*100) {
+				while (curBpm < 90*1000*BUCKET_ACCURACY_FACTOR) {
 					curBpm *= 2;
 				}
-				while (curBpm > 180*1000*100) {
+				while (curBpm > 180*1000*BUCKET_ACCURACY_FACTOR) {
 					curBpm /= 2;
 				}
 
@@ -507,12 +516,43 @@ public class MusicGenerator {
 			}
 		}
 
-		double bpm = largestBucketBpm / (100*1000.0);
+		double bpm = largestBucketBpm / (BUCKET_ACCURACY_FACTOR*1000.0);
 
 		System.out.println("We detected " + bpm + " beats per minute, " +
 			"with the largest bucket containing " + largestBucketContentAmount + " values...");
 
+		// generate beats based on the bpm alone
+		// TODO 2 :: actually use this as a basis (and trust it a lot!), but still try to locally align
+		// to the closest detected beat, e.g. always align to the next one to the right if there is one
+		// to the right of the current beat
+		List<Integer> bpmBasedBeats = new ArrayList<>();
+		for (int i = 0; i < wavDataLeft.length; i += millisToChannelPos((long) ((1000*60) / bpm))) {
+			bpmBasedBeats.add(i);
+			wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
+		}
 
+		Collections.sort(bpmBasedBeats);
+
+		int instrumentRing = 0;
+		int curBeatLen = 0;
+		for (int k = 0; k < bpmBasedBeats.size(); k++) {
+
+			int curBeat = bpmBasedBeats.get(k);
+			if (k + 1 < bpmBasedBeats.size()) {
+				curBeatLen = bpmBasedBeats.get(k+1) - curBeat;
+			}
+
+			addWavMono(WAV_TOM1_DRUM, curBeat, 2);
+			addWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 2);
+			addWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 2);
+			addWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 2);
+			addWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 2);
+
+			addTimes++;
+		}
+
+
+		/*
 		// ALGORITHM 3.5
 
 		// We take algorithm 3 as basis, but now after having found our maxima we try to space them around equi-distant
@@ -603,29 +643,6 @@ public class MusicGenerator {
 
 				int curBeat = partBeats.get(k);
 
-				/*
-				switch (instrumentRing) {
-					case 0:
-						addWavMono(WAV_TOM1_DRUM, curBeat, 1);
-						break;
-					case 1:
-						addWavMono(WAV_TOM2_DRUM, curBeat, 1);
-						break;
-					case 2:
-						addWavMono(WAV_TOM3_DRUM, curBeat, 1);
-						break;
-					case 3:
-						addWavMono(WAV_TOM4_DRUM, curBeat, 1);
-						break;
-					default:
-						break;
-				}
-				instrumentRing++;
-				if (instrumentRing > 3) {
-					instrumentRing = 0;
-				}
-				*/
-
 				// one possible pattern - try out others as well!
 				int curBeatLen = avgDist;
 				if (k < partBeats.size() - 1) {
@@ -646,6 +663,7 @@ public class MusicGenerator {
 				addTimes++;
 			}
 		}
+		*/
 
 		wavImgFile = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition.png");
 		wavImgFile.assign(wavGraphImg);
