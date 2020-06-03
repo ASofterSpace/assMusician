@@ -478,7 +478,10 @@ public class MusicGenerator {
 			// TODO 1 :: give out a histogram of the buckets so that we can see what is going on;
 			// the demo song seems to be around 120 bpm, but we often detect other nonsense too,
 			// so after looking at the histogram maybe we can figure out what is going on
-			for (int j = i-2; j < i; j++) {
+			// - actually, after looking at the histogram, just lookback 1 seems to be best, but
+			// maybe do some smoothing afterwards if necessary (however, for this one demo song
+			// it worked great just like that!)
+			for (int j = i-1; j < i; j++) {
 				if (j < 0) {
 					continue;
 				}
