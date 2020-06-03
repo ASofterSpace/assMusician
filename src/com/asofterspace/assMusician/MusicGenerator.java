@@ -505,6 +505,21 @@ public class MusicGenerator {
 			}
 		}
 
+		// output buckets
+		int graphWidth = (180 - 90) * BUCKET_ACCURACY_FACTOR;
+		GraphImage histogramImg = new GraphImage();
+		histogramImg.setInnerWidthAndHeight(graphWidth, graphImageHeight);
+
+		List<GraphDataPoint> histData = new ArrayList<>();
+		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
+			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
+		}
+		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setAbsoluteDataPoints(histData);
+		DefaultImageFile histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_histogram_for_bpm.png");
+		histogramImgFile.assign(histogramImg);
+		histogramImgFile.save();
+
 		// now find the largest bucket
 		int largestBucketContentAmount = 0;
 		int largestBucketBpm = 0;
