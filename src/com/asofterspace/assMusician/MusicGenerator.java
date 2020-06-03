@@ -22,7 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
@@ -425,16 +427,18 @@ public class MusicGenerator {
 
 		maximumPositions = smooshedMaximumPositions;
 
+		/*
+		// DEBUG beat detection visualization
 		Collections.sort(maximumPositions);
 
 		for (int i = 0; i < maximumPositions.size(); i++) {
 			wavGraphImg.drawVerticalLineAt(maximumPositions.get(i), new ColorRGB(255, 0, 0));
 
-			// DEBUG
 			DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_detection_" + StrUtils.leftPad0(i, 3) + ".png");
 			wavImgFile.assign(wavGraphImg);
 			wavImgFile.save();
 		}
+		*/
 
 		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_detection.png");
 		wavImgFile.assign(wavGraphImg);
@@ -449,6 +453,65 @@ public class MusicGenerator {
 			addTimes++;
 		}
 		*/
+
+		// ALGORITHM 3.6
+
+		// We try to actually get one number for the overall bpm (beats per minute) of this song
+		// To do so, we look at all pairs of detected maxima, and their distances as raw beat lengths
+		// We then scale the raw beat lengths (by doubling or halfing againd again) until they all fall
+		// into our preferred bpm band - that is, we would like to have between 90 and 180 bpm (we have
+		// to choose some range, and this range seems like it will make the resulting sound quite energetic,
+		// which we like!)
+		// We then have lots and lots of estimates for the bpm, which we all put into buckets - and the
+		// largest bucket wins!
+
+		Collections.sort(maximumPositions);
+
+		// each bpm candidate is an int representing a bpm value times 100 (so that we have a bit more accuracy),
+		// mapping to an int which represents how many values we have put into this bucket
+		Map<Integer, Integer> bpmCandidates = new HashMap<>();
+
+		for (int i = 0; i < maximumPositions.size(); i++) {
+			for (int j = 0; j < i; j++) {
+				int curDist = maximumPositions.get(i) - maximumPositions.get(j);
+				int curDiffInMs = channelPosToMillis(curDist);
+
+				// a difference of 1 ms means that there are 60*1000 beats per minute,
+				// and we have the additional *100 to get more accuracy
+				int curBpm = (60*1000*100) / curDiffInMs;
+
+				// scale the bpm into the range that we are interested in
+				while (curBpm < 90*1000*100) {
+					curBpm *= 2;
+				}
+				while (curBpm > 180*1000*100) {
+					curBpm /= 2;
+				}
+
+				if (bpmCandidates.get(curBpm) != null) {
+					bpmCandidates.put(curBpm, bpmCandidates.get(curBpm) + 1);
+				} else {
+					bpmCandidates.put(curBpm, 1);
+				}
+			}
+		}
+
+		// now find the largest bucket
+		int largestBucketContentAmount = 0;
+		int largestBucketBpm = 0;
+
+		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
+			if (entry.getValue() >= largestBucketContentAmount) {
+				largestBucketContentAmount = entry.getValue();
+				largestBucketBpm = entry.getKey();
+			}
+		}
+
+		double bpm = largestBucketBpm / (100*1000.0);
+
+		System.out.println("We detected " + bpm + " beats per minute, " +
+			"with the largest bucket containing " + largestBucketContentAmount + " values...");
+
 
 		// ALGORITHM 3.5
 
