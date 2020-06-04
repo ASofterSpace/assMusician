@@ -571,14 +571,43 @@ public class MusicGenerator {
 		System.out.println("We detected " + bpm + " beats per minute, " +
 			"with the largest bucket containing " + largestBucketContentAmount + " values...");
 
-		// generate beats based on the bpm alone
-		// TODO 2 :: actually use this as a basis (and trust it a lot!), but still try to locally align
-		// to the closest detected beat, e.g. always align to the next one to the right if there is one
-		// to the right of the current beat
+		// generate beats based on the detected bpm, but still try to locally align to the closest
+		// detected beat, e.g. align to the next one to the right if there is one to the left or
+		// right of the current beat and the distance to it is less than 1/10 of a beat...
 		List<Integer> bpmBasedBeats = new ArrayList<>();
-		for (int i = 0; i < wavDataLeft.length; i += millisToChannelPos((long) ((1000*60) / bpm))) {
+		/*for (int i = 0; i < wavDataLeft.length; i += millisToChannelPos((long) ((1000*60) / bpm))) {
 			bpmBasedBeats.add(i);
 			wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
+		}*/
+		int generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
+		int uncertainty = generatedBeatDistance / 5;
+		int maxPosI = 0;
+		// such that we do not have to worry about overflowing the maximumPositions list,
+		// we just add an extra beat far after everything else
+		Collections.sort(maximumPositions);
+		maximumPositions.add((wavDataLeft.length + uncertainty) * 2);
+		for (int i = 0; i < wavDataLeft.length; i += generatedBeatDistance) {
+			while (maximumPositions.get(maxPosI) < i - uncertainty) {
+				maxPosI++;
+			}
+			if (maximumPositions.get(maxPosI) < i + uncertainty) {
+				while (maximumPositions.get(maxPosI) < i) {
+					maxPosI++;
+				}
+				if (maxPosI < 1) {
+					i = maximumPositions.get(maxPosI);
+				} else {
+					if (maximumPositions.get(maxPosI) - i < i - maximumPositions.get(maxPosI-1)) {
+						i = maximumPositions.get(maxPosI);
+					} else {
+						i = maximumPositions.get(maxPosI-1);
+					}
+				}
+				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+			} else {
+				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
+			}
+			bpmBasedBeats.add(i);
 		}
 
 		Collections.sort(bpmBasedBeats);
