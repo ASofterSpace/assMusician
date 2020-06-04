@@ -468,20 +468,21 @@ public class MusicGenerator {
 
 		// each bpm candidate is an int representing a bpm value times 10 (so that we have a bit more accuracy),
 		// mapping to an int which represents how many values we have put into this bucket
-		int BUCKET_ACCURACY_FACTOR = 10;
+		int BUCKET_ACCURACY_FACTOR = 1;
+		int MIN_BPM = 90;
+		int MAX_BPM = 180;
+		int LOOKBACK = 1;
 		Map<Integer, Integer> bpmCandidates = new HashMap<>();
+		for (int curBpm = MIN_BPM*1000*BUCKET_ACCURACY_FACTOR; curBpm < MAX_BPM*1000*BUCKET_ACCURACY_FACTOR + 1; curBpm++) {
+			bpmCandidates.put(curBpm, 0);
+		}
 
 		for (int i = 0; i < maximumPositions.size(); i++) {
 			// actually, instead of looking at all pairs...
 			// for (int j = 0; j < i; j++) {
-			// we just want to look at the closest two other beats!
-			// TODO 1 :: give out a histogram of the buckets so that we can see what is going on;
-			// the demo song seems to be around 120 bpm, but we often detect other nonsense too,
-			// so after looking at the histogram maybe we can figure out what is going on
-			// - actually, after looking at the histogram, just lookback 1 seems to be best, but
-			// maybe do some smoothing afterwards if necessary (however, for this one demo song
-			// it worked great just like that!)
-			for (int j = i-1; j < i; j++) {
+			// we just want to look at the closest other beat, having a lookback of just 1
+			// (after looking at a histogram of the bpm for different lookback values)
+			for (int j = i - LOOKBACK; j < i; j++) {
 				if (j < 0) {
 					continue;
 				}
@@ -489,14 +490,14 @@ public class MusicGenerator {
 				int curDiffInMs = channelPosToMillis(curDist);
 
 				// a difference of 1 ms means that there are 60*1000 beats per minute,
-				// and we have the additional *100 to get more accuracy
+				// and we have the additional *10 to get more accuracy
 				int curBpm = (60*1000*BUCKET_ACCURACY_FACTOR) / curDiffInMs;
 
 				// scale the bpm into the range that we are interested in
-				while (curBpm < 90*1000*BUCKET_ACCURACY_FACTOR) {
+				while (curBpm < MIN_BPM*1000*BUCKET_ACCURACY_FACTOR) {
 					curBpm *= 2;
 				}
-				while (curBpm > 180*1000*BUCKET_ACCURACY_FACTOR) {
+				while (curBpm > MAX_BPM*1000*BUCKET_ACCURACY_FACTOR) {
 					curBpm /= 2;
 				}
 
@@ -508,8 +509,8 @@ public class MusicGenerator {
 			}
 		}
 
-		// output buckets
-		int graphWidth = (180 - 90) * BUCKET_ACCURACY_FACTOR;
+		// output buckets as histogram
+		int graphWidth = (MAX_BPM - MIN_BPM) * BUCKET_ACCURACY_FACTOR * 10;
 		GraphImage histogramImg = new GraphImage();
 		histogramImg.setInnerWidthAndHeight(graphWidth, graphImageHeight);
 
@@ -520,6 +521,37 @@ public class MusicGenerator {
 		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
 		histogramImg.setAbsoluteDataPoints(histData);
 		DefaultImageFile histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_histogram_for_bpm.png");
+		histogramImgFile.assign(histogramImg);
+		histogramImgFile.save();
+
+		// smoothen the buckets a little bit - we do not lose accuracy (as we do not just widen
+		// the buckets into less precise ones), but we gain resistance to small variations in bpm
+		Map<Integer, Integer> smoothBpmCandidates = new HashMap<>();
+		for (int curBpm = MIN_BPM*1000*BUCKET_ACCURACY_FACTOR; curBpm < MAX_BPM*1000*BUCKET_ACCURACY_FACTOR + 1; curBpm++) {
+			int curAmount = 0;
+			for (int i = 1; i < 1500; i++) {
+				if (bpmCandidates.get(curBpm-i) != null) {
+					curAmount += bpmCandidates.get(curBpm-i);
+				}
+				if (bpmCandidates.get(curBpm+i) != null) {
+					curAmount += bpmCandidates.get(curBpm+i);
+				}
+			}
+			if (bpmCandidates.get(curBpm) != null) {
+				curAmount += bpmCandidates.get(curBpm) * 2;
+			}
+			smoothBpmCandidates.put(curBpm, curAmount);
+		}
+		bpmCandidates = smoothBpmCandidates;
+
+		// output smoothened buckets as histogram
+		histData = new ArrayList<>();
+		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
+			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
+		}
+		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setAbsoluteDataPoints(histData);
+		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_histogram_smoothened.png");
 		histogramImgFile.assign(histogramImg);
 		histogramImgFile.save();
 
