@@ -46,8 +46,17 @@ public class MusicGenerator {
 
 	private int byteRate;
 	private int bytesPerSample;
+
+	// the data that we read from the original input wav file, and some additional
+	// data that we add directly to it
 	private int[] wavDataLeft;
 	private int[] wavDataRight;
+
+	// most of the data that we add during the runtime of the song, which will be
+	// intermixed with wavData after all else is done, but with an additional fade
+	// in and fade out effect
+	private long[] fadeDataLeft;
+	private long[] fadeDataRight;
 
 	private int graphImageHeight = 256;
 	private GraphImage wavGraphImg;
@@ -115,6 +124,12 @@ public class MusicGenerator {
 		this.bytesPerSample = wav.getBitsPerSample() / 8;
 		wavDataLeft = wav.getLeftData();
 		wavDataRight = wav.getRightData();
+		fadeDataLeft = new long[wavDataLeft.length];
+		fadeDataRight = new long[wavDataRight.length];
+		for (int i = 0; i < wavDataLeft.length; i++) {
+			fadeDataLeft[i] = 0;
+			fadeDataRight[i] = 0;
+		}
 		// scale(0.5);
 
 		// the visual output graph gets 600 px width per minute of song
@@ -621,11 +636,11 @@ public class MusicGenerator {
 				curBeatLen = bpmBasedBeats.get(k+1) - curBeat;
 			}
 
-			addWavMono(WAV_TOM1_DRUM, curBeat, 2);
-			addWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 2);
-			addWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 2);
-			addWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 2);
-			addWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 2);
+			addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2);
+			addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 2);
+			addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 2);
+			addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 2);
+			addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 2);
 
 			addTimes++;
 		}
@@ -752,6 +767,24 @@ public class MusicGenerator {
 		addWavMono(WAV_REV_DRUM, 0, 8);
 		addTimes++;
 
+		// fade in the faded wav
+		for (int i = 0; i < wavDataLeft.length / 6; i++) {
+			fadeDataLeft[i] = (long) ((fadeDataLeft[i] * i) / (wavDataLeft.length / 6.0));
+			fadeDataRight[i] = (long) ((fadeDataRight[i] * i) / (wavDataLeft.length / 6.0));
+		}
+
+		// fade out the faded wav
+		for (int i = wavDataLeft.length - (wavDataLeft.length / 12); i < wavDataLeft.length; i++) {
+			fadeDataLeft[i] = (long) ((fadeDataLeft[i] * (wavDataLeft.length - i)) / (wavDataLeft.length / 12.0));
+			fadeDataRight[i] = (long) ((fadeDataRight[i] * (wavDataLeft.length - i)) / (wavDataLeft.length / 12.0));
+		}
+
+		// add faded wav to overall wav
+		for (int i = 0; i < wavDataLeft.length; i++) {
+			wavDataLeft[i] += (int) fadeDataLeft[i];
+			wavDataRight[i] += (int) fadeDataRight[i];
+		}
+
 		System.out.println("We added " + addTimes + " drum sounds!");
 	}
 
@@ -774,8 +807,8 @@ public class MusicGenerator {
 		}
 
 		for (int i = 0; i < len; i++) {
-			wavDataLeft[i+pos] = mixin(wavDataLeft[i+pos], wavVolume * newLeft[i]);
-			wavDataRight[i+pos] = mixin(wavDataRight[i+pos], wavVolume * newRight[i]);
+			wavDataLeft[i+pos] += wavVolume * newLeft[i];
+			wavDataRight[i+pos] += wavVolume * newRight[i];
 		}
 	}
 
@@ -804,8 +837,33 @@ public class MusicGenerator {
 			if ((i+pos < 0) || (i < 0)) {
 				return;
 			}
-			wavDataLeft[i+pos] = mixin(wavDataLeft[i+pos], wavVolume * newMono[i]);
-			wavDataRight[i+pos] = mixin(wavDataRight[i+pos], wavVolume * newMono[i]);
+			wavDataLeft[i+pos] += wavVolume * newMono[i];
+			wavDataRight[i+pos] += wavVolume * newMono[i];
+		}
+	}
+
+	private void addFadedWavMono(WavFile wav, int samplePos, int wavVolume) {
+
+		wav.normalizeTo16Bits();
+
+		int[] newMono = wav.getMonoData();
+
+		int pos = samplePos;
+
+		int len = newMono.length;
+		if (len + pos > fadeDataLeft.length) {
+			len = fadeDataLeft.length - pos;
+		}
+
+		for (int i = 0; i < len; i++) {
+			if (i+pos >= fadeDataLeft.length) {
+				return;
+			}
+			if ((i+pos < 0) || (i < 0)) {
+				return;
+			}
+			fadeDataLeft[i+pos] += wavVolume * newMono[i];
+			fadeDataRight[i+pos] += wavVolume * newMono[i];
 		}
 	}
 
@@ -814,12 +872,6 @@ public class MusicGenerator {
 			wavDataLeft[i] = (int) (scaleFactor * wavDataLeft[i]);
 			wavDataRight[i] = (int) (scaleFactor * wavDataRight[i]);
 		}
-	}
-
-	private int mixin(int one, int two) {
-
-		// add the two values, handle the overflow later:
-		return one + two;
 	}
 
 	/*
@@ -883,7 +935,7 @@ public class MusicGenerator {
 		}
 
 		for (int i = 0; i < len; i++) {
-			songData[pos + i] = mixin(songData[pos + i], drumData[i]);
+			songData[pos + i] += drumData[i];
 		}
 	}
 
