@@ -625,6 +625,21 @@ public class MusicGenerator {
 			bpmBasedBeats.add(i);
 		}
 
+		// ALGORITHM 3.7
+
+		// Now, after all that is done... the beats are detected, the bpm decided, the beats generated
+		// and subsequently aligned against the ones previously detected... we have a problem: as we
+		// just aligned the beats, some distances between beats are (noticeably!) different - e.g.
+		// if we had beats at 1, 3, 5, 7, and then aligned it and it is now 1, 3, 4.8, 6.8, then the
+		// distances from 3 to 4.8 being suddenly different will sound weird... so let's smoothen it!
+		// that is, for each we get the distance to front and back, and align to the middle of that:
+		// 1, 2.9, 4.9, 6.8... and again! ... and then we are good! :D
+
+		int SMOOTH_AMOUNT = 2;
+		for (int i = 0; i < SMOOTH_AMOUNT; i++) {
+			bpmBasedBeats = smoothenBeats(bpmBasedBeats);
+		}
+
 		Collections.sort(bpmBasedBeats);
 
 		int instrumentRing = 0;
@@ -787,6 +802,24 @@ public class MusicGenerator {
 
 		System.out.println("We added " + addTimes + " drum sounds!");
 	}
+
+	private List<Integer> smoothenBeats(List<Integer> bpmBasedBeats) {
+
+		Collections.sort(bpmBasedBeats);
+
+		if (bpmBasedBeats.size() > 1) {
+			List<Integer> smoothBeats = new ArrayList<>();
+			smoothBeats.add(bpmBasedBeats.get(0));
+			for (int i = 1; i < bpmBasedBeats.size() - 1; i++) {
+				smoothBeats.add((bpmBasedBeats.get(i-1) + bpmBasedBeats.get(i+1)) / 2);
+			}
+			smoothBeats.add(bpmBasedBeats.get(bpmBasedBeats.size() - 1));
+			bpmBasedBeats = smoothBeats;
+		}
+
+		return bpmBasedBeats;
+	}
+
 
 	/**
 	 * Add a WAV file by mixing it in left and right at a given position (expressed as sample byte number!)
