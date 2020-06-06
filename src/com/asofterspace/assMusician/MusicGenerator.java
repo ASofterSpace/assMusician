@@ -3,6 +3,7 @@
  */
 package com.asofterspace.assMusician;
 
+import com.asofterspace.assMusician.video.elements.GeometryMonster;
 import com.asofterspace.assMusician.video.elements.Star;
 import com.asofterspace.assMusician.video.elements.StreetElement;
 import com.asofterspace.toolbox.images.ColorRGB;
@@ -227,6 +228,7 @@ public class MusicGenerator {
 			for (Integer beat : drumBeats) {
 				streetElements.add(new StreetElement(millisToFrame(channelPosToMillis(beat))));
 			}
+			GeometryMonster geometryMonster = new GeometryMonster(width, height);
 			for (int step = 0; step < totalFrameAmount; step++) {
 				if ((step > 0) && (step % 1000 == 0)) {
 					System.out.println("We are at frame " + step + "...");
@@ -254,6 +256,8 @@ public class MusicGenerator {
 				for (StreetElement el : streetElements) {
 					el.drawOnImage(img, width, height, step, blue);
 				}
+
+				geometryMonster.drawOnImage(img, width, height, step, blue);
 
 				DefaultImageFile curImgFile = new DefaultImageFile(
 					workDir.getAbsoluteDirname() + "/pic" + StrUtils.leftPad0(step, 5) + ".png"
