@@ -12,6 +12,7 @@ public class Star {
 	private int y;
 	private double brightness;
 	private double visibleUntil;
+	private int offset;
 
 	// 0 .. invisible
 	// 1 .. twinkle (grow brighter)
@@ -25,6 +26,7 @@ public class Star {
 	public Star(int x, int y) {
 		this.x = x;
 		this.y = y;
+		this.offset = 0;
 		this.mode = 0;
 		this.brightness = 0;
 		this.rand = new Random();
@@ -42,10 +44,10 @@ public class Star {
 		return brightness;
 	}
 
-	public void calcFrame(double step) {
+	public void calcFrame(int step) {
 		switch (mode) {
 			case 1:
-				brightness += step / 64;
+				brightness += (step - offset) / 64.0;
 				if (brightness > 1) {
 					visibleUntil = rand.nextInt(320);
 					mode = 3;
@@ -53,21 +55,21 @@ public class Star {
 				}
 				break;
 			case 2:
-				brightness -= step / 128;
+				brightness -= (step - offset) / 128.0;
 				if (brightness < 0) {
 					mode = 0;
 					brightness = 0;
 				}
 				break;
 			case 3:
-				visibleUntil -= step;
-				if (visibleUntil < 0) {
+				if (step - offset > visibleUntil) {
 					mode = 2;
 				}
 				break;
 			default:
 				if (rand.nextInt(512) < 1) {
 					mode = 1;
+					offset = step;
 				}
 				break;
 		}
