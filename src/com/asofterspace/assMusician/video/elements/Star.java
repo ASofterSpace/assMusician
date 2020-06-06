@@ -3,6 +3,9 @@
  */
 package com.asofterspace.assMusician.video.elements;
 
+import com.asofterspace.toolbox.images.ColorRGB;
+import com.asofterspace.toolbox.images.Image;
+
 import java.util.Random;
 
 
@@ -44,7 +47,7 @@ public class Star {
 		return brightness;
 	}
 
-	public void calcFrame(int step) {
+	public void drawOnImage(Image img, int step, ColorRGB foregroundColor, ColorRGB backgroundColor) {
 		switch (mode) {
 			case 1:
 				brightness += (step - offset) / 64.0;
@@ -72,6 +75,19 @@ public class Star {
 					offset = step;
 				}
 				break;
+		}
+
+		if (brightness > 0.001) {
+			ColorRGB starColor = ColorRGB.intermix(foregroundColor, backgroundColor, brightness);
+			img.setPixelSafely(x, y, starColor);
+			img.setPixelSafely(x-1, y, starColor);
+			img.setPixelSafely(x-2, y, starColor);
+			img.setPixelSafely(x+1, y, starColor);
+			img.setPixelSafely(x+2, y, starColor);
+			img.setPixelSafely(x, y-1, starColor);
+			img.setPixelSafely(x, y-2, starColor);
+			img.setPixelSafely(x, y+1, starColor);
+			img.setPixelSafely(x, y+2, starColor);
 		}
 	}
 

@@ -63,16 +63,16 @@ public class MusicGenerator {
 	private GraphImage wavGraphImg;
 
 	// width (px), height (px) and frame rate (fps) of the resulting video
-	/**/
+	/*
 	public final static int width = 1920;
 	public final static int height = 1080;
 	public final static int frameRate = 60;
 	/**/
-	/*
+	/**/
 	public final static int width = 640;
 	public final static int height = 360;
 	public final static int frameRate = 30;
-	*/
+	/**/
 
 
 	public MusicGenerator(Database database, Directory inputDir, Directory outputDir) {
@@ -242,19 +242,7 @@ public class MusicGenerator {
 
 				// stars
 				for (Star star : stars) {
-					star.calcFrame(step);
-					if (star.getBrightness() > 0.001) {
-						ColorRGB starColor = ColorRGB.intermix(blue, black, star.getBrightness());
-						img.setPixelSafely(star.getX(), star.getY(), starColor);
-						img.setPixelSafely(star.getX()-1, star.getY(), starColor);
-						img.setPixelSafely(star.getX()-2, star.getY(), starColor);
-						img.setPixelSafely(star.getX()+1, star.getY(), starColor);
-						img.setPixelSafely(star.getX()+2, star.getY(), starColor);
-						img.setPixelSafely(star.getX(), star.getY()-1, starColor);
-						img.setPixelSafely(star.getX(), star.getY()-2, starColor);
-						img.setPixelSafely(star.getX(), star.getY()+1, starColor);
-						img.setPixelSafely(star.getX(), star.getY()+2, starColor);
-					}
+					star.drawOnImage(img, step, blue, black);
 				}
 
 				// horizon
