@@ -270,6 +270,10 @@ public class MusicGenerator {
 				DefaultImageFile curImgFile = new DefaultImageFile(
 					workDir.getAbsoluteDirname() + "/pic" + StrUtils.leftPad0(step, 5) + ".png"
 				);
+				// fade in from black
+				if (step < totalFrameAmount / 100) {
+					img.intermix(black, (float) (step / (totalFrameAmount / 100.0)));
+				}
 				curImgFile.assign(img);
 				curImgFile.save();
 			}
