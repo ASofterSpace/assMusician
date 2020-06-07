@@ -232,12 +232,14 @@ public class MusicGenerator {
 				streetElements.add(new StreetElement(millisToFrame(channelPosToMillis(beat))));
 			}
 			GeometryMonster geometryMonster = new GeometryMonster(width, height);
+
+			ColorRGB black = new ColorRGB(0, 0, 0);
+			ColorRGB blue = ColorRGB.randomColorfulBright();
+
 			for (int step = 0; step < totalFrameAmount; step++) {
 				if ((step > 0) && (step % 1000 == 0)) {
 					System.out.println("We are at frame " + step + "...");
 				}
-				ColorRGB black = new ColorRGB(0, 0, 0);
-				ColorRGB blue = new ColorRGB(0, 128, 255);
 
 				Image img = new Image(width, height);
 				img.setLineWidth(3);
