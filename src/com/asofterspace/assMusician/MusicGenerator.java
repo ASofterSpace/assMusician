@@ -167,13 +167,6 @@ public class MusicGenerator {
 		// add drums
 		List<Beat> drumBeats = getDrumBeats();
 
-		System.out.println("");
-		System.out.println("Beats:");
-		for (Beat beat : drumBeats) {
-			System.out.println(beat);
-		}
-		System.out.println("");
-
 		addDrumsBasedOnBeats(drumBeats);
 
 		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition.png");
@@ -760,10 +753,44 @@ public class MusicGenerator {
 
 		int instrumentRing = 0;
 
-		for (int k = 0; k < beats.size(); k++) {
+		long averageLength = 0;
+		long averageLoudness = 0;
+		long averageJigglieness = 0;
+		long maxLength = 0;
+		long maxLoudness = 0;
+		long maxJigglieness = 0;
 
-			int curBeat = beats.get(k).getPosition();
-			int curBeatLen = beats.get(k).getLength();
+		for (Beat beat : beats) {
+			averageLength += beat.getLength();
+			averageLoudness += beat.getLoudness();
+			averageJigglieness += beat.getJigglieness();
+			if (beat.getLength() > maxLength) {
+				maxLength = beat.getLength();
+			}
+			if (beat.getLoudness() > maxLoudness) {
+				maxLoudness = beat.getLoudness();
+			}
+			if (beat.getJigglieness() > maxJigglieness) {
+				maxJigglieness = beat.getJigglieness();
+			}
+		}
+
+		averageLength = averageLength / beats.size();
+		averageLoudness = averageLoudness / beats.size();
+		averageJigglieness = averageJigglieness / beats.size();
+
+		System.out.println("");
+		System.out.println("averageLength: " + averageLength);
+		System.out.println("averageLoudness: " + averageLoudness);
+		System.out.println("averageJigglieness: " + averageJigglieness);
+		System.out.println("maxLength: " + maxLength);
+		System.out.println("maxLoudness: " + maxLoudness);
+		System.out.println("maxJigglieness: " + maxJigglieness);
+
+		for (Beat beat : beats) {
+
+			int curBeat = beat.getPosition();
+			int curBeatLen = beat.getLength();
 
 			switch (useDrumSounds) {
 				case 1:
