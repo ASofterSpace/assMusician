@@ -8,6 +8,7 @@ import com.asofterspace.assMusician.video.elements.Star;
 import com.asofterspace.assMusician.video.elements.StreetElement;
 import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.DefaultImageFile;
+import com.asofterspace.toolbox.images.GraphImage;
 import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
@@ -25,6 +26,8 @@ import java.util.Random;
 
 public class VideoGenerator {
 
+	private final static boolean skipImageDrawing = false;
+
 	private MusicGenerator musicGen;
 
 	private Directory workDir;
@@ -37,7 +40,8 @@ public class VideoGenerator {
 		this.workDir = workDir;
 	}
 
-	public void generateVideoBasedOnBeats(List<Beat> beats, int totalFrameAmount, int width, int height) {
+	public void generateVideoBasedOnBeats(List<Beat> beats, int totalFrameAmount, int width, int height,
+		GraphImage wavGraphImg) {
 
 		System.out.println("");
 		System.out.println("Generating " + totalFrameAmount + " frames...");
@@ -63,12 +67,14 @@ public class VideoGenerator {
 			beatMap.put(musicGen.beatToFrame(beat), beat);
 		}
 
+		ColorRGB trueBlack = new ColorRGB(0, 0, 0);
 		ColorRGB origBlack = new ColorRGB(0, 0, 0);
 		ColorRGB origBlue = ColorRGB.randomColorfulBright();
 		// ColorRGB blue = new ColorRGB(255, 0, 128);
 
-		boolean lastBeatQuiteQuiet = true;
 		int startColorInversion = -10 * MusicGenerator.frameRate;
+
+		List<Beat> prevBeats = new ArrayList<>();
 
 		for (int step = 0; step < totalFrameAmount; step++) {
 			if ((step > 0) && (step % 1000 == 0)) {
@@ -78,28 +84,61 @@ public class VideoGenerator {
 			// is there a beat right at this location?
 			Beat curBeat = beatMap.get(step);
 			if (curBeat != null) {
-				// is this beat louder than 0.9*max, and the previous one was not?
-				if (curBeat.getLoudness() > stats.getMaxLoudness() * 0.9) {
-					if (lastBeatQuiteQuiet) {
-						// then start flickering for a while!
-						startColorInversion = step;
+				int beatLookbackForFlicker = 20;
+				if (prevBeats.size() > beatLookbackForFlicker) {
+					long lastBeatsAverageLoudness = 0;
+					for (int i = prevBeats.size() - beatLookbackForFlicker; i < prevBeats.size(); i++) {
+						lastBeatsAverageLoudness += prevBeats.get(i).getLoudness();
 					}
-					lastBeatQuiteQuiet = false;
-				} else {
-					lastBeatQuiteQuiet = true;
+					lastBeatsAverageLoudness = lastBeatsAverageLoudness / beatLookbackForFlicker;
+
+					// is this beat more than twice as loud as the previous ones were on average?
+					if (curBeat.getLoudness() > 2 * lastBeatsAverageLoudness) {
+						// then check the upcoming beats - if the loudness stays this way for at least
+						// a few more, then actully do this...
+						List<Beat> nextBeats = new ArrayList<>();
+						for (int i = step + 1; i < totalFrameAmount; i++) {
+							Beat nextBeat = beatMap.get(i);
+							if (nextBeat != null) {
+								nextBeats.add(nextBeat);
+								if (nextBeats.size() == beatLookbackForFlicker) {
+									break;
+								}
+							}
+						}
+						if (nextBeats.size() == beatLookbackForFlicker) {
+							long nextBeatsAverageLoudness = 0;
+							for (int i = 0; i < nextBeats.size(); i++) {
+								nextBeatsAverageLoudness += nextBeats.get(i).getLoudness();
+							}
+							nextBeatsAverageLoudness = nextBeatsAverageLoudness / beatLookbackForFlicker;
+							if (nextBeatsAverageLoudness > 2 * lastBeatsAverageLoudness) {
+								// then start flickering for a while!
+								startColorInversion = step;
+								wavGraphImg.drawVerticalLineAt(curBeat.getPosition(), new ColorRGB(128, 255, 0));
+							}
+						}
+					}
 				}
+
+				prevBeats.add(curBeat);
 			}
 
 			ColorRGB black = origBlack;
 			ColorRGB blue = origBlue;
 			int ssCI = step - startColorInversion;
-			if ((ssCI < MusicGenerator.frameRate / 4) ||
-				((ssCI > (2 * MusicGenerator.frameRate) / 4) && (ssCI < (3 * MusicGenerator.frameRate) / 4)) ||
-				((ssCI > (4 * MusicGenerator.frameRate) / 4) && (ssCI < (5 * MusicGenerator.frameRate) / 4)) ||
-				((ssCI > (6 * MusicGenerator.frameRate) / 4) && (ssCI < (7 * MusicGenerator.frameRate) / 4))) {
+			// when flickering, have everything being bright be a bit shorter than everything being dark
+			if ((ssCI < MusicGenerator.frameRate / 10) ||
+				((ssCI > (2.25 * MusicGenerator.frameRate) / 10) && (ssCI < (3 * MusicGenerator.frameRate) / 10)) ||
+				((ssCI > (4.25 * MusicGenerator.frameRate) / 10) && (ssCI < (5 * MusicGenerator.frameRate) / 10)) ||
+				((ssCI > (6.25 * MusicGenerator.frameRate) / 10) && (ssCI < (7 * MusicGenerator.frameRate) / 10))) {
 				// flicker!
 				blue = origBlack;
 				black = origBlue;
+			}
+
+			if (skipImageDrawing) {
+				continue;
 			}
 
 			Image img = new Image(width, height);
@@ -130,11 +169,16 @@ public class VideoGenerator {
 			);
 			// fade in from black
 			if (step < totalFrameAmount / 100) {
-				img.intermix(black, (float) (step / (totalFrameAmount / 100.0)));
+				img.intermix(trueBlack, (float) (step / (totalFrameAmount / 100.0)));
 			}
 			curImgFile.assign(img);
 			curImgFile.save();
 		}
+
+		DefaultImageFile doneWaveFile = new DefaultImageFile(workDir, "waveform_upon_video_done.png");
+		doneWaveFile.assign(wavGraphImg);
+		doneWaveFile.save();
+
 		System.out.println("All " + totalFrameAmount + " frames generated!");
 	}
 }

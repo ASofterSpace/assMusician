@@ -62,17 +62,17 @@ public class MusicGenerator {
 	private GraphImage wavGraphImg;
 
 	// width (px), height (px) and frame rate (fps) of the resulting video
-	/*
+	/**/
 	public final static int width = 1920;
 	public final static int height = 1080;
 	public final static int frameRate = 60;
 	/**/
-	/**/
+	/*
 	public final static int width = 640;
 	public final static int height = 360;
 	public final static int frameRate = 30;
 	/**/
-	private final static boolean skipVideo = true;
+	private final static boolean skipVideo = false;
 	private final static boolean reuseExistingVideo = false;
 	private final static int useDrumSounds = 1;
 
@@ -250,7 +250,18 @@ public class MusicGenerator {
 
 			VideoGenerator vidGenny = new VideoGenerator(this, workDir);
 
-			vidGenny.generateVideoBasedOnBeats(drumBeats, totalFrameAmount, width, height);
+			GraphImage wavGraphImg = new GraphImage(channelPosToMillis(wavDataLeft.length) / 100, graphImageHeight);
+
+			wavData = new ArrayList<>();
+			position = 0;
+			for (Integer wavInt : wavDataLeft) {
+				wavData.add(new GraphDataPoint(position, wavInt));
+				position++;
+			}
+			wavGraphImg.setDataColor(new ColorRGB(0, 0, 255));
+			wavGraphImg.setAbsoluteDataPoints(wavData);
+
+			vidGenny.generateVideoBasedOnBeats(drumBeats, totalFrameAmount, width, height, wavGraphImg);
 		}
 
 		// splice the generated audio together with the generated video
