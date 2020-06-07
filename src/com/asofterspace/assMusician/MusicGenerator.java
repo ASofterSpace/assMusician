@@ -76,7 +76,7 @@ public class MusicGenerator {
 	public final static int height = 360;
 	public final static int frameRate = 30;
 	/**/
-	private final static boolean skipVideo = false;
+	private final static boolean skipVideo = true;
 	private final static boolean reuseExistingVideo = false;
 	private final static int useDrumSounds = 1;
 
@@ -176,6 +176,7 @@ public class MusicGenerator {
 		// add rev sound at the beginning at high volume
 		addWavMono(WAV_REV_DRUM, 0, 8);
 
+		/* NO NEED TO FADE ANYMORE, AS WE ADJUST DRUM VOLUME BASED ON BEAT VOLUME, WHICH IS EVEN BETTER
 		// fade in the faded wav
 		for (int i = 0; i < wavDataLeft.length / 6; i++) {
 			fadeDataLeft[i] = (long) ((fadeDataLeft[i] * i) / (wavDataLeft.length / 6.0));
@@ -187,6 +188,7 @@ public class MusicGenerator {
 			fadeDataLeft[i] = (long) ((fadeDataLeft[i] * (wavDataLeft.length - i)) / (wavDataLeft.length / 12.0));
 			fadeDataRight[i] = (long) ((fadeDataRight[i] * (wavDataLeft.length - i)) / (wavDataLeft.length / 12.0));
 		}
+		*/
 
 		// add faded wav to overall wav
 		for (int i = 0; i < wavDataLeft.length; i++) {
@@ -264,6 +266,9 @@ public class MusicGenerator {
 			}
 			GeometryMonster geometryMonster = new GeometryMonster(width, height);
 
+			// TODO :: occasionally (based on the song itself, its speed etc.?) change which color is
+			// black and which one is blue for maybe frameCounter / 2 or frameCounter / 4 frames, back
+			// and forth for a while...
 			ColorRGB black = new ColorRGB(0, 0, 0);
 			ColorRGB blue = ColorRGB.randomColorfulBright();
 			// ColorRGB blue = new ColorRGB(255, 0, 128);
@@ -710,9 +715,10 @@ public class MusicGenerator {
 			} else {
 				Beat beat = new Beat(i);
 				if (prevBeat != null) {
-					prevBeat.setLoudness(curBeatLoudness);
-					prevBeat.setJigglieness(curBeatJigglieness);
-					prevBeat.setLength(i - prevBeat.getPosition());
+					int len = i - prevBeat.getPosition();
+					prevBeat.setLoudness(curBeatLoudness / len);
+					prevBeat.setJigglieness(curBeatJigglieness / len);
+					prevBeat.setLength(len);
 				}
 				beats.add(beat);
 				prevBeat = beat;
@@ -722,9 +728,10 @@ public class MusicGenerator {
 			}
 		}
 		if (prevBeat != null) {
-			prevBeat.setLoudness(curBeatLoudness);
-			prevBeat.setJigglieness(curBeatJigglieness);
-			prevBeat.setLength(wavDataLeft.length - prevBeat.getPosition());
+			int len = wavDataLeft.length - prevBeat.getPosition();
+			prevBeat.setLoudness(curBeatLoudness / len);
+			prevBeat.setJigglieness(curBeatJigglieness / len);
+			prevBeat.setLength(len);
 		}
 
 		System.out.println("We detected " + beats.size() + " beats!");
@@ -791,43 +798,44 @@ public class MusicGenerator {
 
 			int curBeat = beat.getPosition();
 			int curBeatLen = beat.getLength();
+			double baseLoudness = (2.5 * beat.getLoudness()) / maxLoudness;
 
 			switch (useDrumSounds) {
 				case 1:
-					addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2);
-					addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 2);
-					addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 2);
-					addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 2);
-					addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 2);
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
 					break;
 				case 2:
 					switch (instrumentRing) {
 						case 0:
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2);
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 2);
-							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 2);
-							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 2);
-							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 2);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
 							break;
 						case 1:
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2);
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 2);
-							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 2);
-							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 2);
-							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 2);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
 							break;
 						case 2:
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 4);
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), 4);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), 2*baseLoudness);
 							break;
 						case 3:
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 8);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 4*baseLoudness);
 							break;
 						case 4:
 							break;
 						case 5:
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 4);
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), 4);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), 2*baseLoudness);
 							instrumentRing = -1;
 							break;
 					}
@@ -892,7 +900,7 @@ public class MusicGenerator {
 		}
 	}
 
-	private void addFadedWavMono(WavFile wav, int samplePos, int wavVolume) {
+	private void addFadedWavMono(WavFile wav, int samplePos, double wavVolume) {
 
 		wav.normalizeTo16Bits();
 
@@ -912,15 +920,8 @@ public class MusicGenerator {
 			if ((i+pos < 0) || (i < 0)) {
 				return;
 			}
-			fadeDataLeft[i+pos] += wavVolume * newMono[i];
-			fadeDataRight[i+pos] += wavVolume * newMono[i];
-		}
-	}
-
-	private void scale(double scaleFactor) {
-		for (int i = 0; i < wavDataLeft.length; i++) {
-			wavDataLeft[i] = (int) (scaleFactor * wavDataLeft[i]);
-			wavDataRight[i] = (int) (scaleFactor * wavDataRight[i]);
+			fadeDataLeft[i+pos] += (int) (wavVolume * newMono[i]);
+			fadeDataRight[i+pos] += (int) (wavVolume * newMono[i]);
 		}
 	}
 
