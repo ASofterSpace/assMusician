@@ -696,7 +696,7 @@ public class MusicGenerator {
 			if (i < wavDataLeft.length - 1) {
 				nextAbsVal = Math.abs(wavDataLeft[i+1]) + Math.abs(wavDataRight[i+1]);
 			}
-			if (i < bpmBasedBeats.get(curBeat)) {
+			if ((curBeat < bpmBasedBeats.size()) && (i < bpmBasedBeats.get(curBeat))) {
 				curBeatLoudness += absVal;
 				if ((prevAbsVal < absVal) && (nextAbsVal < absVal)) {
 					curBeatJigglieness++;
