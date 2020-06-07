@@ -12,6 +12,7 @@ import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
 import com.asofterspace.toolbox.music.Beat;
+import com.asofterspace.toolbox.music.BeatStats;
 import com.asofterspace.toolbox.music.SoundData;
 import com.asofterspace.toolbox.music.WavFile;
 import com.asofterspace.toolbox.utils.CallbackWithString;
@@ -61,12 +62,12 @@ public class MusicGenerator {
 	private GraphImage wavGraphImg;
 
 	// width (px), height (px) and frame rate (fps) of the resulting video
-	/**/
+	/*
 	public final static int width = 1920;
 	public final static int height = 1080;
 	public final static int frameRate = 60;
 	/**/
-	/*
+	/**/
 	public final static int width = 640;
 	public final static int height = 360;
 	public final static int frameRate = 30;
@@ -698,45 +699,21 @@ public class MusicGenerator {
 
 		int instrumentRing = 0;
 
-		long averageLength = 0;
-		long averageLoudness = 0;
-		long averageJigglieness = 0;
-		long maxLength = 0;
-		long maxLoudness = 0;
-		long maxJigglieness = 0;
-
-		for (Beat beat : beats) {
-			averageLength += beat.getLength();
-			averageLoudness += beat.getLoudness();
-			averageJigglieness += beat.getJigglieness();
-			if (beat.getLength() > maxLength) {
-				maxLength = beat.getLength();
-			}
-			if (beat.getLoudness() > maxLoudness) {
-				maxLoudness = beat.getLoudness();
-			}
-			if (beat.getJigglieness() > maxJigglieness) {
-				maxJigglieness = beat.getJigglieness();
-			}
-		}
-
-		averageLength = averageLength / beats.size();
-		averageLoudness = averageLoudness / beats.size();
-		averageJigglieness = averageJigglieness / beats.size();
+		BeatStats stats = new BeatStats(beats);
 
 		System.out.println("");
-		System.out.println("averageLength: " + averageLength);
-		System.out.println("averageLoudness: " + averageLoudness);
-		System.out.println("averageJigglieness: " + averageJigglieness);
-		System.out.println("maxLength: " + maxLength);
-		System.out.println("maxLoudness: " + maxLoudness);
-		System.out.println("maxJigglieness: " + maxJigglieness);
+		System.out.println("averageLength: " + stats.getAverageLength());
+		System.out.println("averageLoudness: " + stats.getAverageLoudness());
+		System.out.println("averageJigglieness: " + stats.getAverageJigglieness());
+		System.out.println("maxLength: " + stats.getMaxLength());
+		System.out.println("maxLoudness: " + stats.getMaxLoudness());
+		System.out.println("maxJigglieness: " + stats.getMaxJigglieness());
 
 		for (Beat beat : beats) {
 
 			int curBeat = beat.getPosition();
 			int curBeatLen = beat.getLength();
-			double baseLoudness = (2.5 * beat.getLoudness()) / maxLoudness;
+			double baseLoudness = (2.5 * beat.getLoudness()) / stats.getMaxLoudness();
 
 			switch (useDrumSounds) {
 				case 1:

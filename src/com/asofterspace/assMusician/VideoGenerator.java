@@ -12,11 +12,14 @@ import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.music.Beat;
+import com.asofterspace.toolbox.music.BeatStats;
 import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.Utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 
@@ -38,6 +41,9 @@ public class VideoGenerator {
 
 		System.out.println("");
 		System.out.println("Generating " + totalFrameAmount + " frames...");
+
+		BeatStats stats = new BeatStats(beats);
+
 		Random rand = new Random();
 		// nice round number
 		int STAR_AMOUNT = 64;
@@ -51,16 +57,49 @@ public class VideoGenerator {
 		}
 		GeometryMonster geometryMonster = new GeometryMonster(width, height);
 
-		// TODO :: occasionally (based on the song itself, its speed etc.?) change which color is
-		// black and which one is blue for maybe frameCounter / 2 or frameCounter / 4 frames, back
-		// and forth for a while...
-		ColorRGB black = new ColorRGB(0, 0, 0);
-		ColorRGB blue = ColorRGB.randomColorfulBright();
+		// a map from frame number to beat detected there
+		Map<Integer, Beat> beatMap = new HashMap<>();
+		for (Beat beat : beats) {
+			beatMap.put(musicGen.beatToFrame(beat), beat);
+		}
+
+		ColorRGB origBlack = new ColorRGB(0, 0, 0);
+		ColorRGB origBlue = ColorRGB.randomColorfulBright();
 		// ColorRGB blue = new ColorRGB(255, 0, 128);
+
+		boolean lastBeatQuiteQuiet = true;
+		int startColorInversion = -10 * MusicGenerator.frameRate;
 
 		for (int step = 0; step < totalFrameAmount; step++) {
 			if ((step > 0) && (step % 1000 == 0)) {
 				System.out.println("We are at frame " + step + "...");
+			}
+
+			// is there a beat right at this location?
+			Beat curBeat = beatMap.get(step);
+			if (curBeat != null) {
+				// is this beat louder than 0.9*max, and the previous one was not?
+				if (curBeat.getLoudness() > stats.getMaxLoudness() * 0.9) {
+					if (lastBeatQuiteQuiet) {
+						// then start flickering for a while!
+						startColorInversion = step;
+					}
+					lastBeatQuiteQuiet = false;
+				} else {
+					lastBeatQuiteQuiet = true;
+				}
+			}
+
+			ColorRGB black = origBlack;
+			ColorRGB blue = origBlue;
+			int ssCI = step - startColorInversion;
+			if ((ssCI < MusicGenerator.frameRate / 4) ||
+				((ssCI > (2 * MusicGenerator.frameRate) / 4) && (ssCI < (3 * MusicGenerator.frameRate) / 4)) ||
+				((ssCI > (4 * MusicGenerator.frameRate) / 4) && (ssCI < (5 * MusicGenerator.frameRate) / 4)) ||
+				((ssCI > (6 * MusicGenerator.frameRate) / 4) && (ssCI < (7 * MusicGenerator.frameRate) / 4))) {
+				// flicker!
+				blue = origBlack;
+				black = origBlue;
 			}
 
 			Image img = new Image(width, height);
