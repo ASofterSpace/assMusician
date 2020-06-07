@@ -14,7 +14,8 @@ import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
-import com.asofterspace.toolbox.io.WavFile;
+import com.asofterspace.toolbox.music.SoundData;
+import com.asofterspace.toolbox.music.WavFile;
 import com.asofterspace.toolbox.utils.CallbackWithString;
 import com.asofterspace.toolbox.utils.DateUtils;
 import com.asofterspace.toolbox.utils.StrUtils;
@@ -130,11 +131,13 @@ public class MusicGenerator {
 		WavFile wav = new WavFile(workSong);
 		this.byteRate = wav.getByteRate();
 		this.bytesPerSample = wav.getBitsPerSample() / 8;
-		wavDataLeft = wav.getLeftData();
-		wavDataRight = wav.getRightData();
+		SoundData wavSoundData = wav.getSoundData();
 
 		// cut off silence from the front and back (basically trim() for the wav file... ^^)
-		trimWav();
+		wavSoundData.trim();
+
+		wavDataLeft = wavSoundData.getLeftData();
+		wavDataRight = wavSoundData.getRightData();
 
 		fadeDataLeft = new long[wavDataLeft.length];
 		fadeDataRight = new long[wavDataRight.length];
@@ -164,7 +167,8 @@ public class MusicGenerator {
 		List<Integer> drumBeats = getDrumBeats();
 
 		// handle the overflow by normalizing the entire song
-		normalize();
+		SoundData soundData = new SoundData(wavDataLeft, wavDataRight);
+		soundData.normalize();
 
 		// save the new song as audio
 		WavFile newSongFile = new WavFile(workDir, "our_song.wav");
@@ -172,8 +176,7 @@ public class MusicGenerator {
 		newSongFile.setSampleRate(wav.getSampleRate());
 		newSongFile.setByteRate(byteRate);
 		newSongFile.setBitsPerSample(bytesPerSample * 8);
-		newSongFile.setLeftData(wavDataLeft);
-		newSongFile.setRightData(wavDataRight);
+		newSongFile.setSoundData(soundData);
 		newSongFile.save();
 
 		// save the new song as waveform image for diagnostic purposes
@@ -972,29 +975,6 @@ public class MusicGenerator {
 	}
 	*/
 
-	private void normalize() {
-
-		int max = 0;
-		for (int i = 0; i < wavDataLeft.length; i++) {
-			if (wavDataLeft[i] > max) {
-				max = wavDataLeft[i];
-			}
-			if (-wavDataLeft[i] > max) {
-				max = -wavDataLeft[i];
-			}
-			if (wavDataRight[i] > max) {
-				max = wavDataRight[i];
-			}
-			if (-wavDataRight[i] > max) {
-				max = -wavDataRight[i];
-			}
-		}
-		for (int i = 0; i < wavDataLeft.length; i++) {
-			wavDataLeft[i] = (int) ((wavDataLeft[i] * (long) 8*16*16*16) / max);
-			wavDataRight[i] = (int) ((wavDataRight[i] * (long) 8*16*16*16) / max);
-		}
-	}
-
 	private void addDrum(int[] songData, int posInMillis) {
 
 		int[] drumData = generateDrum();
@@ -1061,70 +1041,4 @@ public class MusicGenerator {
 		return data;
 	}
 
-	private void trimWav() {
-		int max = 0;
-		int min = 0;
-		for (int i = 0; i < wavDataLeft.length; i++) {
-			if (wavDataLeft[i] > max) {
-				max = wavDataLeft[i];
-			}
-			if (wavDataLeft[i] < min) {
-				min = wavDataLeft[i];
-			}
-			if (wavDataRight[i] > max) {
-				max = wavDataRight[i];
-			}
-			if (wavDataRight[i] < min) {
-				min = wavDataRight[i];
-			}
-		}
-		if (- min > max) {
-			max = - min;
-		}
-		max = max / 100;
-		int noiseStart = 0;
-		int noiseLength = 0;
-		for (int i = 0; i < wavDataLeft.length; i++) {
-			int val = wavDataLeft[i];
-			if (val < 0) {
-				val = - val;
-			}
-			if (val > max) {
-				noiseStart = i;
-				break;
-			}
-			val = wavDataRight[i];
-			if (val < 0) {
-				val = - val;
-			}
-			if (val > max) {
-				noiseStart = i;
-				break;
-			}
-		}
-		for (int i = noiseStart; i < wavDataLeft.length; i++) {
-			int val = wavDataLeft[i];
-			if (val < 0) {
-				val = - val;
-			}
-			if (val > max) {
-				noiseLength = i - noiseStart;
-			}
-			val = wavDataRight[i];
-			if (val < 0) {
-				val = - val;
-			}
-			if (val > max) {
-				noiseLength = i - noiseStart;
-			}
-		}
-		int[] newLeft = new int[noiseLength];
-		int[] newRight = new int[noiseLength];
-		for (int i = noiseStart; i < noiseLength; i++) {
-			newLeft[i - noiseStart] = wavDataLeft[i];
-			newRight[i - noiseStart] = wavDataRight[i];
-		}
-		wavDataLeft = newLeft;
-		wavDataRight = newRight;
-	}
 }
