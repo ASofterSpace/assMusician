@@ -14,6 +14,7 @@ import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
+import com.asofterspace.toolbox.music.Beat;
 import com.asofterspace.toolbox.music.SoundData;
 import com.asofterspace.toolbox.music.WavFile;
 import com.asofterspace.toolbox.utils.CallbackWithString;
@@ -164,7 +165,7 @@ public class MusicGenerator {
 		basicWavFile.save();
 
 		// add drums
-		List<Integer> drumBeats = getDrumBeats();
+		List<Beat> drumBeats = getDrumBeats();
 
 		addDrumsBasedOnBeats(drumBeats);
 
@@ -258,8 +259,8 @@ public class MusicGenerator {
 				stars.add(new Star(rand.nextInt(width), rand.nextInt(height/2)));
 			}
 			List<StreetElement> streetElements = new ArrayList<>();
-			for (Integer beat : drumBeats) {
-				streetElements.add(new StreetElement(millisToFrame(channelPosToMillis(beat))));
+			for (Beat beat : drumBeats) {
+				streetElements.add(new StreetElement(millisToFrame(channelPosToMillis(beat.getPosition()))));
 			}
 			GeometryMonster geometryMonster = new GeometryMonster(width, height);
 
@@ -351,7 +352,7 @@ public class MusicGenerator {
 	// * also make fun noises with water in the bathtub, record them, and put them instead of
 	//   drums just for fun / April 1st edition? :D
 	// returns a list of positions at which beats were, in the very end, added in the song
-	private List<Integer> getDrumBeats() {
+	private List<Beat> getDrumBeats() {
 
 		/*
 		// ALGORITHM 1
@@ -677,9 +678,55 @@ public class MusicGenerator {
 
 		Collections.sort(bpmBasedBeats);
 
-		System.out.println("We detected " + bpmBasedBeats.size() + " beats!");
+		List<Beat> beats = new ArrayList<>();
 
-		return bpmBasedBeats;
+		int curBeat = 0;
+		int curBeatLength = 0;
+		long curBeatLoudness = 0;
+		long curBeatJigglieness = 0;
+		Beat prevBeat = null;
+
+		for (int i = 0; i < wavDataLeft.length; i++) {
+			int absVal = Math.abs(wavDataLeft[i]) + Math.abs(wavDataRight[i]);
+			int prevAbsVal = 0;
+			if (i > 0) {
+				prevAbsVal = Math.abs(wavDataLeft[i-1]) + Math.abs(wavDataRight[i-1]);
+			}
+			int nextAbsVal = 0;
+			if (i < wavDataLeft.length - 1) {
+				nextAbsVal = Math.abs(wavDataLeft[i+1]) + Math.abs(wavDataRight[i+1]);
+			}
+			if (i < bpmBasedBeats.get(curBeat)) {
+				curBeatLoudness += absVal;
+				if ((prevAbsVal < absVal) && (nextAbsVal < absVal)) {
+					curBeatJigglieness++;
+				}
+				if ((prevAbsVal > absVal) && (nextAbsVal > absVal)) {
+					curBeatJigglieness++;
+				}
+			} else {
+				Beat beat = new Beat(i);
+				if (prevBeat != null) {
+					prevBeat.setLoudness(curBeatLoudness);
+					prevBeat.setJigglieness(curBeatJigglieness);
+					prevBeat.setLength(i - prevBeat.getPosition());
+				}
+				beats.add(beat);
+				prevBeat = beat;
+				curBeatLoudness = 0;
+				curBeatJigglieness = 0;
+				curBeat++;
+			}
+		}
+		if (prevBeat != null) {
+			prevBeat.setLoudness(curBeatLoudness);
+			prevBeat.setJigglieness(curBeatJigglieness);
+			prevBeat.setLength(wavDataLeft.length - prevBeat.getPosition());
+		}
+
+		System.out.println("We detected " + beats.size() + " beats!");
+
+		return beats;
 	}
 
 	private List<Integer> smoothenBeats(List<Integer> bpmBasedBeats) {
@@ -699,18 +746,14 @@ public class MusicGenerator {
 		return bpmBasedBeats;
 	}
 
-	private void addDrumsBasedOnBeats(List<Integer> beats) {
-
-		Collections.sort(beats);
+	private void addDrumsBasedOnBeats(List<Beat> beats) {
 
 		int instrumentRing = 0;
-		int curBeatLen = 0;
+
 		for (int k = 0; k < beats.size(); k++) {
 
-			int curBeat = beats.get(k);
-			if (k + 1 < beats.size()) {
-				curBeatLen = beats.get(k+1) - curBeat;
-			}
+			int curBeat = beats.get(k).getPosition();
+			int curBeatLen = beats.get(k).getLength();
 
 			switch (useDrumSounds) {
 				case 1:
