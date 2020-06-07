@@ -37,7 +37,7 @@ public class GeometryMonster {
 
 	public void drawOnImage(Image img, int width, int height, int step, ColorRGB color) {
 
-		double doubleStep = (step * 1.0) / MusicGenerator.frameRate;
+		double stepDifference = 1.0 / MusicGenerator.frameRate;
 
 		for (GeometryPoint point : points) {
 			if (point.getTarget() == null) {
@@ -45,7 +45,7 @@ public class GeometryMonster {
 					new Point<Double, Double>((double) rand.nextInt(width), (double) rand.nextInt(height))
 				);
 			}
-			point.moveToTarget((width * doubleStep) / 250);
+			point.moveToTarget((width * stepDifference) / 25);
 		}
 
 		for (Line<Double> line : lines) {
