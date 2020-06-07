@@ -167,6 +167,13 @@ public class MusicGenerator {
 		// add drums
 		List<Beat> drumBeats = getDrumBeats();
 
+		System.out.println("");
+		System.out.println("Beats:");
+		for (Beat beat : drumBeats) {
+			System.out.println(beat);
+		}
+		System.out.println("");
+
 		addDrumsBasedOnBeats(drumBeats);
 
 		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition.png");
@@ -686,6 +693,9 @@ public class MusicGenerator {
 		long curBeatJigglieness = 0;
 		Beat prevBeat = null;
 
+		// add one far beyond the end so that we do not have to check for there being one all the time
+		bpmBasedBeats.add(1 + (wavDataLeft.length * 2));
+
 		for (int i = 0; i < wavDataLeft.length; i++) {
 			int absVal = Math.abs(wavDataLeft[i]) + Math.abs(wavDataRight[i]);
 			int prevAbsVal = 0;
@@ -696,7 +706,7 @@ public class MusicGenerator {
 			if (i < wavDataLeft.length - 1) {
 				nextAbsVal = Math.abs(wavDataLeft[i+1]) + Math.abs(wavDataRight[i+1]);
 			}
-			if ((curBeat < bpmBasedBeats.size()) && (i < bpmBasedBeats.get(curBeat))) {
+			if (i < bpmBasedBeats.get(curBeat)) {
 				curBeatLoudness += absVal;
 				if ((prevAbsVal < absVal) && (nextAbsVal < absVal)) {
 					curBeatJigglieness++;
