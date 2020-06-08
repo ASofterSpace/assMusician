@@ -142,8 +142,13 @@ public class VideoGenerator {
 				((ssCI > (4.25 * MusicGenerator.frameRate) / 10) && (ssCI < (5 * MusicGenerator.frameRate) / 10)) ||
 				((ssCI > (6.25 * MusicGenerator.frameRate) / 10) && (ssCI < (7 * MusicGenerator.frameRate) / 10))) {
 				// flicker!
+				/*
+				// instead of flickering the entire background as well...
 				blue = origBlack;
 				black = origBlue;
+				*/
+				// just flicker the foreground to white and back!
+				blue = new ColorRGB(255, 255, 255);
 			}
 
 			if (skipImageDrawing) {
