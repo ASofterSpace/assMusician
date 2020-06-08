@@ -76,6 +76,8 @@ public class VideoGenerator {
 
 		List<Beat> prevBeats = new ArrayList<>();
 
+		double currentLoudnessScaled = 0;
+
 		for (int step = 0; step < totalFrameAmount; step++) {
 			if ((step > 0) && (step % 1000 == 0)) {
 				System.out.println("We are at frame " + step + "...");
@@ -83,7 +85,11 @@ public class VideoGenerator {
 
 			// is there a beat right at this location?
 			Beat curBeat = beatMap.get(step);
+
 			if (curBeat != null) {
+
+				currentLoudnessScaled = (curBeat.getLoudness() * 1.0) / stats.getMaxLoudness();
+
 				int beatLookbackForFlicker = 20;
 				if (prevBeats.size() > beatLookbackForFlicker) {
 					long lastBeatsAverageLoudness = 0;
@@ -162,7 +168,7 @@ public class VideoGenerator {
 				el.drawOnImage(img, width, height, step, blue);
 			}
 
-			geometryMonster.drawOnImage(img, width, height, step, blue);
+			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue);
 
 			DefaultImageFile curImgFile = new DefaultImageFile(
 				workDir.getAbsoluteDirname() + "/pic" + StrUtils.leftPad0(step, 5) + ".png"

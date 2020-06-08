@@ -36,7 +36,16 @@ public class GeometryMonster {
 		rand = new Random();
 	}
 
-	public void drawOnImage(Image img, int width, int height, int step, ColorRGB color) {
+	// TODO :: maybe give different nodes (or edges?) different colors - maybe just slightly different,
+	// so that it changes over time...
+	// TODO :: maybe have different predefined shapes (such as a pirate flag, or a bunny head, or something),
+	// and once we have that exact amount of edges we put that shape as target for all nodes and do not add
+	// any more nodes until the target is reached, and then free-wobble again...
+	// TODO :: maybe have something exactly like this geometry monster, but smaller (so a full geometry monster
+	// is generated, but then is scaled to something smaller), and have that wobble around, as it would look
+	// really intricate and cool?
+	public void drawOnImage(Image img, int width, int height, int step, double currentLoudnessScaled,
+		ColorRGB color) {
 
 		double stepDifference = 1.0 / MusicGenerator.frameRate;
 
@@ -77,9 +86,21 @@ public class GeometryMonster {
 
 		for (GeometryPoint point : points) {
 			if (point.getTarget() == null) {
-				point.setTarget(
-					new Point<Double, Double>((double) rand.nextInt(width), (double) rand.nextInt(height))
-				);
+				// make the target area in which target points can spawn based on percentage of loudness
+				// of the current beat as percent of max loudness - so if the current beat is only 50%
+				// as loud, then the target points can only spawn from 0.25*width until 0.75*width, same
+				// for height...
+				int scaledW = (int) (width * currentLoudnessScaled);
+				int scaledH = (int) (height * currentLoudnessScaled);
+				double posX = width / 2.0;
+				if (scaledW > 0) {
+					posX = ((width - scaledW) / 2.0) + rand.nextInt(scaledW);
+				}
+				double posY = height / 2.0;
+				if (scaledH > 0) {
+					posY = ((height - scaledH) / 2.0) + rand.nextInt(scaledH);
+				}
+				point.setTarget(new Point<Double, Double>(posX, posY));
 			}
 			point.moveToTarget((width * stepDifference) / 25);
 		}

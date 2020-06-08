@@ -72,7 +72,7 @@ public class MusicGenerator {
 	public final static int height = 360;
 	public final static int frameRate = 30;
 	/**/
-	private final static boolean skipVideo = false;
+	private final static boolean skipVideo = true;
 	private final static boolean reuseExistingVideo = false;
 	private final static int useDrumSounds = 1;
 
@@ -291,12 +291,9 @@ public class MusicGenerator {
 	}
 
 	// TODO: idea for a better algorithm:
-	// * try to get heights first (kind of like here), then make up several predictions over when
-	//   the next height should happen, and check which one of those ends up being the best one...
-	//   or maybe split the song into several (overlapping?) areas and try for each area to get
-	//   all of the beats and then sync them up?
-	// * also, at the start do not add the drums, but add them slowly, and even more towards the
-	//   end! maybe 10 areas, first no drums, next four a bit of drums, final five LOTS of drums?
+	// * get bpm not overall for entire song, but for song areas, where we define an area to be a duration
+	//   over which the loudness does not increase or decrease by more than 10? then generate bpm and align...
+	//   but do the overall smoothen after it is done?
 	// * have different modes of drums that can be added
 	//   >> for one, get inspired by drums in Oh Land - White Nights
 	//   >> for another, get inspired by Fun - Some Nights
@@ -706,7 +703,26 @@ public class MusicGenerator {
 		return bpmBasedBeats;
 	}
 
+	private long divOr255(long dividend, long divisor) {
+		if (divisor == 0) {
+			return 255;
+		}
+		return dividend / divisor;
+	}
+
 	private void addDrumsBasedOnBeats(List<Beat> beats) {
+
+		GraphImage graphImg = new GraphImage();
+		graphImg.setInnerWidthAndHeight(channelPosToMillis(wavDataLeft.length) / 100, graphImageHeight);
+
+		List<GraphDataPoint> wavData = new ArrayList<>();
+		int position = 0;
+		for (Integer wavInt : wavDataLeft) {
+			wavData.add(new GraphDataPoint(position, wavInt));
+			position++;
+		}
+		graphImg.setDataColor(new ColorRGB(0, 0, 255));
+		graphImg.setAbsoluteDataPoints(wavData);
 
 		int instrumentRing = 0;
 
@@ -725,6 +741,12 @@ public class MusicGenerator {
 			int curBeat = beat.getPosition();
 			int curBeatLen = beat.getLength();
 			double baseLoudness = (2.5 * beat.getLoudness()) / stats.getMaxLoudness();
+
+			graphImg.drawVerticalLineAt(beat.getPosition(), new ColorRGB(
+				divOr255(255 * beat.getLoudness(), stats.getMaxLoudness()),
+				divOr255(255 * beat.getLength(), stats.getMaxLength()),
+				divOr255(255 * beat.getJigglieness(), stats.getMaxJigglieness())
+			));
 
 			switch (useDrumSounds) {
 				case 1:
@@ -770,6 +792,10 @@ public class MusicGenerator {
 
 			instrumentRing++;
 		}
+
+		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_stats.png");
+		wavImgFile.assign(graphImg);
+		wavImgFile.save();
 	}
 
 	/**
