@@ -742,12 +742,7 @@ public class MusicGenerator {
 			int curBeat = beat.getPosition();
 			int curBeatLen = beat.getLength();
 
-			// TODO :: for R.E.M. - Stand, this is too loud, but for Halflives - Rockstar Everyday, it is
-			// barely loud enough... so make the base loudness not only a function of the relative loudness
-			// of this beat vs. the other beats in the song, but also multiply by the overall average loudness
-			// of all average loudnesses of the entire song, divided by the value that we get for Halflives,
-			// and then still change the multiplier to 9 * or somesuch... :)
-			double baseLoudness = (7.5 * beat.getLoudness()) / stats.getMaxLoudness();
+			double baseLoudness = (7.5 * beat.getLoudness()) / 25797;
 			long baseJigglieness = divOr255(255 * beat.getJigglieness(), stats.getMaxJigglieness());
 
 			graphImg.drawVerticalLineAt(beat.getPosition(), new ColorRGB(
