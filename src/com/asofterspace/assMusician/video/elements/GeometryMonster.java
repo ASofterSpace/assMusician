@@ -84,6 +84,31 @@ public class GeometryMonster {
 			lines.add(new Pair<Integer, Integer>(splitPointIndex, newPointIndex));
 		}
 
+		// once per minute, do something funny...
+		if (rand.nextInt(MusicGenerator.frameRate * 60) == 0) {
+			int robin = 0;
+			for (GeometryPoint point : points) {
+				double posX = width / 4.0;
+				double posY = height / 4.0;
+				switch (robin) {
+					case 0:
+						point.setTarget(new Point<Double, Double>(posX, posY));
+						break;
+					case 1:
+						point.setTarget(new Point<Double, Double>(width - posX, posY));
+						break;
+					case 2:
+						point.setTarget(new Point<Double, Double>(width - posX, height - posY));
+						break;
+					default:
+						point.setTarget(new Point<Double, Double>(posX, height - posY));
+						robin = -1;
+						break;
+				}
+				robin++;
+			}
+		}
+
 		for (GeometryPoint point : points) {
 			if (point.getTarget() == null) {
 				// make the target area in which target points can spawn based on percentage of loudness

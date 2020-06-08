@@ -72,7 +72,7 @@ public class MusicGenerator {
 	public final static int height = 360;
 	public final static int frameRate = 30;
 	/**/
-	private final static boolean skipVideo = true;
+	private final static boolean skipVideo = false;
 	private final static boolean reuseExistingVideo = false;
 	private final static int useDrumSounds = 1;
 
@@ -753,20 +753,20 @@ public class MusicGenerator {
 			switch (useDrumSounds) {
 				case 1:
 					if (baseJigglieness > 196) {
-						addFadedWavMono(WAV_TOM1_DRUM, curBeat, 1.5*baseLoudness);
-						addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 1.5*baseLoudness);
-						addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 1.5*baseLoudness);
-						addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 1.5*baseLoudness);
-						addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 1.5*baseLoudness);
-						addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((5 * curBeatLen) / 8), 1.5*baseLoudness);
-						addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((6 * curBeatLen) / 8), 1.5*baseLoudness);
+						addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
+						addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 2*baseLoudness);
+						addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 2*baseLoudness);
+						addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 2*baseLoudness);
+						addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 2*baseLoudness);
+						addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((5 * curBeatLen) / 8), 2*baseLoudness);
+						addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((6 * curBeatLen) / 8), 2*baseLoudness);
 					} else {
 						if (baseJigglieness > 128) {
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 1.5*baseLoudness);
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 1.5*baseLoudness);
-							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 1.5*baseLoudness);
-							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 1.5*baseLoudness);
-							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 1.5*baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 2*baseLoudness);
+							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 2*baseLoudness);
+							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 2*baseLoudness);
+							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 2*baseLoudness);
 						} else {
 							if (baseJigglieness > 96) {
 								addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
