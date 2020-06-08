@@ -636,6 +636,7 @@ public class MusicGenerator {
 		int curBeatLength = 0;
 		long curBeatLoudness = 0;
 		long curBeatJigglieness = 0;
+		long jiggleModifier = 16*16*16;
 		Beat prevBeat = null;
 
 		// add one far beyond the end so that we do not have to check for there being one all the time
@@ -664,7 +665,7 @@ public class MusicGenerator {
 				if (prevBeat != null) {
 					int len = i - prevBeat.getPosition();
 					prevBeat.setLoudness(curBeatLoudness / len);
-					prevBeat.setJigglieness(curBeatJigglieness / len);
+					prevBeat.setJigglieness((jiggleModifier * curBeatJigglieness) / len);
 					prevBeat.setLength(len);
 				}
 				beats.add(beat);
@@ -677,7 +678,7 @@ public class MusicGenerator {
 		if (prevBeat != null) {
 			int len = wavDataLeft.length - prevBeat.getPosition();
 			prevBeat.setLoudness(curBeatLoudness / len);
-			prevBeat.setJigglieness(curBeatJigglieness / len);
+			prevBeat.setJigglieness((jiggleModifier * curBeatJigglieness) / len);
 			prevBeat.setLength(len);
 		}
 
@@ -741,6 +742,7 @@ public class MusicGenerator {
 			int curBeat = beat.getPosition();
 			int curBeatLen = beat.getLength();
 			double baseLoudness = (2.5 * beat.getLoudness()) / stats.getMaxLoudness();
+			long baseJigglieness = divOr255(255 * beat.getJigglieness(), stats.getMaxJigglieness());
 
 			graphImg.drawVerticalLineAt(beat.getPosition(), new ColorRGB(
 				divOr255(255 * beat.getLoudness(), stats.getMaxLoudness()),
@@ -750,11 +752,28 @@ public class MusicGenerator {
 
 			switch (useDrumSounds) {
 				case 1:
-					addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
-					addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
-					addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
-					addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
-					addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
+					if (baseJigglieness > 196) {
+						addFadedWavMono(WAV_TOM1_DRUM, curBeat, 1.5*baseLoudness);
+						addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 1.5*baseLoudness);
+						addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 1.5*baseLoudness);
+						addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 1.5*baseLoudness);
+						addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 1.5*baseLoudness);
+						addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((5 * curBeatLen) / 8), 1.5*baseLoudness);
+						addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((6 * curBeatLen) / 8), 1.5*baseLoudness);
+					} else {
+						if (baseJigglieness > 128) {
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 1.5*baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), 1.5*baseLoudness);
+							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 1.5*baseLoudness);
+							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), 1.5*baseLoudness);
+							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 1.5*baseLoudness);
+						} else {
+							if (baseJigglieness > 96) {
+								addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
+								addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), 2*baseLoudness);
+							}
+						}
+					}
 					break;
 				case 2:
 					switch (instrumentRing) {
