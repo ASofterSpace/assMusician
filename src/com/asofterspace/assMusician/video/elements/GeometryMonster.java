@@ -7,6 +7,7 @@ import com.asofterspace.assMusician.MusicGenerator;
 import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.utils.Line;
+import com.asofterspace.toolbox.utils.Pair;
 import com.asofterspace.toolbox.utils.Point;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import java.util.Random;
 public class GeometryMonster {
 
 	private List<GeometryPoint> points;
-	private List<Line<Double>> lines;
+	private List<Pair<Integer, Integer>> lines;
 	private Random rand;
 
 
@@ -30,7 +31,7 @@ public class GeometryMonster {
 		GeometryPoint bottomPoint = new GeometryPoint(width / 2.0, (2*height) / 3.0);
 		points.add(topPoint);
 		points.add(bottomPoint);
-		lines.add(new Line<Double>(topPoint, bottomPoint));
+		lines.add(new Pair<Integer, Integer>(0, 1));
 
 		rand = new Random();
 	}
@@ -38,6 +39,41 @@ public class GeometryMonster {
 	public void drawOnImage(Image img, int width, int height, int step, ColorRGB color) {
 
 		double stepDifference = 1.0 / MusicGenerator.frameRate;
+
+		if (rand.nextInt(MusicGenerator.frameRate * 8) == 0) {
+
+			// get a point at random
+			int splitPointIndex = rand.nextInt(points.size());
+			int newPointIndex = points.size();
+
+			// create a new one at the same position
+			GeometryPoint newPoint = new GeometryPoint(points.get(splitPointIndex));
+
+			// add the new point itself
+			points.add(newPoint);
+
+			// choose one line connecting the old point to another point
+			List<Pair<Integer, Integer>> affectedLines = new ArrayList<>();
+			for (Pair<Integer, Integer> line : lines) {
+				if ((int) line.getLeft() == splitPointIndex) {
+					affectedLines.add(line);
+				}
+				if ((int) line.getRight() == splitPointIndex) {
+					affectedLines.add(line);
+				}
+			}
+
+			// duplicate that one line with the next point instead of the old point as target
+			Pair<Integer, Integer> duplicatedLine = affectedLines.get(rand.nextInt(affectedLines.size()));
+			if ((int) duplicatedLine.getLeft() == splitPointIndex) {
+				lines.add(new Pair<Integer, Integer>(duplicatedLine.getRight(), newPointIndex));
+			} else {
+				lines.add(new Pair<Integer, Integer>(duplicatedLine.getLeft(), newPointIndex));
+			}
+
+			// add a line between the old point and the new point
+			lines.add(new Pair<Integer, Integer>(splitPointIndex, newPointIndex));
+		}
 
 		for (GeometryPoint point : points) {
 			if (point.getTarget() == null) {
@@ -48,12 +84,12 @@ public class GeometryMonster {
 			point.moveToTarget((width * stepDifference) / 25);
 		}
 
-		for (Line<Double> line : lines) {
+		for (Pair<Integer, Integer> line : lines) {
 			img.drawLine(
-				(int) (double) line.getFrom().getX(),
-				(int) (double) line.getFrom().getY(),
-				(int) (double) line.getTo().getX(),
-				(int) (double) line.getTo().getY(),
+				(int) (double) points.get(line.getLeft()).getX(),
+				(int) (double) points.get(line.getLeft()).getY(),
+				(int) (double) points.get(line.getRight()).getX(),
+				(int) (double) points.get(line.getRight()).getY(),
 				color
 			);
 		}

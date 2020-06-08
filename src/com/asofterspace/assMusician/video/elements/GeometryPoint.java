@@ -15,6 +15,10 @@ public class GeometryPoint extends Point<Double, Double> {
 		super(x, y);
 	}
 
+	public GeometryPoint(GeometryPoint other) {
+		super(other.getX(), other.getY());
+	}
+
 	public Point<Double, Double> getTarget() {
 		return target;
 	}
