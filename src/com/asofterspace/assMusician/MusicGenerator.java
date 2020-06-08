@@ -62,12 +62,12 @@ public class MusicGenerator {
 	private GraphImage wavGraphImg;
 
 	// width (px), height (px) and frame rate (fps) of the resulting video
-	/**/
+	/*
 	public final static int width = 1920;
 	public final static int height = 1080;
 	public final static int frameRate = 60;
 	/**/
-	/*
+	/**/
 	public final static int width = 640;
 	public final static int height = 360;
 	public final static int frameRate = 30;

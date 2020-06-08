@@ -91,12 +91,15 @@ public class GeometryMonster {
 			int robin = 0;
 			double posX = width / 4.0;
 			double posY = height / 4.0;
-			shapeGuardOn = true;
 
 			switch (shape) {
 
 				// triangle
 				case 0:
+					if (points.size() < 3) {
+						break;
+					}
+					shapeGuardOn = true;
 					for (GeometryPoint point : points) {
 						switch (robin) {
 							case 0:
@@ -116,6 +119,10 @@ public class GeometryMonster {
 
 				// square
 				case 1:
+					if (points.size() < 4) {
+						break;
+					}
+					shapeGuardOn = true;
 					for (GeometryPoint point : points) {
 						switch (robin) {
 							case 0:
@@ -138,6 +145,10 @@ public class GeometryMonster {
 
 				// sixangle
 				default:
+					if (points.size() < 6) {
+						break;
+					}
+					shapeGuardOn = true;
 					for (GeometryPoint point : points) {
 						switch (robin) {
 							case 0:
@@ -164,6 +175,7 @@ public class GeometryMonster {
 					}
 					break;
 			}
+		}
 
 		for (GeometryPoint point : points) {
 			if ((point.getTarget() == null) && !shapeGuardOn) {
