@@ -20,6 +20,7 @@ public class GeometryMonster {
 	private List<GeometryPoint> points;
 	private List<Pair<Integer, Integer>> lines;
 	private Random rand;
+	private boolean shapeGuardOn = false;
 
 
 	public GeometryMonster(int width, int height) {
@@ -48,7 +49,6 @@ public class GeometryMonster {
 		ColorRGB color) {
 
 		double stepDifference = 1.0 / MusicGenerator.frameRate;
-		boolean shapeGuardOn = false;
 
 		if (rand.nextInt(MusicGenerator.frameRate * 8) == 0) {
 
