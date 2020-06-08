@@ -99,7 +99,10 @@ public class VideoGenerator {
 					lastBeatsAverageLoudness = lastBeatsAverageLoudness / beatLookbackForFlicker;
 
 					// is this beat more than twice as loud as the previous ones were on average?
-					if (curBeat.getLoudness() > 2 * lastBeatsAverageLoudness) {
+					// AND is this beat more than the half loudness? (as we don't want to flash e.g.
+					// during the intro...)
+					if ((curBeat.getLoudness() > 2 * lastBeatsAverageLoudness) &&
+						(curBeat.getLoudness() > stats.getMaxLoudness() / 2)) {
 						// then check the upcoming beats - if the loudness stays this way for at least
 						// a few more, then actully do this...
 						List<Beat> nextBeats = new ArrayList<>();

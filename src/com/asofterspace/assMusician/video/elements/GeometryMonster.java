@@ -48,6 +48,7 @@ public class GeometryMonster {
 		ColorRGB color) {
 
 		double stepDifference = 1.0 / MusicGenerator.frameRate;
+		boolean shapeGuardOn = false;
 
 		if (rand.nextInt(MusicGenerator.frameRate * 8) == 0) {
 
@@ -84,33 +85,88 @@ public class GeometryMonster {
 			lines.add(new Pair<Integer, Integer>(splitPointIndex, newPointIndex));
 		}
 
-		// once per minute, do something funny...
-		if (rand.nextInt(MusicGenerator.frameRate * 60) == 0) {
+		// once every 45 seconds, do something funny - that is, take a preconfigured shape...
+		if (rand.nextInt(MusicGenerator.frameRate * 45) == 0) {
+			int shape = rand.nextInt(3);
 			int robin = 0;
-			for (GeometryPoint point : points) {
-				double posX = width / 4.0;
-				double posY = height / 4.0;
-				switch (robin) {
-					case 0:
-						point.setTarget(new Point<Double, Double>(posX, posY));
-						break;
-					case 1:
-						point.setTarget(new Point<Double, Double>(width - posX, posY));
-						break;
-					case 2:
-						point.setTarget(new Point<Double, Double>(width - posX, height - posY));
-						break;
-					default:
-						point.setTarget(new Point<Double, Double>(posX, height - posY));
-						robin = -1;
-						break;
-				}
-				robin++;
+			double posX = width / 4.0;
+			double posY = height / 4.0;
+			shapeGuardOn = true;
+
+			switch (shape) {
+
+				// triangle
+				case 0:
+					for (GeometryPoint point : points) {
+						switch (robin) {
+							case 0:
+								point.setTarget(new Point<Double, Double>(width / 2.0, posY));
+								break;
+							case 1:
+								point.setTarget(new Point<Double, Double>(width - posX, height - posY));
+								break;
+							default:
+								point.setTarget(new Point<Double, Double>(posX, height - posY));
+								robin = -1;
+								break;
+						}
+						robin++;
+					}
+					break;
+
+				// square
+				case 1:
+					for (GeometryPoint point : points) {
+						switch (robin) {
+							case 0:
+								point.setTarget(new Point<Double, Double>(posX, posY));
+								break;
+							case 1:
+								point.setTarget(new Point<Double, Double>(width - posX, posY));
+								break;
+							case 2:
+								point.setTarget(new Point<Double, Double>(width - posX, height - posY));
+								break;
+							default:
+								point.setTarget(new Point<Double, Double>(posX, height - posY));
+								robin = -1;
+								break;
+						}
+						robin++;
+					}
+					break;
+
+				// sixangle
+				default:
+					for (GeometryPoint point : points) {
+						switch (robin) {
+							case 0:
+								point.setTarget(new Point<Double, Double>(posX, posY));
+								break;
+							case 1:
+								point.setTarget(new Point<Double, Double>(width - posX, posY));
+								break;
+							case 2:
+								point.setTarget(new Point<Double, Double>(width - (posX / 2.0), height / 2.0));
+								break;
+							case 3:
+								point.setTarget(new Point<Double, Double>(width - posX, height - posY));
+								break;
+							case 4:
+								point.setTarget(new Point<Double, Double>(posX, height - posY));
+								break;
+							default:
+								point.setTarget(new Point<Double, Double>(posX / 2.0, height / 2.0));
+								robin = -1;
+								break;
+						}
+						robin++;
+					}
+					break;
 			}
-		}
 
 		for (GeometryPoint point : points) {
-			if (point.getTarget() == null) {
+			if ((point.getTarget() == null) && !shapeGuardOn) {
 				// make the target area in which target points can spawn based on percentage of loudness
 				// of the current beat as percent of max loudness - so if the current beat is only 50%
 				// as loud, then the target points can only spawn from 0.25*width until 0.75*width, same
@@ -128,6 +184,17 @@ public class GeometryMonster {
 				point.setTarget(new Point<Double, Double>(posX, posY));
 			}
 			point.moveToTarget((width * stepDifference) / 25);
+		}
+
+		// keep the shape guard activated as long as not all points have moved to their designated targets
+		if (shapeGuardOn) {
+			shapeGuardOn = false;
+			for (GeometryPoint point : points) {
+				if (point.getTarget() != null) {
+					shapeGuardOn = true;
+					break;
+				}
+			}
 		}
 
 		for (Pair<Integer, Integer> line : lines) {
