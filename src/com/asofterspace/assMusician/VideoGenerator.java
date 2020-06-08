@@ -6,6 +6,7 @@ package com.asofterspace.assMusician;
 import com.asofterspace.assMusician.video.elements.GeometryMonster;
 import com.asofterspace.assMusician.video.elements.Star;
 import com.asofterspace.assMusician.video.elements.StreetElement;
+import com.asofterspace.assMusician.video.elements.Waveform;
 import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.DefaultImageFile;
 import com.asofterspace.toolbox.images.GraphImage;
@@ -76,6 +77,21 @@ public class VideoGenerator {
 
 		List<Beat> prevBeats = new ArrayList<>();
 
+		Waveform origWaveform = new Waveform();
+		Waveform newWaveform = new Waveform();
+
+		DefaultImageFile textOrigFile = new DefaultImageFile("video/orig.png");
+		Image textOrig = textOrigFile.getImage();
+		textOrig.resampleBy(MusicGenerator.width / (1920 * 3.0), MusicGenerator.width / (1920 * 3.0));
+		Image textOrigWhite = textOrig.copy();
+		textOrig.multiply(origBlue);
+
+		DefaultImageFile textRemixFile = new DefaultImageFile("video/remix.png");
+		Image textRemix = textRemixFile.getImage();
+		textRemix.resampleBy(MusicGenerator.width / (1920 * 3.0), MusicGenerator.width / (1920 * 3.0));
+		Image textRemixWhite = textRemix.copy();
+		textRemix.multiply(origBlue);
+
 		double currentLoudnessScaled = 0;
 
 		for (int step = 0; step < totalFrameAmount; step++) {
@@ -136,6 +152,7 @@ public class VideoGenerator {
 			ColorRGB black = origBlack;
 			ColorRGB blue = origBlue;
 			int ssCI = step - startColorInversion;
+			boolean drawAllWhite = false;
 			// when flickering, have everything being bright be a bit shorter than everything being dark
 			if ((ssCI < MusicGenerator.frameRate / 10) ||
 				((ssCI > (2.25 * MusicGenerator.frameRate) / 10) && (ssCI < (3 * MusicGenerator.frameRate) / 10)) ||
@@ -149,6 +166,7 @@ public class VideoGenerator {
 				*/
 				// just flicker the foreground to white and back!
 				blue = new ColorRGB(255, 255, 255);
+				drawAllWhite = true;
 			}
 
 			if (skipImageDrawing) {
@@ -177,6 +195,26 @@ public class VideoGenerator {
 			}
 
 			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue);
+
+			origWaveform.drawOnImage(img, width, height, step, blue);
+
+			int x = width / 240;
+			int y = (int) (height * 0.85);
+			if (drawAllWhite) {
+				img.draw(textOrigWhite, x, y);
+			} else {
+				img.draw(textOrig, x, y);
+			}
+
+			newWaveform.drawOnImage(img, width, height, step, blue);
+
+			x = width / 240;
+			y = (int) (height * 0.925);
+			if (drawAllWhite) {
+				img.draw(textRemixWhite, x, y);
+			} else {
+				img.draw(textRemix, x, y);
+			}
 
 			DefaultImageFile curImgFile = new DefaultImageFile(
 				workDir.getAbsoluteDirname() + "/pic" + StrUtils.leftPad0(step, 5) + ".png"
