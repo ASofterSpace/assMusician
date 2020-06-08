@@ -50,39 +50,44 @@ public class GeometryMonster {
 
 		double stepDifference = 1.0 / MusicGenerator.frameRate;
 
+		// every 8 seconds...
 		if (rand.nextInt(MusicGenerator.frameRate * 8) == 0) {
 
-			// get a point at random
-			int splitPointIndex = rand.nextInt(points.size());
-			int newPointIndex = points.size();
+			// ... if the shape guard is not currently on (so if we are not currently drawing a special shape)...
+			if (!shapeGuardOn) {
 
-			// create a new one at the same position
-			GeometryPoint newPoint = new GeometryPoint(points.get(splitPointIndex));
+				// get a point at random
+				int splitPointIndex = rand.nextInt(points.size());
+				int newPointIndex = points.size();
 
-			// add the new point itself
-			points.add(newPoint);
+				// create a new one at the same position
+				GeometryPoint newPoint = new GeometryPoint(points.get(splitPointIndex));
 
-			// choose one line connecting the old point to another point
-			List<Pair<Integer, Integer>> affectedLines = new ArrayList<>();
-			for (Pair<Integer, Integer> line : lines) {
-				if ((int) line.getLeft() == splitPointIndex) {
-					affectedLines.add(line);
+				// add the new point itself
+				points.add(newPoint);
+
+				// choose one line connecting the old point to another point
+				List<Pair<Integer, Integer>> affectedLines = new ArrayList<>();
+				for (Pair<Integer, Integer> line : lines) {
+					if ((int) line.getLeft() == splitPointIndex) {
+						affectedLines.add(line);
+					}
+					if ((int) line.getRight() == splitPointIndex) {
+						affectedLines.add(line);
+					}
 				}
-				if ((int) line.getRight() == splitPointIndex) {
-					affectedLines.add(line);
+
+				// duplicate that one line with the next point instead of the old point as target
+				Pair<Integer, Integer> duplicatedLine = affectedLines.get(rand.nextInt(affectedLines.size()));
+				if ((int) duplicatedLine.getLeft() == splitPointIndex) {
+					lines.add(new Pair<Integer, Integer>(duplicatedLine.getRight(), newPointIndex));
+				} else {
+					lines.add(new Pair<Integer, Integer>(duplicatedLine.getLeft(), newPointIndex));
 				}
-			}
 
-			// duplicate that one line with the next point instead of the old point as target
-			Pair<Integer, Integer> duplicatedLine = affectedLines.get(rand.nextInt(affectedLines.size()));
-			if ((int) duplicatedLine.getLeft() == splitPointIndex) {
-				lines.add(new Pair<Integer, Integer>(duplicatedLine.getRight(), newPointIndex));
-			} else {
-				lines.add(new Pair<Integer, Integer>(duplicatedLine.getLeft(), newPointIndex));
+				// add a line between the old point and the new point
+				lines.add(new Pair<Integer, Integer>(splitPointIndex, newPointIndex));
 			}
-
-			// add a line between the old point and the new point
-			lines.add(new Pair<Integer, Integer>(splitPointIndex, newPointIndex));
 		}
 
 		// once every 45 seconds, do something funny - that is, take a preconfigured shape...
