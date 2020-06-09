@@ -136,8 +136,8 @@ public class MusicGenerator {
 
 		Waveform origWaveform = new Waveform(wavSoundData);
 
-		wavDataLeft = wavSoundData.getLeftData();
-		wavDataRight = wavSoundData.getRightData();
+		wavDataLeft = wavSoundData.getLeftDataCopy();
+		wavDataRight = wavSoundData.getRightDataCopy();
 
 		fadeDataLeft = new long[wavDataLeft.length];
 		fadeDataRight = new long[wavDataRight.length];
