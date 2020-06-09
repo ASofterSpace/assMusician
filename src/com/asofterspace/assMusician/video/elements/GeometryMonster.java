@@ -90,116 +90,191 @@ public class GeometryMonster {
 			}
 		}
 
-		// once every 45 seconds, do something funny - that is, take a preconfigured shape...
-		if (rand.nextInt(MusicGenerator.frameRate * 45) == 0) {
-			int shape = rand.nextInt(3);
-			int robin = 0;
-			double posX = width / 4.0;
-			double posY = height / 4.0;
+		// while the shape guard is not on...
+		if (!shapeGuardOn) {
 
-			switch (shape) {
+			// ... once every 42 seconds, do something funny - that is, take on a preconfigured shape...
+			if (rand.nextInt(MusicGenerator.frameRate * 42) == 0) {
+				int shape = rand.nextInt(4);
+				int robin = 0;
+				double posX = width / 4.0;
+				double posY = height / 4.0;
 
-				// triangle
-				case 0:
-					if (points.size() < 3) {
-						break;
-					}
-					shapeGuardOn = true;
-					for (GeometryPoint point : points) {
-						switch (robin) {
-							case 0:
-								point.setTarget(new Point<Double, Double>(width / 2.0, posY));
-								break;
-							case 1:
-								point.setTarget(new Point<Double, Double>(width - posX, height - posY));
-								break;
-							default:
-								point.setTarget(new Point<Double, Double>(posX, height - posY));
-								robin = -1;
-								break;
+				switch (shape) {
+
+					// triangle
+					case 0:
+						if (points.size() < 3) {
+							break;
 						}
-						robin++;
-					}
-					break;
-
-				// square
-				case 1:
-					if (points.size() < 4) {
-						break;
-					}
-					shapeGuardOn = true;
-					for (GeometryPoint point : points) {
-						switch (robin) {
-							case 0:
-								point.setTarget(new Point<Double, Double>(posX, posY));
-								break;
-							case 1:
-								point.setTarget(new Point<Double, Double>(width - posX, posY));
-								break;
-							case 2:
-								point.setTarget(new Point<Double, Double>(width - posX, height - posY));
-								break;
-							default:
-								point.setTarget(new Point<Double, Double>(posX, height - posY));
-								robin = -1;
-								break;
+						shapeGuardOn = true;
+						for (GeometryPoint point : points) {
+							switch (robin) {
+								case 0:
+									point.setTarget(new Point<Double, Double>(width / 2.0, posY));
+									break;
+								case 1:
+									point.setTarget(new Point<Double, Double>(width - posX, height - posY));
+									break;
+								default:
+									point.setTarget(new Point<Double, Double>(posX, height - posY));
+									robin = -1;
+									break;
+							}
+							robin++;
 						}
-						robin++;
-					}
-					break;
-
-				// sixangle
-				default:
-					if (points.size() < 6) {
 						break;
-					}
-					shapeGuardOn = true;
-					for (GeometryPoint point : points) {
-						switch (robin) {
-							case 0:
-								point.setTarget(new Point<Double, Double>(posX, posY));
-								break;
-							case 1:
-								point.setTarget(new Point<Double, Double>(width - posX, posY));
-								break;
-							case 2:
-								point.setTarget(new Point<Double, Double>(width - (posX / 2.0), height / 2.0));
-								break;
-							case 3:
-								point.setTarget(new Point<Double, Double>(width - posX, height - posY));
-								break;
-							case 4:
-								point.setTarget(new Point<Double, Double>(posX, height - posY));
-								break;
-							default:
-								point.setTarget(new Point<Double, Double>(posX / 2.0, height / 2.0));
-								robin = -1;
-								break;
+
+					// square
+					case 1:
+						if (points.size() < 4) {
+							break;
 						}
-						robin++;
-					}
-					break;
+						shapeGuardOn = true;
+						for (GeometryPoint point : points) {
+							switch (robin) {
+								case 0:
+									point.setTarget(new Point<Double, Double>(posX, posY));
+									break;
+								case 1:
+									point.setTarget(new Point<Double, Double>(width - posX, posY));
+									break;
+								case 2:
+									point.setTarget(new Point<Double, Double>(width - posX, height - posY));
+									break;
+								default:
+									point.setTarget(new Point<Double, Double>(posX, height - posY));
+									robin = -1;
+									break;
+							}
+							robin++;
+						}
+						break;
+
+					// sixangle
+					case 2:
+						if (points.size() < 6) {
+							break;
+						}
+						shapeGuardOn = true;
+						for (GeometryPoint point : points) {
+							switch (robin) {
+								case 0:
+									point.setTarget(new Point<Double, Double>(posX, posY));
+									break;
+								case 1:
+									point.setTarget(new Point<Double, Double>(width - posX, posY));
+									break;
+								case 2:
+									point.setTarget(new Point<Double, Double>(width - (posX / 2.0), height / 2.0));
+									break;
+								case 3:
+									point.setTarget(new Point<Double, Double>(width - posX, height - posY));
+									break;
+								case 4:
+									point.setTarget(new Point<Double, Double>(posX, height - posY));
+									break;
+								default:
+									point.setTarget(new Point<Double, Double>(posX / 2.0, height / 2.0));
+									robin = -1;
+									break;
+							}
+							robin++;
+						}
+						break;
+
+					// diamond
+					default:
+						if (points.size() < 7) {
+							break;
+						}
+						shapeGuardOn = true;
+						for (GeometryPoint point : points) {
+							switch (robin) {
+								case 0:
+									point.setTarget(new Point<Double, Double>(width / 2.0, posY));
+									break;
+								case 1:
+									point.setTarget(new Point<Double, Double>(width - (posX / 2.0), height / 2.0));
+									break;
+								case 2:
+									point.setTarget(new Point<Double, Double>(((width - (posX / 2.0)) + (width / 2.0)) / 2.0, height / 2.0));
+									break;
+								case 3:
+									point.setTarget(new Point<Double, Double>(width / 2.0, height / 2.0));
+									break;
+								case 4:
+									point.setTarget(new Point<Double, Double>(((posX / 2.0) + (width / 2.0)) / 2.0, height / 2.0));
+									break;
+								case 5:
+									point.setTarget(new Point<Double, Double>(posX / 2.0, height / 2.0));
+									break;
+								default:
+									point.setTarget(new Point<Double, Double>(width / 2.0, height - posY));
+									robin = -1;
+									break;
+							}
+							robin++;
+						}
+						break;
+				}
 			}
 		}
 
-		for (GeometryPoint point : points) {
-			if ((point.getTarget() == null) && !shapeGuardOn) {
-				// make the target area in which target points can spawn based on percentage of loudness
-				// of the current beat as percent of max loudness - so if the current beat is only 50%
-				// as loud, then the target points can only spawn from 0.25*width until 0.75*width, same
-				// for height...
-				int scaledW = (int) (width * currentLoudnessScaled);
-				int scaledH = (int) (height * currentLoudnessScaled);
-				double posX = width / 2.0;
-				if (scaledW > 0) {
-					posX = ((width - scaledW) / 2.0) + rand.nextInt(scaledW);
+		// if the shape guard is not on...
+		if (!shapeGuardOn) {
+
+			int scaledW = (int) (width * currentLoudnessScaled);
+			int scaledH = (int) (height * currentLoudnessScaled);
+			double minX = ((width - scaledW) / 2.0);
+			double minY = ((height - scaledH) / 2.0);
+
+			// ... check all the current targets to see if they
+			// (1) exist, and
+			// (2) are within the current loudness envelope
+			for (GeometryPoint point : points) {
+
+				boolean resetTarget = false;
+
+				if (point.getTarget() == null) {
+					resetTarget = true;
+
+				} else {
+					if (point.getTarget().getX() < minX) {
+						resetTarget = true;
+					}
+					if (point.getTarget().getX() > minX + scaledW) {
+						resetTarget = true;
+					}
+					if (point.getTarget().getY() < minY) {
+						resetTarget = true;
+					}
+					if (point.getTarget().getY() > minY + scaledH) {
+						resetTarget = true;
+					}
 				}
-				double posY = height / 2.0;
-				if (scaledH > 0) {
-					posY = ((height - scaledH) / 2.0) + rand.nextInt(scaledH);
+
+				if (resetTarget) {
+					// make the target area in which target points can spawn based on percentage of loudness
+					// of the current beat as percent of max loudness - so if the current beat is only 50%
+					// as loud, then the target points can only spawn from 0.25*width until 0.75*width, same
+					// for height...
+					double posX = width / 2.0;
+					if (scaledW > 0) {
+						posX = minX + rand.nextInt(scaledW);
+					}
+					double posY = height / 2.0;
+					if (scaledH > 0) {
+						posY = minY + rand.nextInt(scaledH);
+					}
+
+					point.setTarget(new Point<Double, Double>(posX, posY));
 				}
-				point.setTarget(new Point<Double, Double>(posX, posY));
 			}
+		}
+
+		// move all the points towards their targets
+		for (GeometryPoint point : points) {
 			point.moveToTarget((width * stepDifference) / 25);
 		}
 

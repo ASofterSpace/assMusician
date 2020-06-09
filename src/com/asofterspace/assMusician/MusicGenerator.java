@@ -300,6 +300,8 @@ public class MusicGenerator {
 	// * get bpm not overall for entire song, but for song areas, where we define an area to be a duration
 	//   over which the loudness does not increase or decrease by more than 10? then generate bpm and align...
 	//   but do the overall smoothen after it is done?
+	// * maybe give more importance during bpm detection to beats that have higher jitterieness?
+	//   (they tend to be where the fun is...)
 	// * have different modes of drums that can be added
 	//   >> for one, get inspired by drums in Oh Land - White Nights
 	//   >> for another, get inspired by Fun - Some Nights
@@ -759,6 +761,13 @@ public class MusicGenerator {
 
 			switch (useDrumSounds) {
 				case 1:
+					// we have encountered the following jigglienesses in the wild:
+					//  26 .. singing with nearly no instruments
+					// 169 .. loud singing with some instruments
+					// 201 .. full blast! :D
+					// TODO :: if same beat kind based on jitterieness before and after, and before that
+					// and after that, then put it also in the middle? (at least if the middle elsewise
+					// would have less drums than the surrounding area, to eliminate "missing" drums)
 					if (baseJigglieness > 196) {
 						addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
 						addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);

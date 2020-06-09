@@ -41,6 +41,9 @@ public class VideoGenerator {
 		this.workDir = workDir;
 	}
 
+	// TODO: also have a straight line from the side (actually, several!) and on that display info such
+	// as current beat loudness, current beat jitterieness, current beat length etc... (all written in
+	// a console-y or SciFi-y!)
 	public void generateVideoBasedOnBeats(List<Beat> beats, int totalFrameAmount, int width, int height,
 		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform) {
 

@@ -21,6 +21,7 @@ public class Waveform {
 		ColorRGB foregroundColor, ColorRGB midgroundColor, ColorRGB highlightColor) {
 
 		int[] leftData = soundData.getLeftData();
+		int[] rightData = soundData.getRightData();
 
 		for (int x = 0; x < width; x++) {
 			int loudMax = 0;
@@ -33,6 +34,12 @@ public class Waveform {
 					}
 					if (leftData[offset] < loudMin) {
 						loudMin = leftData[offset];
+					}
+					if (rightData[offset] > loudMax) {
+						loudMax = rightData[offset];
+					}
+					if (rightData[offset] < loudMin) {
+						loudMin = rightData[offset];
 					}
 				}
 			}
