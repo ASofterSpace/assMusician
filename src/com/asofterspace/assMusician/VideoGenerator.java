@@ -69,8 +69,10 @@ public class VideoGenerator {
 		}
 
 		ColorRGB trueBlack = new ColorRGB(0, 0, 0);
+		ColorRGB trueWhite = new ColorRGB(255, 255, 255);
 		ColorRGB origBlack = new ColorRGB(0, 0, 0);
 		ColorRGB origBlue = ColorRGB.randomColorfulBright();
+		ColorRGB origDarkBlue = ColorRGB.intermix(origBlack, origBlue, 0.5);
 		// ColorRGB blue = new ColorRGB(255, 0, 128);
 
 		int startColorInversion = -10 * MusicGenerator.frameRate;
@@ -148,6 +150,7 @@ public class VideoGenerator {
 
 			ColorRGB black = origBlack;
 			ColorRGB blue = origBlue;
+			ColorRGB darkBlue = origDarkBlue;
 			int ssCI = step - startColorInversion;
 			boolean drawAllWhite = false;
 			// when flickering, have everything being bright be a bit shorter than everything being dark
@@ -162,7 +165,8 @@ public class VideoGenerator {
 				black = origBlue;
 				*/
 				// just flicker the foreground to white and back!
-				blue = new ColorRGB(255, 255, 255);
+				blue = trueWhite;
+				darkBlue = new ColorRGB(128, 128, 128);
 				drawAllWhite = true;
 			}
 
@@ -195,7 +199,7 @@ public class VideoGenerator {
 
 			img.setLineWidth(1);
 
-			origWaveform.drawOnImage(img, width, (int)(height*0.885), step, totalFrameAmount, blue);
+			origWaveform.drawOnImage(img, width, (int)(height*0.885), step, totalFrameAmount, blue, darkBlue, trueWhite);
 
 			int x = width / 240;
 			int y = (int) (height * 0.85);
@@ -205,7 +209,7 @@ public class VideoGenerator {
 				img.draw(textOrig, x, y);
 			}
 
-			newWaveform.drawOnImage(img, width, (int)(height*0.965), step, totalFrameAmount, blue);
+			newWaveform.drawOnImage(img, width, (int)(height*0.965), step, totalFrameAmount, blue, darkBlue, trueWhite);
 
 			x = width / 240;
 			y = (int) (height * 0.93);

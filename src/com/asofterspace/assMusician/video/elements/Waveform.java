@@ -18,7 +18,7 @@ public class Waveform {
 	}
 
 	public void drawOnImage(Image img, int width, int vertPos, int step, int totalFrameAmount,
-		ColorRGB foregroundColor) {
+		ColorRGB foregroundColor, ColorRGB midgroundColor, ColorRGB highlightColor) {
 
 		int[] leftData = soundData.getLeftData();
 
@@ -36,9 +36,17 @@ public class Waveform {
 					}
 				}
 			}
+			// 64 is the vertical height in both (!) directions off zero in which we want to show the waveform
+			// 8*16*16*16 is the maximum positive value that is possible as loudness
 			int top = vertPos - ((loudMax * 64) / (8*16*16*16));
+			int mid = vertPos;
 			int bottom = vertPos - ((loudMin * 64) / (8*16*16*16));
-			img.drawLine(x, top, x, bottom, foregroundColor);
+			if (x == width / 2) {
+				img.drawLine(x, top, x, bottom, highlightColor);
+			} else {
+				img.drawLine(x, mid, x, bottom, midgroundColor);
+				img.drawLine(x, top, x, mid, foregroundColor);
+			}
 		}
 	}
 }
