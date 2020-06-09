@@ -37,6 +37,7 @@ config
 *.txt
 *.csv
 *.json
+fonts
 input
 work
 output

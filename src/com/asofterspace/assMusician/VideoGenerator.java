@@ -113,6 +113,9 @@ public class VideoGenerator {
 		textJitterieness.multiply(origBlue);
 
 		double currentLoudnessScaled = 0;
+		int lastLength = 0;
+		long lastLoudness = 0;
+		long lastJitterieness = 0;
 
 		for (int step = 0; step < totalFrameAmount; step++) {
 			if ((step > 0) && (step % 1000 == 0)) {
@@ -125,6 +128,13 @@ public class VideoGenerator {
 			if (curBeat != null) {
 
 				currentLoudnessScaled = (curBeat.getLoudness() * 1.0) / stats.getMaxLoudness();
+				lastLength = curBeat.getLength();
+				lastLoudness = curBeat.getLoudness();
+				if (stats.getMaxJigglieness() == 0) {
+					lastJitterieness = 255;
+				} else {
+					lastJitterieness = (curBeat.getJigglieness() * 255) / stats.getMaxJigglieness();
+				}
 
 				int beatLookbackForFlicker = 20;
 				if (prevBeats.size() > beatLookbackForFlicker) {
@@ -217,23 +227,26 @@ public class VideoGenerator {
 			}
 
 			// left HUD
-			img.drawLine(0, (int) (height * 0.0935), (int) (width * 0.098), (int) (height * 0.0935), blue);
+			img.drawText(""+lastLength, (64 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
+			img.drawLine(0, (height * 102) / 1080, (int) (width * 0.098), (height * 102) / 1080, blue);
 			if (drawAllWhite) {
-				img.draw(textLengthWhite, (15 * width) / 1920, (108 * height) / 1080);
+				img.draw(textLengthWhite, (15 * width) / 1920, (109 * height) / 1080);
 			} else {
-				img.draw(textLength, (15 * width) / 1920, (108 * height) / 1080);
+				img.draw(textLength, (15 * width) / 1920, (109 * height) / 1080);
 			}
-			img.drawLine(0, (int) (height * 0.2074), (int) (width * 0.098), (int) (height * 0.2074), blue);
+			img.drawText(""+lastLoudness, (187 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
+			img.drawLine(0, (height * 225) / 1080, (int) (width * 0.098), (height * 225) / 1080, blue);
 			if (drawAllWhite) {
-				img.draw(textLoudnessWhite, (15 * width) / 1920, (231 * height) / 1080);
+				img.draw(textLoudnessWhite, (15 * width) / 1920, (232 * height) / 1080);
 			} else {
-				img.draw(textLoudness, (15 * width) / 1920, (231 * height) / 1080);
+				img.draw(textLoudness, (15 * width) / 1920, (232 * height) / 1080);
 			}
-			img.drawLine(0, (int) (height * 0.3269), (int) (width * 0.098), (int) (height * 0.3269), blue);
+			img.drawText(""+lastJitterieness, (310 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
+			img.drawLine(0, (height * 348) / 1080, (int) (width * 0.098), (height * 348) / 1080, blue);
 			if (drawAllWhite) {
-				img.draw(textJitterienessWhite, (15 * width) / 1920, (361 * height) / 1080);
+				img.draw(textJitterienessWhite, (15 * width) / 1920, (355 * height) / 1080);
 			} else {
-				img.draw(textJitterieness, (15 * width) / 1920, (361 * height) / 1080);
+				img.draw(textJitterieness, (15 * width) / 1920, (355 * height) / 1080);
 			}
 
 			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue);

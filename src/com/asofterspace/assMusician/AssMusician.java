@@ -7,6 +7,9 @@ import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.Utils;
 
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
+
 
 public class AssMusician {
 
@@ -46,6 +49,15 @@ public class AssMusician {
 
 		Directory outputDir = new Directory("output");
 		outputDir.create();
+
+		String fontName = "neuropol.ttf";
+		try {
+			GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+			File fontFile = new File("fonts/" + fontName);
+			env.registerFont(Font.createFont(Font.TRUETYPE_FONT, fontFile.getJavaFile()));
+		} catch (Exception e) {
+			System.out.println("Could not load the font " + fontName + "!");
+		}
 
 		MusicGenerator musicGenny = new MusicGenerator(database, inputDir, outputDir);
 		boolean recursively = false;
