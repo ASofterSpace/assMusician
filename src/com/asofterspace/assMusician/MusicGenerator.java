@@ -745,13 +745,47 @@ public class MusicGenerator {
 		System.out.println("maxLoudness: " + stats.getMaxLoudness());
 		System.out.println("maxJigglieness: " + stats.getMaxJigglieness());
 
-		for (Beat beat : beats) {
+		for (int b = 0; b < beats.size(); b++) {
+			Beat beat = beats.get(b);
 
 			int curBeat = beat.getPosition();
 			int curBeatLen = beat.getLength();
 
 			double baseLoudness = (7.5 * beat.getLoudness()) / 25797;
+
 			long baseJigglieness = divOr255(255 * beat.getJigglieness(), stats.getMaxJigglieness());
+
+			long prevJigglieness = baseJigglieness;
+			if (b > 0) {
+				prevJigglieness = divOr255(255 * beats.get(b-1).getJigglieness(), stats.getMaxJigglieness());
+			}
+			long prevPrevJigglieness = baseJigglieness;
+			if (b > 1) {
+				prevPrevJigglieness = divOr255(255 * beats.get(b-2).getJigglieness(), stats.getMaxJigglieness());
+			}
+			long nextJigglieness = baseJigglieness;
+			if (b < beats.size() - 1) {
+				nextJigglieness = divOr255(255 * beats.get(b+1).getJigglieness(), stats.getMaxJigglieness());
+			}
+			long nextNextJigglieness = baseJigglieness;
+			if (b < beats.size() - 2) {
+				nextNextJigglieness = divOr255(255 * beats.get(b+2).getJigglieness(), stats.getMaxJigglieness());
+			}
+
+			// prevent weirdly missing drums in the middle of lots-of-drum parts
+
+			// prevent one missing
+			if ((prevJigglieness > baseJigglieness) && (nextJigglieness > baseJigglieness)) {
+				baseJigglieness = Math.min(prevJigglieness, nextJigglieness);
+			}
+
+			// prevent two missing
+			if ((prevJigglieness > baseJigglieness) && (nextNextJigglieness > baseJigglieness)) {
+				baseJigglieness = Math.min(prevJigglieness, nextNextJigglieness);
+			}
+			if ((prevPrevJigglieness > baseJigglieness) && (nextJigglieness > baseJigglieness)) {
+				baseJigglieness = Math.min(prevPrevJigglieness, nextJigglieness);
+			}
 
 			graphImg.drawVerticalLineAt(beat.getPosition(), new ColorRGB(
 				divOr255(255 * beat.getLoudness(), stats.getMaxLoudness()),
@@ -765,9 +799,6 @@ public class MusicGenerator {
 					//  26 .. singing with nearly no instruments
 					// 169 .. loud singing with some instruments
 					// 201 .. full blast! :D
-					// TODO :: if same beat kind based on jitterieness before and after, and before that
-					// and after that, then put it also in the middle? (at least if the middle elsewise
-					// would have less drums than the surrounding area, to eliminate "missing" drums)
 					if (baseJigglieness > 196) {
 						addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
 						addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
@@ -778,7 +809,7 @@ public class MusicGenerator {
 						addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((6 * curBeatLen) / 8), baseLoudness);
 					} else {
 						if (baseJigglieness > 128) {
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 1.25*baseLoudness);
 							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
 							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
 							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
