@@ -94,6 +94,24 @@ public class VideoGenerator {
 		Image textRemixWhite = textRemix.copy();
 		textRemix.multiply(origBlue);
 
+		DefaultImageFile textLengthFile = new DefaultImageFile("video/length.png");
+		Image textLength = textLengthFile.getImage();
+		textLength.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
+		Image textLengthWhite = textLength.copy();
+		textLength.multiply(origBlue);
+
+		DefaultImageFile textLoudnessFile = new DefaultImageFile("video/loudness.png");
+		Image textLoudness = textLoudnessFile.getImage();
+		textLoudness.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
+		Image textLoudnessWhite = textLoudness.copy();
+		textLoudness.multiply(origBlue);
+
+		DefaultImageFile textJitterienessFile = new DefaultImageFile("video/jitterieness.png");
+		Image textJitterieness = textJitterienessFile.getImage();
+		textJitterieness.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
+		Image textJitterienessWhite = textJitterieness.copy();
+		textJitterieness.multiply(origBlue);
+
 		double currentLoudnessScaled = 0;
 
 		for (int step = 0; step < totalFrameAmount; step++) {
@@ -196,6 +214,26 @@ public class VideoGenerator {
 			// moving elements
 			for (StreetElement el : streetElements) {
 				el.drawOnImage(img, width, height, step, blue);
+			}
+
+			// left HUD
+			img.drawLine(0, (int) (height * 0.0935), (int) (width * 0.098), (int) (height * 0.0935), blue);
+			if (drawAllWhite) {
+				img.draw(textLengthWhite, (15 * width) / 1920, (108 * height) / 1080);
+			} else {
+				img.draw(textLength, (15 * width) / 1920, (108 * height) / 1080);
+			}
+			img.drawLine(0, (int) (height * 0.2074), (int) (width * 0.098), (int) (height * 0.2074), blue);
+			if (drawAllWhite) {
+				img.draw(textLoudnessWhite, (15 * width) / 1920, (231 * height) / 1080);
+			} else {
+				img.draw(textLoudness, (15 * width) / 1920, (231 * height) / 1080);
+			}
+			img.drawLine(0, (int) (height * 0.3269), (int) (width * 0.098), (int) (height * 0.3269), blue);
+			if (drawAllWhite) {
+				img.draw(textJitterienessWhite, (15 * width) / 1920, (361 * height) / 1080);
+			} else {
+				img.draw(textJitterieness, (15 * width) / 1920, (361 * height) / 1080);
 			}
 
 			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue);

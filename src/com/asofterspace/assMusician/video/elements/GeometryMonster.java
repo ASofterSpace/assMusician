@@ -90,6 +90,8 @@ public class GeometryMonster {
 			}
 		}
 
+		// TODO :: as another fun thing, every once in a while, rotate the entire geometry monster? :D
+
 		// while the shape guard is not on...
 		if (!shapeGuardOn) {
 
