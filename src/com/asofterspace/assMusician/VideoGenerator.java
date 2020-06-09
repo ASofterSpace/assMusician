@@ -42,7 +42,7 @@ public class VideoGenerator {
 	}
 
 	public void generateVideoBasedOnBeats(List<Beat> beats, int totalFrameAmount, int width, int height,
-		GraphImage wavGraphImg) {
+		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform) {
 
 		System.out.println("");
 		System.out.println("Generating " + totalFrameAmount + " frames...");
@@ -77,18 +77,15 @@ public class VideoGenerator {
 
 		List<Beat> prevBeats = new ArrayList<>();
 
-		Waveform origWaveform = new Waveform();
-		Waveform newWaveform = new Waveform();
-
 		DefaultImageFile textOrigFile = new DefaultImageFile("video/orig.png");
 		Image textOrig = textOrigFile.getImage();
-		textOrig.resampleBy(MusicGenerator.width / (1920 * 3.0), MusicGenerator.width / (1920 * 3.0));
+		textOrig.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
 		Image textOrigWhite = textOrig.copy();
 		textOrig.multiply(origBlue);
 
 		DefaultImageFile textRemixFile = new DefaultImageFile("video/remix.png");
 		Image textRemix = textRemixFile.getImage();
-		textRemix.resampleBy(MusicGenerator.width / (1920 * 3.0), MusicGenerator.width / (1920 * 3.0));
+		textRemix.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
 		Image textRemixWhite = textRemix.copy();
 		textRemix.multiply(origBlue);
 
@@ -196,7 +193,9 @@ public class VideoGenerator {
 
 			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue);
 
-			origWaveform.drawOnImage(img, width, height, step, blue);
+			img.setLineWidth(1);
+
+			origWaveform.drawOnImage(img, width, (int)(height*0.885), step, totalFrameAmount, blue);
 
 			int x = width / 240;
 			int y = (int) (height * 0.85);
@@ -206,10 +205,10 @@ public class VideoGenerator {
 				img.draw(textOrig, x, y);
 			}
 
-			newWaveform.drawOnImage(img, width, height, step, blue);
+			newWaveform.drawOnImage(img, width, (int)(height*0.965), step, totalFrameAmount, blue);
 
 			x = width / 240;
-			y = (int) (height * 0.925);
+			y = (int) (height * 0.93);
 			if (drawAllWhite) {
 				img.draw(textRemixWhite, x, y);
 			} else {

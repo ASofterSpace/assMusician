@@ -3,6 +3,7 @@
  */
 package com.asofterspace.assMusician;
 
+import com.asofterspace.assMusician.video.elements.Waveform;
 import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.DefaultImageFile;
 import com.asofterspace.toolbox.images.GraphDataPoint;
@@ -133,6 +134,8 @@ public class MusicGenerator {
 		// cut off silence from the front and back (basically trim() for the wav file... ^^)
 		wavSoundData.trim();
 
+		Waveform origWaveform = new Waveform(wavSoundData);
+
 		wavDataLeft = wavSoundData.getLeftData();
 		wavDataRight = wavSoundData.getRightData();
 
@@ -195,6 +198,8 @@ public class MusicGenerator {
 		// handle the overflow by normalizing the entire song
 		SoundData soundData = new SoundData(wavDataLeft, wavDataRight);
 		soundData.normalize();
+
+		Waveform newWaveform = new Waveform(soundData);
 
 		// save the new song as audio
 		WavFile newSongFile = new WavFile(workDir, "our_song.wav");
@@ -261,7 +266,8 @@ public class MusicGenerator {
 			wavGraphImg.setDataColor(new ColorRGB(0, 0, 255));
 			wavGraphImg.setAbsoluteDataPoints(wavData);
 
-			vidGenny.generateVideoBasedOnBeats(drumBeats, totalFrameAmount, width, height, wavGraphImg);
+			vidGenny.generateVideoBasedOnBeats(drumBeats, totalFrameAmount, width, height, wavGraphImg,
+				origWaveform, newWaveform);
 		}
 
 		// splice the generated audio together with the generated video
