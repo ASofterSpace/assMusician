@@ -50,23 +50,39 @@ public class Waveform {
 			int top = vertPos - ((loudMax * 64) / (8*16*16*16));
 			int mid = vertPos;
 			int bottom = vertPos - ((loudMin * 64) / (8*16*16*16));
-			if (x < leftOffset + 10) {
-				// for the first ten pixels, fade in the waveform
-				ColorRGB black = new ColorRGB(0, 0, 0);
-				if (x == width / 2) {
-					img.drawLine(x, top, x, bottom, ColorRGB.intermix(highlightColor, black, (x - leftOffset) / 10.0));
-				} else {
-					img.drawLine(x, mid, x, bottom, ColorRGB.intermix(midgroundColor, black, (x - leftOffset) / 10.0));
-					img.drawLine(x, top, x, mid, ColorRGB.intermix(foregroundColor, black, (x - leftOffset) / 10.0));
-				}
-			} else {
-				if (x == width / 2) {
-					img.drawLine(x, top, x, bottom, highlightColor);
-				} else {
-					img.drawLine(x, mid, x, bottom, midgroundColor);
-					img.drawLine(x, top, x, mid, foregroundColor);
-				}
+
+			int fadeLen = width / 150;
+			double fadeLenDouble = fadeLen;
+
+			// for the first ten pixels, fade in the waveform
+			if (x < leftOffset + fadeLen) {
+				img.drawLine(x, mid, x, bottom, ColorRGB.intermix(midgroundColor, new ColorRGB(0, 0, 0), (x - leftOffset) / fadeLenDouble));
+				img.drawLine(x, top, x, mid, ColorRGB.intermix(foregroundColor, new ColorRGB(0, 0, 0), (x - leftOffset) / fadeLenDouble));
+				continue;
 			}
+
+			int halfWidth = width / 2;
+
+			if ((x > halfWidth - fadeLen) && (x < halfWidth)) {
+				img.drawLine(x, mid, x, bottom, ColorRGB.intermix(midgroundColor, highlightColor, (halfWidth - x) / fadeLenDouble));
+				img.drawLine(x, top, x, mid, ColorRGB.intermix(foregroundColor, highlightColor, (halfWidth - x) / fadeLenDouble));
+				continue;
+			}
+
+			if (x == halfWidth) {
+				img.drawLine(x, top, x, bottom, highlightColor);
+				continue;
+			}
+
+			if ((x > halfWidth) && (x < halfWidth + fadeLen)) {
+				img.drawLine(x, mid, x, bottom, ColorRGB.intermix(midgroundColor, highlightColor, (x - halfWidth) / fadeLenDouble));
+				img.drawLine(x, top, x, mid, ColorRGB.intermix(foregroundColor, highlightColor, (x - halfWidth) / fadeLenDouble));
+				continue;
+			}
+
+			// for all other pixels, just show the waveform regularly
+			img.drawLine(x, mid, x, bottom, midgroundColor);
+			img.drawLine(x, top, x, mid, foregroundColor);
 		}
 	}
 }
