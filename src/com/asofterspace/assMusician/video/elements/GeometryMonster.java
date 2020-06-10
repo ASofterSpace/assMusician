@@ -97,7 +97,7 @@ public class GeometryMonster {
 
 			// ... once every 42 seconds, do something funny - that is, take on a preconfigured shape...
 			if (rand.nextInt(MusicGenerator.frameRate * 42) == 0) {
-				int shape = rand.nextInt(4);
+				int shape = rand.nextInt(6);
 				int robin = 0;
 				double posX = width / 4.0;
 				double posY = height / 4.0;
@@ -127,8 +127,31 @@ public class GeometryMonster {
 						}
 						break;
 
-					// square
+					// triangle upside-down
 					case 1:
+						if (points.size() < 3) {
+							break;
+						}
+						shapeGuardOn = true;
+						for (GeometryPoint point : points) {
+							switch (robin) {
+								case 0:
+									point.setTarget(new Point<Double, Double>(width / 2.0, height - posY));
+									break;
+								case 1:
+									point.setTarget(new Point<Double, Double>(width - posX, posY));
+									break;
+								default:
+									point.setTarget(new Point<Double, Double>(posX, posY));
+									robin = -1;
+									break;
+							}
+							robin++;
+						}
+						break;
+
+					// square
+					case 2:
 						if (points.size() < 4) {
 							break;
 						}
@@ -153,8 +176,34 @@ public class GeometryMonster {
 						}
 						break;
 
+					// caro
+					case 3:
+						if (points.size() < 4) {
+							break;
+						}
+						shapeGuardOn = true;
+						for (GeometryPoint point : points) {
+							switch (robin) {
+								case 0:
+									point.setTarget(new Point<Double, Double>(width / 2.0, posY));
+									break;
+								case 1:
+									point.setTarget(new Point<Double, Double>(width - posX, height / 2.0));
+									break;
+								case 2:
+									point.setTarget(new Point<Double, Double>(width / 2.0, height - posY));
+									break;
+								default:
+									point.setTarget(new Point<Double, Double>(posX, height / 2.0));
+									robin = -1;
+									break;
+							}
+							robin++;
+						}
+						break;
+
 					// sixangle
-					case 2:
+					case 4:
 						if (points.size() < 6) {
 							break;
 						}
