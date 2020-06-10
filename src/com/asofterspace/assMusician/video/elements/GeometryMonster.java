@@ -45,6 +45,11 @@ public class GeometryMonster {
 	// TODO :: maybe have something exactly like this geometry monster, but smaller (so a full geometry monster
 	// is generated, but then is scaled to something smaller), and have that wobble around, as it would look
 	// really intricate and cool?
+	// TODO :: with a certain (quite small though!) probability, split one geometry monster into two, that
+	// are then next to each other and are dancing independently... :D (they start as the same and then
+	// get split apart and move sideways, starting to wobble on their own rather than same same - for that,
+	// maybe just keep individual target points until reached, even while splitting, just change the origin
+	// from which we are calculating)
 	public void drawOnImage(Image img, int width, int height, int step, double currentLoudnessScaled,
 		ColorRGB color) {
 

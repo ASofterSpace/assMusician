@@ -183,11 +183,11 @@ public class MusicGenerator {
 		// add drums
 		List<Beat> drumBeats = getDrumBeats();
 
-		addDrumsBasedOnBeats(drumBeats);
-
 		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition.png");
 		wavImgFile.assign(wavGraphImg);
 		wavImgFile.save();
+
+		addDrumsBasedOnBeats(drumBeats);
 
 		// add rev sound at the beginning at high volume
 		addWavMono(WAV_REV_DRUM, 0, 8);
@@ -602,7 +602,7 @@ public class MusicGenerator {
 		// generate beats based on the detected bpm, but still try to locally align to the closest
 		// detected beat, e.g. align to the next one to the right if there is one to the left or
 		// right of the current beat and the distance to it is less than 1/10 of a beat...
-		List<Integer> bpmBasedBeats = new ArrayList<>();
+		List<Beat> mayBeats = new ArrayList<>();
 		/*for (int i = 0; i < wavDataLeft.length; i += millisToChannelPos((long) ((1000*60) / bpm))) {
 			bpmBasedBeats.add(i);
 			wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
@@ -618,6 +618,7 @@ public class MusicGenerator {
 			while (maximumPositions.get(maxPosI) < i - uncertainty) {
 				maxPosI++;
 			}
+			Beat mayBeat = new Beat(i);
 			if (maximumPositions.get(maxPosI) < i + uncertainty) {
 				while (maximumPositions.get(maxPosI) < i) {
 					maxPosI++;
@@ -632,11 +633,88 @@ public class MusicGenerator {
 					}
 				}
 				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+				mayBeat.setPosition(i);
+				mayBeat.setIsAligned(true);
 			} else {
 				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
+				mayBeat.setIsAligned(false);
 			}
-			bpmBasedBeats.add(i);
+			mayBeats.add(mayBeat);
 		}
+
+		// ALGORITHM 3.8
+
+		// Aaaaand - you thought we were done, huh? :D - we continue... now we are looking at this:
+		//  detected beats: |  |  |
+		// generated beats: | | | |
+		// so the first and last are aligned, but in the middle it would actually fit quite nicely...
+		// if we had one less being generated, and they were put to equi-distance - so let's!
+
+		List<Integer> bpmBasedBeats = new ArrayList<>();
+
+		for (int i = 0; i < mayBeats.size(); i++) {
+			Beat beat = mayBeats.get(i);
+
+			bpmBasedBeats.add(beat.getPosition());
+
+			/*
+			// fun idea, but actually it ends up sounding nicer without this algo ._.'
+
+			if (beat.getIsAligned()) {
+				// we accept 2 until 5 beats in between
+				for (int k = 2; k < 6; k++) {
+					boolean foundSituation = true;
+					for (int m = i + 1; m <= i + k; m++) {
+						if (m >= mayBeats.size()) {
+							foundSituation = false;
+							break;
+						}
+						if (mayBeats.get(m).getIsAligned()) {
+							foundSituation = false;
+							break;
+						}
+					}
+					// we found such a situation for k beats in between - that is, we have
+					// k mayBeats generated in between which are all unaligned...
+					if (foundSituation) {
+						if (i + k + 1 < mayBeats.size()) {
+							if (mayBeats.get(i + k + 1).getIsAligned()) {
+								// ... now let's see if we have exactly k-1 or k+1 detected
+								// beats in between these!
+								int detectedBeatsFound = 0;
+								for (int maxPosIter = 0; maxPosIter < maximumPositions.size(); maxPosIter++) {
+									if ((maximumPositions.get(maxPosIter) > beat.getPosition()) &&
+										(maximumPositions.get(maxPosIter) < mayBeats.get(i+k+1).getPosition())) {
+										// TODO :: in addition to all that, also check if the beats detected here
+										// are somewhat nicely aligned already - not just |   ||   |, but more
+										// like |  |  |  |
+										detectedBeatsFound++;
+									}
+								}
+								int startPos = beat.getPosition();
+								int endPos = mayBeats.get(i+k+1).getPosition();
+								// here we generated one more than we detected - so let's remove one!
+								if ((detectedBeatsFound == k - 1) ||
+									//  we generated one less than we detected - so let's add one!
+									(detectedBeatsFound == k + 1)) {
+									System.out.println("At startPos " + startPos + " (" + channelPosToMillis(startPos) + " ms)" +
+										" and endPos " + endPos + " (" + channelPosToMillis(endPos) + " ms) we detected " +
+										detectedBeatsFound + " beats, but generated " + k + " so let's do something about that!");
+									for (int subGenI = 0; subGenI < detectedBeatsFound; subGenI++) {
+										bpmBasedBeats.add(startPos + (((subGenI+1)*(endPos - startPos))/(detectedBeatsFound+1)));
+									}
+									i += k;
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+			*/
+		}
+
+		Collections.sort(bpmBasedBeats);
 
 		// ALGORITHM 3.7
 
