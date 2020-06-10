@@ -12,6 +12,7 @@ import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
+import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.music.Beat;
 import com.asofterspace.toolbox.music.BeatStats;
 import com.asofterspace.toolbox.music.SoundData;
@@ -162,6 +163,22 @@ public class MusicGenerator {
 		DefaultImageFile basicWavFile = new DefaultImageFile(workDir, "waveform_before.png");
 		basicWavFile.assign(wavGraphImg);
 		basicWavFile.save();
+
+		TextFile waveformAnalysisFile = new TextFile(workDir, "waveform_analysis.txt");
+		waveformAnalysisFile.saveContent(
+			"unser Beispielsong ist 3:41 lang, also 221 Sekunden\r\n" +
+			"\r\n" +
+			"waveform image Breite ist 2236 px, ohne Rahmen 2216 px - also ohne Rahmen ist -20\r\n" +
+			"\r\n" +
+			"wenn wir jetzt an Position x interessiert sind, ist der pixwert:\r\n" +
+			"x_px = (x_sec * (2236 / 221)) + 10\r\n" +
+			"(plus 10, damit wir den linken Rahmen mit drin haben)\r\n" +
+			"\r\n" +
+			"und andersherum:\r\n" +
+			"x_sec = (x_px - 10) * (221 / 2236)\r\n" +
+			"\r\n" +
+			"uuund das lustige ist, diese Formeln sollten immer gelten, auch für andere Songs! :D"
+		);
 
 		// add drums
 		List<Beat> drumBeats = getDrumBeats();
