@@ -898,55 +898,35 @@ public class MusicGenerator {
 			int curBeat = beat.getPosition();
 			int curBeatLen = beat.getLength();
 
-			double baseLoudness = (7.5 * beat.getLoudness()) / 25797;
-
-			long baseJigglieness = divOr255(255 * beat.getJigglieness(), stats.getMaxJigglieness());
-
-			long prevJigglieness = baseJigglieness;
-			if (b > 0) {
-				prevJigglieness = divOr255(255 * beats.get(b-1).getJigglieness(), stats.getMaxJigglieness());
-			}
-			long prevPrevJigglieness = baseJigglieness;
-			if (b > 1) {
-				prevPrevJigglieness = divOr255(255 * beats.get(b-2).getJigglieness(), stats.getMaxJigglieness());
-			}
-			long nextJigglieness = baseJigglieness;
-			if (b < beats.size() - 1) {
-				nextJigglieness = divOr255(255 * beats.get(b+1).getJigglieness(), stats.getMaxJigglieness());
-			}
-			long nextNextJigglieness = baseJigglieness;
-			if (b < beats.size() - 2) {
-				nextNextJigglieness = divOr255(255 * beats.get(b+2).getJigglieness(), stats.getMaxJigglieness());
-			}
-
-			// prevent weirdly missing drums in the middle of lots-of-drum parts
-
-			// prevent one missing
-			if ((prevJigglieness > baseJigglieness) && (nextJigglieness > baseJigglieness)) {
-				baseJigglieness = Math.min(prevJigglieness, nextJigglieness);
-			}
-
-			// prevent two missing
-			if ((prevJigglieness > baseJigglieness) && (nextNextJigglieness > baseJigglieness)) {
-				baseJigglieness = Math.min(prevJigglieness, nextNextJigglieness);
-			}
-			if ((prevPrevJigglieness > baseJigglieness) && (nextJigglieness > baseJigglieness)) {
-				baseJigglieness = Math.min(prevPrevJigglieness, nextJigglieness);
-			}
-
 			graphImg.drawVerticalLineAt(beat.getPosition(), new ColorRGB(
 				divOr255(255 * beat.getLoudness(), stats.getMaxLoudness()),
 				divOr255(255 * beat.getLength(), stats.getMaxLength()),
 				divOr255(255 * beat.getJigglieness(), stats.getMaxJigglieness())
 			));
 
-			// if we are much quieter than maximum, then we will use this factor to reduce the drumPatternIndicator...
-			double relativeLoudnessFactor = 2 * beat.getLoudness() / stats.getMaxLoudness();
-			if (relativeLoudnessFactor > 1.0) {
-				// ... however, we will NOT use the loudness to increase the drumPatternIndicator!
-				relativeLoudnessFactor = 1.0;
+
+			double baseLoudness = (7.5 * beat.getLoudness()) / 25797;
+
+			long nextNextDrumPatternIndicator = getDrumPatternIndicatorFor(beats, b + 2, stats);
+			long nextDrumPatternIndicator = getDrumPatternIndicatorFor(beats, b + 1, stats);
+			long drumPatternIndicator = getDrumPatternIndicatorFor(beats, b, stats);
+			long prevDrumPatternIndicator = getDrumPatternIndicatorFor(beats, b - 1, stats);
+			long prevPrevDrumPatternIndicator = getDrumPatternIndicatorFor(beats, b - 2, stats);
+
+			// prevent weirdly missing drums in the middle of lots-of-drum parts
+
+			// prevent one missing
+			if ((prevDrumPatternIndicator > drumPatternIndicator) && (nextDrumPatternIndicator > drumPatternIndicator)) {
+				drumPatternIndicator = Math.min(prevDrumPatternIndicator, nextDrumPatternIndicator);
 			}
-			long drumPatternIndicator = (long) (baseJigglieness * relativeLoudnessFactor);
+
+			// prevent two missing
+			if ((prevDrumPatternIndicator > drumPatternIndicator) && (nextNextDrumPatternIndicator > drumPatternIndicator)) {
+				drumPatternIndicator = Math.min(prevDrumPatternIndicator, nextNextDrumPatternIndicator);
+			}
+			if ((prevPrevDrumPatternIndicator > drumPatternIndicator) && (nextDrumPatternIndicator > drumPatternIndicator)) {
+				drumPatternIndicator = Math.min(prevPrevDrumPatternIndicator, nextDrumPatternIndicator);
+			}
 
 			switch (useDrumSounds) {
 				case 1:
@@ -1017,6 +997,24 @@ public class MusicGenerator {
 		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_stats.png");
 		wavImgFile.assign(graphImg);
 		wavImgFile.save();
+	}
+
+	private long getDrumPatternIndicatorFor(List<Beat> beats, int beatNum, BeatStats stats) {
+
+		if ((beatNum < 0) || (beatNum >= beats.size())) {
+			return 0;
+		}
+
+		long baseJigglieness = divOr255(255 * beats.get(beatNum).getJigglieness(), stats.getMaxJigglieness());
+
+		// if we are much quieter than maximum, then we will use this factor to reduce the drumPatternIndicator...
+		double relativeLoudnessFactor = 2 * beats.get(beatNum).getLoudness() / stats.getMaxLoudness();
+		if (relativeLoudnessFactor > 1.0) {
+			// ... however, we will NOT use the loudness to increase the drumPatternIndicator!
+			relativeLoudnessFactor = 1.0;
+		}
+
+		return (long) (baseJigglieness * relativeLoudnessFactor);
 	}
 
 	/**
