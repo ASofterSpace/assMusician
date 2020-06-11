@@ -102,7 +102,7 @@ public class GeometryMonster {
 
 			// ... once every 42 seconds, do something funny - that is, take on a preconfigured shape...
 			if (rand.nextInt(MusicGenerator.frameRate * 42) == 0) {
-				int shape = rand.nextInt(6);
+				int shape = rand.nextInt(8);
 				int robin = 0;
 				double posX = width / 4.0;
 				double posY = height / 4.0;
@@ -181,8 +181,40 @@ public class GeometryMonster {
 						}
 						break;
 
-					// caro
+					// sixpoint square
 					case 3:
+						if (points.size() < 6) {
+							break;
+						}
+						shapeGuardOn = true;
+						for (GeometryPoint point : points) {
+							switch (robin) {
+								case 0:
+									point.setTarget(new Point<Double, Double>(posX, posY));
+									break;
+								case 1:
+									point.setTarget(new Point<Double, Double>(width - posX, posY));
+									break;
+								case 2:
+									point.setTarget(new Point<Double, Double>(posX, height / 2.0));
+									break;
+								case 3:
+									point.setTarget(new Point<Double, Double>(width - posX, height / 2.0));
+									break;
+								case 4:
+									point.setTarget(new Point<Double, Double>(width - posX, height - posY));
+									break;
+								default:
+									point.setTarget(new Point<Double, Double>(posX, height - posY));
+									robin = -1;
+									break;
+							}
+							robin++;
+						}
+						break;
+
+					// caro
+					case 4:
 						if (points.size() < 4) {
 							break;
 						}
@@ -208,7 +240,7 @@ public class GeometryMonster {
 						break;
 
 					// sixangle
-					case 4:
+					case 5:
 						if (points.size() < 6) {
 							break;
 						}
@@ -240,7 +272,7 @@ public class GeometryMonster {
 						break;
 
 					// diamond
-					default:
+					case 6:
 						if (points.size() < 7) {
 							break;
 						}
@@ -267,6 +299,41 @@ public class GeometryMonster {
 									break;
 								default:
 									point.setTarget(new Point<Double, Double>(width / 2.0, height - posY));
+									robin = -1;
+									break;
+							}
+							robin++;
+						}
+						break;
+
+					// diamond sideways
+					default:
+						if (points.size() < 7) {
+							break;
+						}
+						shapeGuardOn = true;
+						for (GeometryPoint point : points) {
+							switch (robin) {
+								case 0:
+									point.setTarget(new Point<Double, Double>(posX, height / 2.0));
+									break;
+								case 1:
+									point.setTarget(new Point<Double, Double>(width / 2.0, height - (posY / 2.0)));
+									break;
+								case 2:
+									point.setTarget(new Point<Double, Double>(width / 2.0, ((height - (posY / 2.0)) + (height / 2.0)) / 2.0));
+									break;
+								case 3:
+									point.setTarget(new Point<Double, Double>(width / 2.0, height / 2.0));
+									break;
+								case 4:
+									point.setTarget(new Point<Double, Double>(width / 2.0, ((posY / 2.0) + (height / 2.0)) / 2.0));
+									break;
+								case 5:
+									point.setTarget(new Point<Double, Double>(width / 2.0, posY / 2.0));
+									break;
+								default:
+									point.setTarget(new Point<Double, Double>(width - posX, height / 2.0));
 									robin = -1;
 									break;
 							}
