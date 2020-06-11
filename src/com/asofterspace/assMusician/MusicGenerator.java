@@ -133,7 +133,11 @@ public class MusicGenerator {
 		SoundData wavSoundData = wav.getSoundData();
 
 		// cut off silence from the front and back (basically trim() for the wav file... ^^)
-		wavSoundData.trim();
+		// but add one second of silence in the end!
+		wavSoundData.trimAndAdd(millisToChannelPos(1000));
+		// fade in and out for 1 second each
+		wavSoundData.fadeIn(millisToChannelPos(1000));
+		wavSoundData.fadeOut(millisToChannelPos(1000));
 
 		Waveform origWaveform = new Waveform(wavSoundData);
 
