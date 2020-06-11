@@ -395,14 +395,14 @@ public class MusicGenerator {
 		// ALGORITHM 3
 
 		// We first iterate over the entire song and try to find maxima, by finding
-		// first the maxima over each 0.2 s region, and then we go over all the maxima
+		// first the maxima over each 0.025 s region, and then we go over all the maxima
 		// from end to start and keep only the ones which are preceded by lower ones
 		// For this (for now) we only use the left channel...
 		List<Integer> maximumPositions = new ArrayList<>();
 		List<Integer> potentialMaximumPositions = new ArrayList<>();
 		int localMaxPos = 0;
 		int localMax = 0;
-		int regionSize = millisToChannelPos(100);
+		int regionSize = millisToChannelPos(25);
 		for (int i = 0; i < wavDataLeft.length; i++) {
 			if (wavDataLeft[i] > localMax) {
 				localMax = wavDataLeft[i];
@@ -414,6 +414,7 @@ public class MusicGenerator {
 				localMaxPos = i;
 			}
 		}
+		/*
 		for (int i = potentialMaximumPositions.size() - 1; i > 2; i--) {
 
 				// if the previous maximum is smaller
@@ -429,12 +430,50 @@ public class MusicGenerator {
 				maximumPositions.add(potentialMaximumPositions.get(i));
 			}
 		}
+		*/
+		Map<Integer, Integer> moreLikelyMaximumPositions = new HashMap<>();
+		for (int i = potentialMaximumPositions.size() - 1; i > 2; i--) {
+
+				// if the previous maximum is smaller
+			if ((wavDataLeft[potentialMaximumPositions.get(i-1)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
+				// and the previous-previous maximum is smaller
+				(wavDataLeft[potentialMaximumPositions.get(i-2)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
+				// and the previous-previous-previous maximum is smaller
+				(wavDataLeft[potentialMaximumPositions.get(i-3)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
+				// and this maximum is above volume 1/8
+				(wavDataLeft[potentialMaximumPositions.get(i)] > 16*16*16)) {
+
+				// then we actually fully accept it as maximum :)
+				moreLikelyMaximumPositions.put(potentialMaximumPositions.get(i),
+					(3*wavDataLeft[potentialMaximumPositions.get(i)])-(wavDataLeft[potentialMaximumPositions.get(i-1)]+
+					wavDataLeft[potentialMaximumPositions.get(i-2)]+wavDataLeft[potentialMaximumPositions.get(i-3)]));
+			}
+		}
+
+		// we now iterate once more, getting the highest / most maximum-y of the maxima
+		for (int i = 0; i < wavDataLeft.length; i += millisToChannelPos(100)) {
+			int highestPos = -1;
+			int highestAmount = -1;
+			for (int k = i; k < i + millisToChannelPos(100); k++) {
+				Integer val = moreLikelyMaximumPositions.get(k);
+				if (val != null) {
+					if (val > highestAmount) {
+						highestAmount = val;
+						highestPos = k;
+					}
+				}
+			}
+			if (highestPos >= 0) {
+				maximumPositions.add(highestPos);
+			}
+		}
 
 		Collections.sort(maximumPositions);
 
+/*
 		// now iterate over all the found maximum positions, and whenever the distance between some is small-ish
-		// (let's say 0.5s), we mush them together into one
-		int smooshSize = millisToChannelPos(500);
+		// (let's say 0.1s), we mush them together into one
+		int smooshSize = millisToChannelPos(100);
 		List<Integer> smooshedMaximumPositions = new ArrayList<>();
 
 		for (int i = maximumPositions.size() - 1; i >= 0; i--) {
@@ -455,6 +494,7 @@ public class MusicGenerator {
 		}
 
 		maximumPositions = smooshedMaximumPositions;
+*/
 
 		Collections.sort(maximumPositions);
 
@@ -515,11 +555,14 @@ public class MusicGenerator {
 					continue;
 				}
 				int curDist = maximumPositions.get(i) - maximumPositions.get(j);
-				int curDiffInMs = channelPosToMillis(curDist);
+				int curDiffInMs = channelPosToMillis(10*curDist);
 
 				// a difference of 1 ms means that there are 60*1000 beats per minute,
 				// and we have the additional *10 to get more accuracy
-				int curBpm = (60*1000*BUCKET_ACCURACY_FACTOR) / curDiffInMs;
+				if (curDiffInMs == 0) {
+					continue;
+				}
+				int curBpm = (60*1000*BUCKET_ACCURACY_FACTOR*10) / curDiffInMs;
 
 				// scale the bpm into the range that we are interested in
 				while (curBpm < MIN_BPM*1000*BUCKET_ACCURACY_FACTOR) {
