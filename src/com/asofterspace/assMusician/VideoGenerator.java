@@ -45,7 +45,7 @@ public class VideoGenerator {
 	// as current beat loudness, current beat jitterieness, current beat length etc... (all written in
 	// a console-y or SciFi-y!)
 	public void generateVideoBasedOnBeats(List<Beat> beats, int totalFrameAmount, int width, int height,
-		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform) {
+		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle) {
 
 		System.out.println("");
 		System.out.println("Generating " + totalFrameAmount + " frames...");
@@ -111,6 +111,9 @@ public class VideoGenerator {
 		textJitterieness.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
 		Image textJitterienessWhite = textJitterieness.copy();
 		textJitterieness.multiply(origBlue);
+
+		Image textTitle = Image.createTextImage(songTitle, "Neuropol", 29, true, origBlue, trueBlack);
+		Image textTitleWhite = Image.createTextImage(songTitle, "Neuropol", 29, true, trueWhite, trueBlack);
 
 		double currentLoudnessScaled = 0;
 		int lastLength = 0;
@@ -210,6 +213,15 @@ public class VideoGenerator {
 
 			// background
 			img.drawRectangle(0, 0, width-1, height-1, black);
+
+			// title
+			int titleX = (width - textTitle.getWidth()) / 2;
+			int titleY = (32 * height) / 1080;
+			if (drawAllWhite) {
+				img.draw(textTitleWhite, titleX, titleY);
+			} else {
+				img.draw(textTitle, titleX, titleY);
+			}
 
 			// stars
 			for (Star star : stars) {

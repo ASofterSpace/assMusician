@@ -283,8 +283,13 @@ public class MusicGenerator {
 			wavGraphImg.setDataColor(new ColorRGB(0, 0, 255));
 			wavGraphImg.setAbsoluteDataPoints(wavData);
 
+			String songTitle = originalSong.getLocalFilename();
+			if (songTitle.contains(".")) {
+				songTitle = songTitle.substring(0, songTitle.lastIndexOf("."));
+			}
+			songTitle += " (Remix with Drums)";
 			vidGenny.generateVideoBasedOnBeats(drumBeats, totalFrameAmount, width, height, wavGraphImg,
-				origWaveform, newWaveform);
+				origWaveform, newWaveform, songTitle);
 		}
 
 		// splice the generated audio together with the generated video
