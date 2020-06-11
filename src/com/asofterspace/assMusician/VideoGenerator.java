@@ -41,9 +41,8 @@ public class VideoGenerator {
 		this.workDir = workDir;
 	}
 
-	// TODO: also have a straight line from the side (actually, several!) and on that display info such
-	// as current beat loudness, current beat jitterieness, current beat length etc... (all written in
-	// a console-y or SciFi-y!)
+	// TODO :: add asofterspace fun logos to the start of the video?
+	// like, they are there (and stay there for a second or so) and then the actual stuff fades in?
 	public void generateVideoBasedOnBeats(List<Beat> beats, int totalFrameAmount, int width, int height,
 		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle) {
 
