@@ -216,7 +216,7 @@ public class VideoGenerator {
 
 			// title
 			int titleX = (width - textTitle.getWidth()) / 2;
-			int titleY = (32 * height) / 1080;
+			int titleY = (8 * height) / 1080;
 			if (drawAllWhite) {
 				img.draw(textTitleWhite, titleX, titleY);
 			} else {
