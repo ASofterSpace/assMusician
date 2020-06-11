@@ -50,6 +50,9 @@ public class GeometryMonster {
 	// get split apart and move sideways, starting to wobble on their own rather than same same - for that,
 	// maybe just keep individual target points until reached, even while splitting, just change the origin
 	// from which we are calculating)
+	// TODO :: add even more fun-ness (e.g. the geometry monster transforming into breakout blocks and then
+	// a ball and paddle playing, or transforming into space invaders that all looks like the geometry monster
+	// and attack, or even transforming into Game of Life somehow... ^^)
 	public void drawOnImage(Image img, int width, int height, int step, double currentLoudnessScaled,
 		ColorRGB color) {
 
