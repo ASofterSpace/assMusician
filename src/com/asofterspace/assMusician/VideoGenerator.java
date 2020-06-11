@@ -207,11 +207,9 @@ public class VideoGenerator {
 				continue;
 			}
 
-			Image img = new Image(width, height);
-			img.setLineWidth(3);
-
 			// background
-			img.drawRectangle(0, 0, width-1, height-1, black);
+			Image img = new Image(width, height, black);
+			img.setLineWidth(3);
 
 			// title
 			int titleX = (width - textTitle.getWidth()) / 2;
