@@ -52,7 +52,7 @@ public class GeometryMonster {
 	// a ball and paddle playing, or transforming into space invaders that all looks like the geometry monster
 	// and attack, or even transforming into Game of Life somehow... ^^)
 	public void drawOnImage(Image img, int width, int height, int step, double currentLoudnessScaled,
-		ColorRGB color) {
+		ColorRGB color, boolean firstChanged, boolean encounteredChanged) {
 
 		if (lines.size() < 1) {
 			GeometryLine newLine = new GeometryLine(0, 1);
@@ -62,48 +62,52 @@ public class GeometryMonster {
 
 		double stepDifference = 1.0 / MusicGenerator.frameRate;
 
-		// every 8 seconds...
-		if (rand.nextInt(MusicGenerator.frameRate * 8) == 0) {
+		// after we encountered the first drum sound that we added...
+		if (encounteredChanged) {
 
-			// ... if the shape guard is not currently on (so if we are not currently drawing a special shape)...
-			if (!shapeGuardOn) {
+			// every 8 seconds...
+			if (firstChanged || (rand.nextInt(MusicGenerator.frameRate * 8) == 0)) {
 
-				// get a point at random
-				int splitPointIndex = rand.nextInt(points.size());
-				int newPointIndex = points.size();
+				// ... if the shape guard is not currently on (so if we are not currently drawing a special shape)...
+				if (!shapeGuardOn) {
 
-				// create a new one at the same position
-				GeometryPoint newPoint = new GeometryPoint(points.get(splitPointIndex));
+					// get a point at random
+					int splitPointIndex = rand.nextInt(points.size());
+					int newPointIndex = points.size();
 
-				// add the new point itself
-				points.add(newPoint);
+					// create a new one at the same position
+					GeometryPoint newPoint = new GeometryPoint(points.get(splitPointIndex));
 
-				// choose one line connecting the old point to another point
-				List<GeometryLine> affectedLines = new ArrayList<>();
-				for (GeometryLine line : lines) {
-					if ((int) line.getLeft() == splitPointIndex) {
-						affectedLines.add(line);
+					// add the new point itself
+					points.add(newPoint);
+
+					// choose one line connecting the old point to another point
+					List<GeometryLine> affectedLines = new ArrayList<>();
+					for (GeometryLine line : lines) {
+						if ((int) line.getLeft() == splitPointIndex) {
+							affectedLines.add(line);
+						}
+						if ((int) line.getRight() == splitPointIndex) {
+							affectedLines.add(line);
+						}
 					}
-					if ((int) line.getRight() == splitPointIndex) {
-						affectedLines.add(line);
+
+					// duplicate that one line with the next point instead of the old point as target
+					GeometryLine duplicatedLine = affectedLines.get(rand.nextInt(affectedLines.size()));
+					GeometryLine newLine1 = null;
+					if ((int) duplicatedLine.getLeft() == splitPointIndex) {
+						newLine1 = new GeometryLine(duplicatedLine.getRight(), newPointIndex);
+					} else {
+						newLine1 = new GeometryLine(duplicatedLine.getLeft(), newPointIndex);
 					}
-				}
+					newLine1.setColor(duplicatedLine.getColor().getSlightlyDifferent());
+					lines.add(newLine1);
 
-				// duplicate that one line with the next point instead of the old point as target
-				GeometryLine duplicatedLine = affectedLines.get(rand.nextInt(affectedLines.size()));
-				GeometryLine newLine1 = null;
-				if ((int) duplicatedLine.getLeft() == splitPointIndex) {
-					newLine1 = new GeometryLine(duplicatedLine.getRight(), newPointIndex);
-				} else {
-					newLine1 = new GeometryLine(duplicatedLine.getLeft(), newPointIndex);
+					// add a line between the old point and the new point
+					GeometryLine newLine2 = new GeometryLine(splitPointIndex, newPointIndex);
+					newLine2.setColor(duplicatedLine.getColor().getSlightlyDifferent());
+					lines.add(newLine2);
 				}
-				newLine1.setColor(duplicatedLine.getColor().getSlightlyDifferent());
-				lines.add(newLine1);
-
-				// add a line between the old point and the new point
-				GeometryLine newLine2 = new GeometryLine(splitPointIndex, newPointIndex);
-				newLine2.setColor(duplicatedLine.getColor().getSlightlyDifferent());
-				lines.add(newLine2);
 			}
 		}
 

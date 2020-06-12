@@ -942,6 +942,7 @@ public class MusicGenerator {
 						addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
 						addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((5 * curBeatLen) / 8), baseLoudness);
 						addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((6 * curBeatLen) / 8), baseLoudness);
+						beat.setChanged(true);
 					} else {
 						if (drumPatternIndicator > 128) {
 							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 1.25*baseLoudness);
@@ -949,15 +950,18 @@ public class MusicGenerator {
 							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
 							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
 							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
+							beat.setChanged(true);
 						} else {
 							if (drumPatternIndicator > 96) {
 								addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
 								addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
+								beat.setChanged(true);
 							}
 						}
 					}
 					break;
 				case 2:
+					beat.setChanged(true);
 					switch (instrumentRing) {
 						case 0:
 							addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
