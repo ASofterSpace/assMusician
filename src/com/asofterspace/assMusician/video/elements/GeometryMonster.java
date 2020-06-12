@@ -31,7 +31,6 @@ public class GeometryMonster {
 		GeometryPoint bottomPoint = new GeometryPoint(width / 2.0, (2*height) / 3.0);
 		points.add(topPoint);
 		points.add(bottomPoint);
-		lines.add(new GeometryLine(0, 1));
 
 		rand = new Random();
 	}
@@ -54,6 +53,12 @@ public class GeometryMonster {
 	// and attack, or even transforming into Game of Life somehow... ^^)
 	public void drawOnImage(Image img, int width, int height, int step, double currentLoudnessScaled,
 		ColorRGB color) {
+
+		if (lines.size() < 1) {
+			GeometryLine newLine = new GeometryLine(0, 1);
+			newLine.setColor(color);
+			lines.add(newLine);
+		}
 
 		double stepDifference = 1.0 / MusicGenerator.frameRate;
 
@@ -86,14 +91,19 @@ public class GeometryMonster {
 
 				// duplicate that one line with the next point instead of the old point as target
 				GeometryLine duplicatedLine = affectedLines.get(rand.nextInt(affectedLines.size()));
+				GeometryLine newLine1 = null;
 				if ((int) duplicatedLine.getLeft() == splitPointIndex) {
-					lines.add(new GeometryLine(duplicatedLine.getRight(), newPointIndex));
+					newLine1 = new GeometryLine(duplicatedLine.getRight(), newPointIndex);
 				} else {
-					lines.add(new GeometryLine(duplicatedLine.getLeft(), newPointIndex));
+					newLine1 = new GeometryLine(duplicatedLine.getLeft(), newPointIndex);
 				}
+				newLine1.setColor(duplicatedLine.getColor().getSlightlyDifferent());
+				lines.add(newLine1);
 
 				// add a line between the old point and the new point
-				lines.add(new GeometryLine(splitPointIndex, newPointIndex));
+				GeometryLine newLine2 = new GeometryLine(splitPointIndex, newPointIndex);
+				newLine2.setColor(duplicatedLine.getColor().getSlightlyDifferent());
+				lines.add(newLine2);
 			}
 		}
 
@@ -414,13 +424,23 @@ public class GeometryMonster {
 			}
 		}
 
+		boolean drawWhite = false;
+		ColorRGB white = new ColorRGB(255, 255, 255);
+		if (color.equals(white)) {
+			drawWhite = true;
+		}
+
 		for (GeometryLine line : lines) {
+			ColorRGB lineColor = line.getColor();
+			if (drawWhite) {
+				lineColor = white;
+			}
 			img.drawLine(
 				(int) (double) points.get(line.getLeft()).getX(),
 				(int) (double) points.get(line.getLeft()).getY(),
 				(int) (double) points.get(line.getRight()).getX(),
 				(int) (double) points.get(line.getRight()).getY(),
-				color
+				lineColor
 			);
 		}
 	}
