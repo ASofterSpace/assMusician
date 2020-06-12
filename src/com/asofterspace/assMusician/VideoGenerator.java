@@ -124,6 +124,9 @@ public class VideoGenerator {
 		boolean encounteredChanged = false;
 
 		for (int step = 0; step < totalFrameAmount; step++) {
+
+			firstChanged = false;
+
 			if ((step > 0) && (step % 1000 == 0)) {
 				System.out.println("We are at frame " + step + "...");
 			}
