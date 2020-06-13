@@ -65,10 +65,14 @@ public class GeometryMonster {
 		// after we encountered the first drum sound that we added...
 		if (encounteredChanged) {
 
-			// ... we want all lines to start slowly changing their colors, twice per second! :)
+			// ... we want all lines to start slowly changing their colors, five times per second! :)
 			for (GeometryLine line : lines) {
-				if (rand.nextInt(MusicGenerator.frameRate / 2) == 0) {
-					line.setColor(line.getColor().getSlightlyDifferent());
+				if (rand.nextInt(MusicGenerator.frameRate / 5) == 0) {
+					ColorRGB newColor = line.getColor().getSlightlyDifferent();
+					while (color.getDifferenceTo(newColor) > 128) {
+						newColor = line.getColor().getSlightlyDifferent();
+					}
+					line.setColor(newColor);
 				}
 			}
 
