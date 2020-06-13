@@ -100,12 +100,12 @@ public class GeometryMonster {
 					} else {
 						newLine1 = new GeometryLine(duplicatedLine.getLeft(), newPointIndex);
 					}
-					newLine1.setColor(duplicatedLine.getColor().getSlightlyDifferent().getSlightlyDifferent());
+					newLine1.setColor(duplicatedLine.getColor().getSlightlyDifferent().getSlightlyDifferent().getSlightlyDifferent());
 					lines.add(newLine1);
 
 					// add a line between the old point and the new point
 					GeometryLine newLine2 = new GeometryLine(splitPointIndex, newPointIndex);
-					newLine2.setColor(duplicatedLine.getColor().getSlightlyDifferent().getSlightlyDifferent());
+					newLine2.setColor(duplicatedLine.getColor().getSlightlyDifferent().getSlightlyDifferent().getSlightlyDifferent());
 					lines.add(newLine2);
 				}
 			}
