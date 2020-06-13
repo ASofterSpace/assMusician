@@ -65,7 +65,12 @@ public class GeometryMonster {
 		// after we encountered the first drum sound that we added...
 		if (encounteredChanged) {
 
-			// every 8 seconds...
+			// ... we want all lines to start slowly changing their colors, on each frame! :)
+			for (GeometryLine line : lines) {
+				line.setColor(line.getColor().getSlightlyDifferent());
+			}
+
+			// ... and every 8 seconds...
 			if (firstChanged || (rand.nextInt(MusicGenerator.frameRate * 8) == 0)) {
 
 				// ... if the shape guard is not currently on (so if we are not currently drawing a special shape)...
@@ -100,12 +105,12 @@ public class GeometryMonster {
 					} else {
 						newLine1 = new GeometryLine(duplicatedLine.getLeft(), newPointIndex);
 					}
-					newLine1.setColor(duplicatedLine.getColor().getSlightlyDifferent().getSlightlyDifferent().getSlightlyDifferent());
+					newLine1.setColor(duplicatedLine.getColor());
 					lines.add(newLine1);
 
 					// add a line between the old point and the new point
 					GeometryLine newLine2 = new GeometryLine(splitPointIndex, newPointIndex);
-					newLine2.setColor(duplicatedLine.getColor().getSlightlyDifferent().getSlightlyDifferent().getSlightlyDifferent());
+					newLine2.setColor(duplicatedLine.getColor());
 					lines.add(newLine2);
 				}
 			}
