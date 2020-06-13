@@ -69,8 +69,14 @@ public class GeometryMonster {
 			for (GeometryLine line : lines) {
 				if (rand.nextInt(MusicGenerator.frameRate / 5) == 0) {
 					ColorRGB newColor = line.getColor().getSlightlyDifferent();
+					int counter = 0;
 					while (color.getDifferenceTo(newColor) > 128) {
 						newColor = line.getColor().getSlightlyDifferent();
+						counter++;
+						if (counter > 128) {
+							newColor = ColorRGB.intermix(color, line.getColor(), 0.5);
+							break;
+						}
 					}
 					line.setColor(newColor);
 				}
