@@ -20,6 +20,7 @@ public class GeometryMonster {
 	private List<GeometryLine> lines;
 	private Random rand;
 	private boolean shapeGuardOn = false;
+	private int shapeGuardStillOnFor = 0;
 
 
 	public GeometryMonster(int width, int height) {
@@ -147,7 +148,7 @@ public class GeometryMonster {
 						if (points.size() < 3) {
 							break;
 						}
-						shapeGuardOn = true;
+						activateShapeGuard();
 						for (GeometryPoint point : points) {
 							switch (robin) {
 								case 0:
@@ -170,7 +171,7 @@ public class GeometryMonster {
 						if (points.size() < 3) {
 							break;
 						}
-						shapeGuardOn = true;
+						activateShapeGuard();
 						for (GeometryPoint point : points) {
 							switch (robin) {
 								case 0:
@@ -193,7 +194,7 @@ public class GeometryMonster {
 						if (points.size() < 4) {
 							break;
 						}
-						shapeGuardOn = true;
+						activateShapeGuard();
 						for (GeometryPoint point : points) {
 							switch (robin) {
 								case 0:
@@ -219,7 +220,7 @@ public class GeometryMonster {
 						if (points.size() < 6) {
 							break;
 						}
-						shapeGuardOn = true;
+						activateShapeGuard();
 						for (GeometryPoint point : points) {
 							switch (robin) {
 								case 0:
@@ -251,7 +252,7 @@ public class GeometryMonster {
 						if (points.size() < 4) {
 							break;
 						}
-						shapeGuardOn = true;
+						activateShapeGuard();
 						for (GeometryPoint point : points) {
 							switch (robin) {
 								case 0:
@@ -277,7 +278,7 @@ public class GeometryMonster {
 						if (points.size() < 6) {
 							break;
 						}
-						shapeGuardOn = true;
+						activateShapeGuard();
 						for (GeometryPoint point : points) {
 							switch (robin) {
 								case 0:
@@ -309,7 +310,7 @@ public class GeometryMonster {
 						if (points.size() < 7) {
 							break;
 						}
-						shapeGuardOn = true;
+						activateShapeGuard();
 						for (GeometryPoint point : points) {
 							switch (robin) {
 								case 0:
@@ -344,7 +345,7 @@ public class GeometryMonster {
 						if (points.size() < 7) {
 							break;
 						}
-						shapeGuardOn = true;
+						activateShapeGuard();
 						for (GeometryPoint point : points) {
 							switch (robin) {
 								case 0:
@@ -436,12 +437,15 @@ public class GeometryMonster {
 
 		// keep the shape guard activated as long as not all points have moved to their designated targets
 		if (shapeGuardOn) {
-			shapeGuardOn = false;
 			for (GeometryPoint point : points) {
 				if (point.getTarget() != null) {
-					shapeGuardOn = true;
+					activateShapeGuard();
 					break;
 				}
+			}
+			shapeGuardStillOnFor--;
+			if (shapeGuardStillOnFor < 0) {
+				shapeGuardOn = false;
 			}
 		}
 
@@ -464,5 +468,14 @@ public class GeometryMonster {
 				lineColor
 			);
 		}
+	}
+
+	private void activateShapeGuard() {
+
+		// turn on the shape guard
+		shapeGuardOn = true;
+
+		// and keep it on for at least two more secondss
+		shapeGuardStillOnFor = MusicGenerator.frameRate * 2;
 	}
 }
