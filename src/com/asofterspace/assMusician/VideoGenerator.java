@@ -120,12 +120,14 @@ public class VideoGenerator {
 		long lastJitterieness = 0;
 
 		boolean encounteredFirstChanged = false;
-		boolean firstChanged = false;
 		boolean encounteredChanged = false;
+		boolean firstChanged = false;
+		boolean curChanged = false;
 
 		for (int step = 0; step < totalFrameAmount; step++) {
 
 			firstChanged = false;
+			curChanged = false;
 
 			if ((step > 0) && (step % 1000 == 0)) {
 				System.out.println("We are at frame " + step + "...");
@@ -137,6 +139,7 @@ public class VideoGenerator {
 			if (curBeat != null) {
 
 				if (curBeat.getChanged()) {
+					curChanged = true;
 					encounteredChanged = true;
 					if (!encounteredFirstChanged) {
 						encounteredFirstChanged = true;
@@ -273,7 +276,7 @@ public class VideoGenerator {
 				img.draw(textJitterieness, (15 * width) / 1920, (355 * height) / 1080);
 			}
 
-			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue, firstChanged, encounteredChanged);
+			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue, firstChanged, curChanged, encounteredChanged);
 
 			img.setLineWidth(1);
 
