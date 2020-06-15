@@ -276,7 +276,7 @@ public class VideoGenerator {
 				img.draw(textJitterieness, (15 * width) / 1920, (355 * height) / 1080);
 			}
 
-			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue, firstChanged, curChanged, encounteredChanged);
+			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue, origBlue, firstChanged, curChanged, encounteredChanged);
 
 			img.setLineWidth(1);
 

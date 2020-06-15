@@ -53,11 +53,11 @@ public class GeometryMonster {
 	// a ball and paddle playing, or transforming into space invaders that all looks like the geometry monster
 	// and attack, or even transforming into Game of Life somehow... ^^)
 	public void drawOnImage(Image img, int width, int height, int step, double currentLoudnessScaled,
-		ColorRGB color, boolean firstChanged, boolean curChanged, boolean encounteredChanged) {
+		ColorRGB color, ColorRGB baseColor, boolean firstChanged, boolean curChanged, boolean encounteredChanged) {
 
 		if (lines.size() < 1) {
 			GeometryLine newLine = new GeometryLine(0, 1);
-			newLine.setColor(color);
+			newLine.setColor(baseColor);
 			lines.add(newLine);
 		}
 
@@ -71,11 +71,11 @@ public class GeometryMonster {
 				if (rand.nextInt(MusicGenerator.frameRate / 5) == 0) {
 					ColorRGB newColor = line.getColor().getSlightlyDifferent();
 					int counter = 0;
-					while (color.getDifferenceTo(newColor) > 128) {
+					while (baseColor.getDifferenceTo(newColor) > 128) {
 						newColor = line.getColor().getSlightlyDifferent();
 						counter++;
 						if (counter > 128) {
-							newColor = ColorRGB.intermix(color, line.getColor(), 0.5);
+							newColor = ColorRGB.intermix(baseColor, line.getColor(), 0.5);
 							break;
 						}
 					}
