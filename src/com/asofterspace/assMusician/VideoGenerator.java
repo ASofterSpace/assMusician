@@ -44,7 +44,8 @@ public class VideoGenerator {
 	// TODO :: add asofterspace fun logos to the start of the video?
 	// like, they are there (and stay there for a second or so) and then the actual stuff fades in?
 	public void generateVideoBasedOnBeats(List<Beat> beats, int totalFrameAmount, int width, int height,
-		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle) {
+		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle,
+		int framesPerFourier, int[][] fouriers) {
 
 		System.out.println("");
 		System.out.println("Generating " + totalFrameAmount + " frames...");
@@ -298,6 +299,18 @@ public class VideoGenerator {
 				img.draw(textRemixWhite, x, y);
 			} else {
 				img.draw(textRemix, x, y);
+			}
+
+			// draw Fourier at the top right, turned sideways, with lower base stuff shown at the bottom
+			int fourierNum = step / framesPerFourier;
+			if (fourierNum >= fouriers.length) {
+				fourierNum = fouriers.length - 1;
+			}
+			int[] curFourier = fouriers[fourierNum];
+			for (int i = 0; i < curFourier.length; i++) {
+				y = curFourier.length - (i + 1);
+				x = width - (curFourier[i] / 1000);
+				img.drawLine(x, y, width, y, blue);
 			}
 
 			DefaultImageFile curImgFile = new DefaultImageFile(

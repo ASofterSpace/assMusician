@@ -68,6 +68,8 @@ public class MusicGenerator {
 	public final static int width = 1920;
 	public final static int height = 1080;
 	public final static int frameRate = 60;
+	// we have 6 frames for one Fourier transform
+	public final static int framesPerFourier = 6;
 	/**/
 	/*
 	public final static int width = 640;
@@ -146,14 +148,14 @@ public class MusicGenerator {
 
 
 
-		int fourierLen = millisToChannelPos(100);
+		int fourierLen = millisToChannelPos((1000 * framesPerFourier) / frameRate);
 		int fourierNum = 0;
-		int fourierMax = 16;
+		int fourierMax = 0;
 		int fourierAmount = wavSoundData.getLength() / fourierLen;
 		int[][] fouriers = new int[fourierAmount][];
 
 		while (true) {
-			System.out.println("Processed " + fourierNum + " / " + fourierAmount + " Fouriers...");
+			System.out.println("Processed " + fourierNum + " / " + fourierAmount + " Fouriers, max so far: " + fourierMax + "...");
 			if (fourierNum + 1 >= wavSoundData.getLength()) {
 				break;
 			}
@@ -343,7 +345,7 @@ public class MusicGenerator {
 			}
 			songTitle += " (Remix with Drums)";
 			vidGenny.generateVideoBasedOnBeats(drumBeats, totalFrameAmount, width, height, wavGraphImg,
-				origWaveform, newWaveform, songTitle);
+				origWaveform, newWaveform, songTitle, framesPerFourier, fouriers);
 		}
 
 		// splice the generated audio together with the generated video
