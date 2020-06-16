@@ -141,6 +141,41 @@ public class MusicGenerator {
 
 		Waveform origWaveform = new Waveform(wavSoundData);
 
+
+
+
+
+
+		int fourierLen = millisToChannelPos(100);
+		int fourierNum = 0;
+
+		while (true) {
+			if (fourierNum + 1 >= wavSoundData.getLength()) {
+				break;
+			}
+
+			int[] fourier = wavSoundData.getFourier(fourierNum*fourierLen, (fourierNum+1)*fourierLen);
+
+			// output Fourier as histogram
+			List<GraphDataPoint> fourierData = new ArrayList<>();
+			for (int k = 0; k < fourier.length / 2; k++) {
+				fourierData.add(new GraphDataPoint(k/5, Math.abs(fourier[k])));
+			}
+			GraphImage fourierImg = new GraphImage();
+			fourierImg.setInnerWidthAndHeight(fourier.length/5, 512);
+			fourierImg.setDataColor(new ColorRGB(0, 0, 255));
+			fourierImg.setAbsoluteDataPoints(fourierData);
+			DefaultImageFile fourierImgFile = new DefaultImageFile(workDir, "waveform_fourier_" + fourierNum + ".png");
+			fourierImgFile.assign(fourierImg);
+			fourierImgFile.save();
+
+			fourierNum++;
+		}
+
+
+
+
+
 		wavDataLeft = wavSoundData.getLeftDataCopy();
 		wavDataRight = wavSoundData.getRightDataCopy();
 
