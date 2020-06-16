@@ -309,7 +309,7 @@ public class VideoGenerator {
 			int[] curFourier = fouriers[fourierNum];
 			for (int i = 0; i < curFourier.length; i++) {
 				y = curFourier.length - (i + 1);
-				x = width - (curFourier[i] / 1000);
+				x = width - (curFourier[i] / 5000);
 				img.drawLine(x, y, width, y, blue);
 			}
 

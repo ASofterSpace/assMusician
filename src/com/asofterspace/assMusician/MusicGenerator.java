@@ -144,9 +144,7 @@ public class MusicGenerator {
 		Waveform origWaveform = new Waveform(wavSoundData);
 
 
-
-
-
+		// Fourier analysis...
 
 		int fourierLen = millisToChannelPos((1000 * framesPerFourier) / frameRate);
 		int fourierNum = 0;
@@ -190,8 +188,7 @@ public class MusicGenerator {
 		}
 
 
-
-
+		// go over to directly working on the wave data...
 
 		wavDataLeft = wavSoundData.getLeftDataCopy();
 		wavDataRight = wavSoundData.getRightDataCopy();
