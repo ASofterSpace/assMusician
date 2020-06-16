@@ -148,16 +148,30 @@ public class MusicGenerator {
 
 		int fourierLen = millisToChannelPos(100);
 		int fourierNum = 0;
+		int fourierMax = 16;
+		int fourierAmount = wavSoundData.getLength() / fourierLen;
+		int[][] fouriers = new int[fourierAmount][];
 
 		while (true) {
+			System.out.println("Processed " + fourierNum + " / " + fourierAmount + " Fouriers...");
 			if (fourierNum + 1 >= wavSoundData.getLength()) {
 				break;
 			}
 
-			int[] fourier = wavSoundData.getFourier(fourierNum*fourierLen, (fourierNum+1)*fourierLen);
+			int[] fourier = wavSoundData.getSmallFourier(fourierNum*fourierLen, (fourierNum+1)*fourierLen);
 
+			for (int k = 0; k < fourier.length / 2; k++) {
+				if (fourier[k] > fourierMax) {
+					fourierMax = fourier[k];
+				}
+			}
+
+			fouriers[fourierNum] = fourier;
+
+			/*
 			// output Fourier as histogram
 			List<GraphDataPoint> fourierData = new ArrayList<>();
+			fourierData.add(new GraphDataPoint(-1, fourierMax));
 			for (int k = 0; k < fourier.length / 2; k++) {
 				fourierData.add(new GraphDataPoint(k/5, Math.abs(fourier[k])));
 			}
@@ -168,6 +182,7 @@ public class MusicGenerator {
 			DefaultImageFile fourierImgFile = new DefaultImageFile(workDir, "waveform_fourier_" + fourierNum + ".png");
 			fourierImgFile.assign(fourierImg);
 			fourierImgFile.save();
+			*/
 
 			fourierNum++;
 		}
