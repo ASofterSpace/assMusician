@@ -307,10 +307,22 @@ public class VideoGenerator {
 				fourierNum = fouriers.length - 1;
 			}
 			int[] curFourier = fouriers[fourierNum];
+			int[] nextFourier = curFourier;
+			if (fourierNum+1 < fouriers.length) {
+				nextFourier = fouriers[fourierNum+1];
+			}
+			int nextiness = step % framesPerFourier;
+			int curiness = framesPerFourier - nextiness;
 			for (int i = 0; i < curFourier.length; i++) {
 				y = curFourier.length - (i + 1);
-				x = width - (curFourier[i] / 5000);
-				img.drawLine(x, y, width, y, blue);
+				x = width + 1 - (((curFourier[i] * curiness) + (nextFourier[i] * nextiness)) / (framesPerFourier * 5000));
+				img.drawLine(x, 4*y+3, width, 4*y+3, blue);
+				if (i+1 < curFourier.length) {
+					int newX = width + 1 - (((curFourier[i+1] * curiness) + (nextFourier[i+1] * nextiness)) / (framesPerFourier * 5000));
+					img.drawLine((3*x +   newX) / 4, 4*y+2, width, 4*y+2, blue);
+					img.drawLine((  x +   newX) / 2, 4*y+1, width, 4*y+1, blue);
+					img.drawLine((  x + 3*newX) / 4, 4*y  , width, 4*y  , blue);
+				}
 			}
 
 			DefaultImageFile curImgFile = new DefaultImageFile(

@@ -69,7 +69,7 @@ public class MusicGenerator {
 	public final static int height = 1080;
 	public final static int frameRate = 60;
 	// we have 6 frames for one Fourier transform
-	public final static int framesPerFourier = 6;
+	public final static int framesPerFourier = 3;
 	/**/
 	/*
 	public final static int width = 640;
@@ -154,7 +154,11 @@ public class MusicGenerator {
 
 		while (true) {
 			System.out.println("Processed " + fourierNum + " / " + fourierAmount + " Fouriers, max so far: " + fourierMax + "...");
-			if (fourierNum + 1 >= wavSoundData.getLength()) {
+
+			if ((fourierNum+1)*fourierLen >= wavSoundData.getLength()) {
+				break;
+			}
+			if (fourierNum >= fourierAmount) {
 				break;
 			}
 
@@ -178,7 +182,7 @@ public class MusicGenerator {
 			GraphImage fourierImg = new GraphImage();
 			fourierImg.setInnerWidthAndHeight(fourier.length/5, 512);
 			fourierImg.setDataColor(new ColorRGB(0, 0, 255));
-			fourierImg.setAbsoluteDataPoints(fourierData);
+			fourierImg.setRelativeDataPoints(fourierData);
 			DefaultImageFile fourierImgFile = new DefaultImageFile(workDir, "waveform_fourier_" + fourierNum + ".png");
 			fourierImgFile.assign(fourierImg);
 			fourierImgFile.save();
