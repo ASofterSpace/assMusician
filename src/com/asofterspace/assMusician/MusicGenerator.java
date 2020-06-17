@@ -733,6 +733,7 @@ public class MusicGenerator {
 			int maxPos = 0;
 			for (int j = lastStart; j < i; j += fourierLen) {
 				int f = (j / fourierLen);
+				// go for fouriers[f].length - 1 as second index such that we get the one with the lowest frequency
 				if (fouriers[f][fouriers[f].length - 1] > maxVal) {
 					maxPos = j;
 					maxVal = fouriers[f][fouriers[f].length - 1];
@@ -763,6 +764,115 @@ public class MusicGenerator {
 		DefaultImageFile wavFourierImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_beats.png");
 		wavFourierImgFile.assign(graphWithFourierImg);
 		wavFourierImgFile.save();
+
+
+		// ALGORITHM 4.1
+
+		// now do beat detection AGAIN - this time, based on the fourier-based maxima
+
+		bpmCandidates = new HashMap<>();
+		for (int curBpm = MIN_BPM*1000*BUCKET_ACCURACY_FACTOR; curBpm < MAX_BPM*1000*BUCKET_ACCURACY_FACTOR + 1; curBpm++) {
+			bpmCandidates.put(curBpm, 0);
+		}
+
+		for (int i = 0; i < maximumPositions.size(); i++) {
+			// actually, instead of looking at all pairs...
+			// for (int j = 0; j < i; j++) {
+			// we just want to look at the closest other beat, having a lookback of just 1
+			// (after looking at a histogram of the bpm for different lookback values)
+			for (int j = i - LOOKBACK; j < i; j++) {
+				if (j < 0) {
+					continue;
+				}
+				int curDist = maximumPositions.get(i) - maximumPositions.get(j);
+				int curDiffInMs = channelPosToMillis(10*curDist);
+
+				// a difference of 1 ms means that there are 60*1000 beats per minute,
+				// and we have the additional *10 to get more accuracy
+				if (curDiffInMs == 0) {
+					continue;
+				}
+				int curBpm = (60*1000*BUCKET_ACCURACY_FACTOR*10) / curDiffInMs;
+
+				// scale the bpm into the range that we are interested in
+				while (curBpm < MIN_BPM*1000*BUCKET_ACCURACY_FACTOR) {
+					curBpm *= 2;
+				}
+				while (curBpm > MAX_BPM*1000*BUCKET_ACCURACY_FACTOR) {
+					curBpm /= 2;
+				}
+
+				if (bpmCandidates.get(curBpm) != null) {
+					bpmCandidates.put(curBpm, bpmCandidates.get(curBpm) + 1);
+				} else {
+					bpmCandidates.put(curBpm, 1);
+				}
+			}
+		}
+
+		// output buckets as histogram
+		graphWidth = (MAX_BPM - MIN_BPM) * BUCKET_ACCURACY_FACTOR * 10;
+		histogramImg = new GraphImage();
+		histogramImg.setInnerWidthAndHeight(graphWidth, graphImageHeight);
+
+		histData = new ArrayList<>();
+		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
+			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
+		}
+		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setAbsoluteDataPoints(histData);
+		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_histogram_for_bpm.png");
+		histogramImgFile.assign(histogramImg);
+		histogramImgFile.save();
+
+		// smoothen the buckets a little bit - we do not lose accuracy (as we do not just widen
+		// the buckets into less precise ones), but we gain resistance to small variations in bpm
+		smoothBpmCandidates = new HashMap<>();
+		for (int curBpm = MIN_BPM*1000*BUCKET_ACCURACY_FACTOR; curBpm < MAX_BPM*1000*BUCKET_ACCURACY_FACTOR + 1; curBpm++) {
+			int curAmount = 0;
+			for (int i = 1; i < 1500; i++) {
+				if (bpmCandidates.get(curBpm-i) != null) {
+					curAmount += bpmCandidates.get(curBpm-i);
+				}
+				if (bpmCandidates.get(curBpm+i) != null) {
+					curAmount += bpmCandidates.get(curBpm+i);
+				}
+			}
+			if (bpmCandidates.get(curBpm) != null) {
+				curAmount += bpmCandidates.get(curBpm) * 2;
+			}
+			smoothBpmCandidates.put(curBpm, curAmount);
+		}
+		bpmCandidates = smoothBpmCandidates;
+
+		// output smoothened buckets as histogram
+		histData = new ArrayList<>();
+		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
+			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
+		}
+		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setAbsoluteDataPoints(histData);
+		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_histogram_smoothened.png");
+		histogramImgFile.assign(histogramImg);
+		histogramImgFile.save();
+
+		// now find the largest bucket
+		largestBucketContentAmount = 0;
+		largestBucketBpm = 0;
+
+		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
+			if (entry.getValue() >= largestBucketContentAmount) {
+				largestBucketContentAmount = entry.getValue();
+				largestBucketBpm = entry.getKey();
+			}
+		}
+
+		bpm = largestBucketBpm / (BUCKET_ACCURACY_FACTOR*1000.0);
+
+		System.out.println("We detected " + bpm + " beats per minute based on the Fourier beats, " +
+			"with the largest bucket containing " + largestBucketContentAmount + " values...");
+
+		generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
 
 
 		// generate beats based on the detected bpm, but still try to locally align to the closest
