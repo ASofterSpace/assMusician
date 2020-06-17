@@ -883,7 +883,12 @@ public class MusicGenerator {
 			bpmBasedBeats.add(i);
 			wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
 		}*/
-		int uncertainty = generatedBeatDistance / 5;
+
+		// regular alignment: 20% to the front, 20% to the back will be aligned, 60% of a beat would be unaligned
+		// int uncertainty = generatedBeatDistance / 5;
+		// aggressive alignment: 50% to the front, 50% to the back will be aligned, 0% of a beat would be unaligned
+		int uncertainty = generatedBeatDistance / 2;
+
 		int maxPosI = 0;
 		// such that we do not have to worry about overflowing the maximumPositions list,
 		// we just add an extra beat far after everything else
@@ -908,14 +913,20 @@ public class MusicGenerator {
 					}
 				}
 				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
 				mayBeat.setPosition(i);
 				mayBeat.setIsAligned(true);
 			} else {
 				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
+				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
 				mayBeat.setIsAligned(false);
 			}
 			mayBeats.add(mayBeat);
 		}
+
+		DefaultImageFile wavImgFileFourier = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition_fourier_pre_smoothen.png");
+		wavImgFileFourier.assign(graphWithFourierImg);
+		wavImgFileFourier.save();
 
 		// ALGORITHM 3.8
 
@@ -1007,6 +1018,24 @@ public class MusicGenerator {
 		}
 
 		Collections.sort(bpmBasedBeats);
+
+
+		graphWithFourierImg = new GraphImage();
+		graphWithFourierImg.setInnerWidthAndHeight(channelPosToMillis(wavDataLeft.length) / 100, graphImageHeight);
+		graphWithFourierImg.setDataColor(new ColorRGB(0, 0, 255));
+		graphWithFourierImg.setAbsoluteDataPoints(wavData);
+
+		for (Integer pos : maximumPositions) {
+			graphWithFourierImg.drawVerticalLineAt(pos, new ColorRGB(255, 0, 128));
+		}
+
+		for (Integer i : bpmBasedBeats) {
+			graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+		}
+		wavImgFileFourier = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition_fourier_post_smoothen.png");
+		wavImgFileFourier.assign(graphWithFourierImg);
+		wavImgFileFourier.save();
+
 
 		List<Beat> beats = new ArrayList<>();
 
