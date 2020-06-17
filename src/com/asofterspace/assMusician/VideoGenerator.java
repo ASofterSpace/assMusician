@@ -76,7 +76,6 @@ public class VideoGenerator {
 		ColorRGB origBlack = new ColorRGB(0, 0, 0);
 		ColorRGB origBlue = ColorRGB.randomColorfulBright();
 		ColorRGB origDarkBlue = ColorRGB.intermix(origBlack, origBlue, 0.5);
-		// ColorRGB blue = new ColorRGB(255, 0, 128);
 
 		int startColorInversion = -10 * MusicGenerator.frameRate;
 

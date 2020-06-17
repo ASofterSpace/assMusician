@@ -19,11 +19,13 @@ import com.asofterspace.toolbox.music.SoundData;
 import com.asofterspace.toolbox.music.WavFile;
 import com.asofterspace.toolbox.utils.CallbackWithString;
 import com.asofterspace.toolbox.utils.DateUtils;
+import com.asofterspace.toolbox.utils.Pair;
 import com.asofterspace.toolbox.Utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -716,6 +718,7 @@ public class MusicGenerator {
 		// base on the Fourier transform and the lowest frequencies we get from it...
 		// to do so, we split the entire song into pieces the size of two beats, and take the highest
 		// Fourier of the lowest frequency as beat to align within that two-beat window!
+		// (However, we only take the louder half of these to not get too much noise)
 
 		maximumPositions = new ArrayList<>();
 
@@ -727,6 +730,8 @@ public class MusicGenerator {
 		}
 		*/
 
+		List<Pair<Integer, Integer>> possibleMaximumPositions = new ArrayList<>();
+		List<Integer> allMaximumPositionsForAlignment = new ArrayList<>();
 		int lastStart = 0;
 		for (int i = generatedBeatDistance; i < wavDataLeft.length; i += generatedBeatDistance) {
 			int maxVal = 0;
@@ -739,9 +744,27 @@ public class MusicGenerator {
 					maxVal = fouriers[f][fouriers[f].length - 1];
 				}
 			}
-			maximumPositions.add(maxPos);
+			possibleMaximumPositions.add(new Pair<Integer, Integer>(maxPos, maxVal));
+			allMaximumPositionsForAlignment.add(maxPos);
 			lastStart = i;
 		}
+
+		Collections.sort(possibleMaximumPositions, new Comparator<Pair<Integer, Integer>>() {
+			public int compare(Pair<Integer, Integer> a, Pair<Integer, Integer> b) {
+				return a.getRight() - b.getRight();
+			}
+		});
+
+		int midVal = possibleMaximumPositions.get(possibleMaximumPositions.size() / 2).getRight();
+
+		// only get the louder half of them for now (for bpm detection)
+		for (int i = 0; i < possibleMaximumPositions.size(); i++) {
+			if (possibleMaximumPositions.get(i).getRight() >= midVal) {
+				maximumPositions.add(possibleMaximumPositions.get(i).getLeft());
+			}
+		}
+
+		Collections.sort(maximumPositions);
 
 		// output new file containing these new positions
 
@@ -769,6 +792,7 @@ public class MusicGenerator {
 		// ALGORITHM 4.1
 
 		// now do beat detection AGAIN - this time, based on the fourier-based maxima
+		// TODO :: algo 4.1 has been replaced by algo 4.2, stop calculating it!
 
 		bpmCandidates = new HashMap<>();
 		for (int curBpm = MIN_BPM*1000*BUCKET_ACCURACY_FACTOR; curBpm < MAX_BPM*1000*BUCKET_ACCURACY_FACTOR + 1; curBpm++) {
@@ -852,7 +876,7 @@ public class MusicGenerator {
 		}
 		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
 		histogramImg.setAbsoluteDataPoints(histData);
-		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_histogram_smoothened.png");
+		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_histogram_for_bpm_smoothened.png");
 		histogramImgFile.assign(histogramImg);
 		histogramImgFile.save();
 
@@ -875,6 +899,205 @@ public class MusicGenerator {
 		generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// ALGORITHM 4.2
+
+		// now do beat detection AGAIN - this time, based on the fourier-based maxima, and with a different
+		// algorithm - instead of putting bpms into buckets, we want to look at the histogram of all the
+		// one-beat distances and see if we can find some truth in that...
+
+		int maxDist = 0;
+		List<Integer> distances = new ArrayList<>();
+		System.out.println("\n\nDistances unsorted:\n");
+		for (int i = 1; i < maximumPositions.size(); i++) {
+			int curDist = maximumPositions.get(i) - maximumPositions.get(i - 1);
+			if (curDist > maxDist) {
+				maxDist = curDist;
+			}
+			distances.add(curDist);
+			System.out.println("  "+ curDist + " from " + maximumPositions.get(i) + " to " + maximumPositions.get(i-1));
+		}
+
+		System.out.println("\n\n");
+
+		Collections.sort(distances);
+		System.out.println("\n\nDistances sorted:\n");
+		for (Integer i : distances) {
+			System.out.println("  "+i);
+		}
+		System.out.println("\n\n");
+
+		Map<Integer, Integer> beatLenCandidates = new HashMap<>();
+		for (int i = 1; i <= maxDist; i++) {
+			beatLenCandidates.put(i, 0);
+		}
+
+		for (int i = 1; i < maximumPositions.size(); i++) {
+			int curDist = maximumPositions.get(i) - maximumPositions.get(i - 1);
+			if (beatLenCandidates.get(curDist) != null) {
+				beatLenCandidates.put(curDist, beatLenCandidates.get(curDist) + 1);
+			} else {
+				beatLenCandidates.put(curDist, 1);
+			}
+		}
+
+		// output buckets as histogram
+		graphWidth = maxDist;
+		histogramImg = new GraphImage();
+		histogramImg.setInnerWidthAndHeight(graphWidth / 20, graphImageHeight);
+
+		histData = new ArrayList<>();
+		for (Map.Entry<Integer, Integer> entry : beatLenCandidates.entrySet()) {
+			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
+		}
+		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setAbsoluteDataPoints(histData);
+		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_histogram_for_len_beats.png");
+		histogramImgFile.assign(histogramImg);
+		histogramImgFile.save();
+
+		// smoothen the buckets a little bit - we do not lose accuracy (as we do not just widen
+		// the buckets into less precise ones), but we gain resistance to small variations in bpm
+		Map<Integer, Integer> smoothBeatLenCandidates = new HashMap<>();
+		for (int curLen = 1; curLen <= maxDist; curLen++) {
+			smoothBeatLenCandidates.put(curLen, 0);
+		}
+		int smoothenBy = 4096;
+		for (int curLen = 1; curLen <= maxDist; curLen++) {
+			if (beatLenCandidates.get(curLen) != null) {
+				if (beatLenCandidates.get(curLen) > 0) {
+					for (int i = 0; i < smoothenBy; i++) {
+						if (smoothBeatLenCandidates.get(curLen+i) != null) {
+							int cur = smoothBeatLenCandidates.get(curLen+i);
+							cur += (smoothenBy - i) * beatLenCandidates.get(curLen);
+							smoothBeatLenCandidates.put(curLen+i, cur);
+						}
+						if (i == 0) {
+							continue;
+						}
+						if (smoothBeatLenCandidates.get(curLen-i) != null) {
+							int cur = smoothBeatLenCandidates.get(curLen-i);
+							cur += (smoothenBy - i) * beatLenCandidates.get(curLen);
+							smoothBeatLenCandidates.put(curLen-i, cur);
+						}
+						/*
+						if (smoothBeatLenCandidates.get(curLen+i) != null) {
+							int cur = smoothBeatLenCandidates.get(curLen+i);
+							cur += beatLenCandidates.get(curLen);
+							smoothBeatLenCandidates.put(curLen+i, cur + smoothenBy - i);
+						}
+						if (smoothBeatLenCandidates.get(curLen-i) != null) {
+							int cur = smoothBeatLenCandidates.get(curLen-i);
+							cur += beatLenCandidates.get(curLen);
+							smoothBeatLenCandidates.put(curLen-i, cur + smoothenBy - i);
+						}
+						*/
+					}
+				}
+			}
+/*
+			int curAmount = 0;
+			for (int i = 1; i < 256; i++) {
+				if (beatLenCandidates.get(curLen-i) != null) {
+					curAmount += beatLenCandidates.get(curLen-i);
+				}
+				if (beatLenCandidates.get(curLen+i) != null) {
+					curAmount += beatLenCandidates.get(curLen+i);
+				}
+			}
+			for (int i = 1; i < 128; i++) {
+				if (beatLenCandidates.get(curLen-i) != null) {
+					curAmount += beatLenCandidates.get(curLen-i);
+				}
+				if (beatLenCandidates.get(curLen+i) != null) {
+					curAmount += beatLenCandidates.get(curLen+i);
+				}
+			}
+			for (int i = 1; i < 64; i++) {
+				if (beatLenCandidates.get(curLen-i) != null) {
+					curAmount += beatLenCandidates.get(curLen-i);
+				}
+				if (beatLenCandidates.get(curLen+i) != null) {
+					curAmount += beatLenCandidates.get(curLen+i);
+				}
+			}
+			if (beatLenCandidates.get(curLen) != null) {
+				curAmount += beatLenCandidates.get(curLen) * 4;
+			}
+			smoothBeatLenCandidates.put(curLen, curAmount);
+*/
+		}
+		beatLenCandidates = smoothBeatLenCandidates;
+
+		// output smoothened buckets as histogram
+		histData = new ArrayList<>();
+		for (Map.Entry<Integer, Integer> entry : beatLenCandidates.entrySet()) {
+			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
+		}
+		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setAbsoluteDataPoints(histData);
+		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_histogram_for_len_beats_smoothened.png");
+		histogramImgFile.assign(histogramImg);
+		histogramImgFile.save();
+
+		// now find the largest bucket
+		largestBucketContentAmount = 0;
+		int largestBucketBeatLen = 0;
+
+		for (Map.Entry<Integer, Integer> entry : beatLenCandidates.entrySet()) {
+			if (entry.getValue() >= largestBucketContentAmount) {
+				largestBucketContentAmount = entry.getValue();
+				largestBucketBeatLen = entry.getKey();
+			}
+		}
+
+		int largestBucketBeatLenInMS = channelPosToMillis(largestBucketBeatLen);
+
+		if (largestBucketBeatLenInMS != 0) {
+			bpm = 1000 * 60.0 / largestBucketBeatLenInMS;
+
+			System.out.println("We detected " + bpm + " beats per minute based on the Fourier beats length histogram, " +
+				"with the largest bucket containing " + largestBucketContentAmount + " values...");
+		} else {
+			System.out.println("Falling back on " + bpm + " beats per minute due to a division by zero!");
+		}
+
+		generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		// generate beats based on the detected bpm, but still try to locally align to the closest
 		// detected beat, e.g. align to the next one to the right if there is one to the left or
 		// right of the current beat and the distance to it is less than 1/10 of a beat...
@@ -884,34 +1107,143 @@ public class MusicGenerator {
 			wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
 		}*/
 
-		// regular alignment: 20% to the front, 20% to the back will be aligned, 60% of a beat would be unaligned
-		// int uncertainty = generatedBeatDistance / 5;
-		// aggressive alignment: 50% to the front, 50% to the back will be aligned, 0% of a beat would be unaligned
-		int uncertainty = generatedBeatDistance / 2;
-
 		int maxPosI = 0;
 		// such that we do not have to worry about overflowing the maximumPositions list,
 		// we just add an extra beat far after everything else
+		maximumPositions = allMaximumPositionsForAlignment;
 		Collections.sort(maximumPositions);
-		maximumPositions.add((wavDataLeft.length + uncertainty) * 2);
+		maximumPositions.add(wavDataLeft.length * 10);
+
+
+		// ALGORITHM 5
+
+		// in addition to all else, here keep a rolling average of the last 10 beat distances that we actually
+		// put into the song, and use as predictor for the next beat distances the average of that and the
+		// generated distance rather than just the generated distance purely
+		int ACTUAL_GEN_RING_SIZE = 10;
+		int[] actualGeneratedDistances = new int[ACTUAL_GEN_RING_SIZE];
+		int actualGeneratedI = 0;
+		for (int i = 0; i < ACTUAL_GEN_RING_SIZE; i++) {
+			actualGeneratedDistances[i] = generatedBeatDistance;
+		}
+
+		int prevI = -generatedBeatDistance;
+		int origGeneratedBeatDistance = generatedBeatDistance;
+
+		System.out.println("");
 		for (int i = 0; i < wavDataLeft.length; i += generatedBeatDistance) {
-			while (maximumPositions.get(maxPosI) < i - uncertainty) {
+
+			// regular alignment: 20% to the front, 20% to the back will be aligned, 60% of a beat would be unaligned
+			// int uncertainty = generatedBeatDistance / 5;
+			// semi-aggressive alignment: 40% to the front, 50% to the back will be aligned, 50% to 100% to the back we align but add a beat
+			int uncertaintyFront = (generatedBeatDistance * 4) / 10;
+			int uncertaintyBack = (generatedBeatDistance * 5) / 10;
+			int uncertaintyBackInsertBeat = (generatedBeatDistance * 10) / 10;
+			// aggressive alignment: 50% to the front, 50% to the back will be aligned, 0% of a beat would be unaligned
+			// int uncertainty = generatedBeatDistance / 2;
+
+			while (maximumPositions.get(maxPosI) < i - uncertaintyFront) {
 				maxPosI++;
 			}
 			Beat mayBeat = new Beat(i);
-			if (maximumPositions.get(maxPosI) < i + uncertainty) {
+			if (maximumPositions.get(maxPosI) < i + uncertaintyBackInsertBeat) {
 				while (maximumPositions.get(maxPosI) < i) {
 					maxPosI++;
 				}
+				int newI = i;
 				if (maxPosI < 1) {
-					i = maximumPositions.get(maxPosI);
+					newI = maximumPositions.get(maxPosI);
 				} else {
 					if (maximumPositions.get(maxPosI) - i < i - maximumPositions.get(maxPosI-1)) {
-						i = maximumPositions.get(maxPosI);
+						newI = maximumPositions.get(maxPosI);
 					} else {
-						i = maximumPositions.get(maxPosI-1);
+						newI = maximumPositions.get(maxPosI-1);
 					}
 				}
+				// if we are over the regular uncertainty towards the back, add an extra beat halfway in between
+				if (newI > i + uncertaintyBack) {
+					int extraI = (newI + (i - generatedBeatDistance)) / 2;
+					Beat extraBeat = new Beat(extraI);
+					extraBeat.setIsAligned(false);
+					mayBeats.add(extraBeat);
+					wavGraphImg.drawVerticalLineAt(extraI, new ColorRGB(128, 196, 0));
+					graphWithFourierImg.drawVerticalLineAt(extraI, new ColorRGB(128, 196, 0));
+
+					actualGeneratedDistances[actualGeneratedI] = extraI - prevI;
+					prevI = extraI;
+					actualGeneratedI++;
+					if (actualGeneratedI >= ACTUAL_GEN_RING_SIZE) {
+						actualGeneratedI = 0;
+					}
+				}
+				i = newI;
+				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+				mayBeat.setPosition(i);
+				mayBeat.setIsAligned(true);
+			} else {
+				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
+				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
+				mayBeat.setIsAligned(false);
+			}
+			mayBeats.add(mayBeat);
+
+			actualGeneratedDistances[actualGeneratedI] = i - prevI;
+			actualGeneratedI++;
+			if (actualGeneratedI >= ACTUAL_GEN_RING_SIZE) {
+				actualGeneratedI = 0;
+			}
+			generatedBeatDistance = 0;
+			for (int g = 0; g < ACTUAL_GEN_RING_SIZE; g++) {
+				generatedBeatDistance += actualGeneratedDistances[g];
+			}
+			generatedBeatDistance = generatedBeatDistance / ACTUAL_GEN_RING_SIZE;
+			generatedBeatDistance = (origGeneratedBeatDistance + generatedBeatDistance) / 2;
+			System.out.println("generatedBeatDistance: " + generatedBeatDistance + " orig: " + origGeneratedBeatDistance);
+			prevI = i;
+		}
+		System.out.println("");
+
+		/*
+		for (int i = 0; i < wavDataLeft.length; i += generatedBeatDistance) {
+
+			// regular alignment: 20% to the front, 20% to the back will be aligned, 60% of a beat would be unaligned
+			// int uncertainty = generatedBeatDistance / 5;
+			// semi-aggressive alignment: 40% to the front, 50% to the back will be aligned, 50% to 100% to the back we align but add a beat
+			int uncertaintyFront = (generatedBeatDistance * 4) / 10;
+			int uncertaintyBack = (generatedBeatDistance * 5) / 10;
+			int uncertaintyBackInsertBeat = (generatedBeatDistance * 10) / 10;
+			// aggressive alignment: 50% to the front, 50% to the back will be aligned, 0% of a beat would be unaligned
+			// int uncertainty = generatedBeatDistance / 2;
+
+			while (maximumPositions.get(maxPosI) < i - uncertaintyFront) {
+				maxPosI++;
+			}
+			Beat mayBeat = new Beat(i);
+			if (maximumPositions.get(maxPosI) < i + uncertaintyBackInsertBeat) {
+				while (maximumPositions.get(maxPosI) < i) {
+					maxPosI++;
+				}
+				int newI = i;
+				if (maxPosI < 1) {
+					newI = maximumPositions.get(maxPosI);
+				} else {
+					if (maximumPositions.get(maxPosI) - i < i - maximumPositions.get(maxPosI-1)) {
+						newI = maximumPositions.get(maxPosI);
+					} else {
+						newI = maximumPositions.get(maxPosI-1);
+					}
+				}
+				// if we are over the regular uncertainty towards the back, add an extra beat halfway in between
+				if (newI > i + uncertaintyBack) {
+					int extraI = (newI + (i - generatedBeatDistance)) / 2;
+					Beat extraBeat = new Beat(extraI);
+					extraBeat.setIsAligned(false);
+					mayBeats.add(extraBeat);
+					wavGraphImg.drawVerticalLineAt(extraI, new ColorRGB(128, 196, 0));
+					graphWithFourierImg.drawVerticalLineAt(extraI, new ColorRGB(128, 196, 0));
+				}
+				i = newI;
 				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
 				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
 				mayBeat.setPosition(i);
@@ -923,8 +1255,9 @@ public class MusicGenerator {
 			}
 			mayBeats.add(mayBeat);
 		}
+		*/
 
-		DefaultImageFile wavImgFileFourier = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition_fourier_pre_smoothen.png");
+		DefaultImageFile wavImgFileFourier = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition_fourier_before_smoothen.png");
 		wavImgFileFourier.assign(graphWithFourierImg);
 		wavImgFileFourier.save();
 
@@ -1012,7 +1345,7 @@ public class MusicGenerator {
 		// that is, for each we get the distance to front and back, and align to the middle of that:
 		// 1, 2.9, 4.9, 6.8... and again! ... and then we are good! :D
 
-		int SMOOTH_AMOUNT = 2;
+		int SMOOTH_AMOUNT = 3;
 		for (int i = 0; i < SMOOTH_AMOUNT; i++) {
 			bpmBasedBeats = smoothenBeats(bpmBasedBeats);
 		}
@@ -1101,9 +1434,11 @@ public class MusicGenerator {
 		if (bpmBasedBeats.size() > 1) {
 			List<Integer> smoothBeats = new ArrayList<>();
 			smoothBeats.add(bpmBasedBeats.get(0));
-			for (int i = 1; i < bpmBasedBeats.size() - 1; i++) {
-				smoothBeats.add((bpmBasedBeats.get(i-1) + bpmBasedBeats.get(i+1)) / 2);
+			smoothBeats.add(bpmBasedBeats.get(1));
+			for (int i = 2; i < bpmBasedBeats.size() - 2; i++) {
+				smoothBeats.add((bpmBasedBeats.get(i-2) + 2*bpmBasedBeats.get(i-1) + bpmBasedBeats.get(i) + 2*bpmBasedBeats.get(i+1) + bpmBasedBeats.get(i+2)) / 7);
 			}
+			smoothBeats.add(bpmBasedBeats.get(bpmBasedBeats.size() - 2));
 			smoothBeats.add(bpmBasedBeats.get(bpmBasedBeats.size() - 1));
 			bpmBasedBeats = smoothBeats;
 		}
