@@ -317,13 +317,13 @@ public class VideoGenerator {
 				y = curFourier.length - (i + 1);
 				x = width + 1 - (((curFourier[i] * curiness) + (nextFourier[i] * nextiness)) / (framesPerFourier * 5000));
 				img.drawLine(x, 4*y+3, width, 4*y+3, blue);
-				int newX = width;
+				int newX = width + 1;
 				if (i+1 < curFourier.length) {
 					newX = width + 1 - (((curFourier[i+1] * curiness) + (nextFourier[i+1] * nextiness)) / (framesPerFourier * 5000));
 				}
-				img.drawLine((3*x +   newX) / 4, 4*y+2, width, 4*y+2, blue);
-				img.drawLine((  x +   newX) / 2, 4*y+1, width, 4*y+1, blue);
-				img.drawLine((  x + 3*newX) / 4, 4*y  , width, 4*y  , blue);
+				img.drawLine((3*x +   newX) / 4, 4*y+2, width+1, 4*y+2, blue);
+				img.drawLine((  x +   newX) / 2, 4*y+1, width+1, 4*y+1, blue);
+				img.drawLine((  x + 3*newX) / 4, 4*y  , width+1, 4*y  , blue);
 			}
 
 			DefaultImageFile curImgFile = new DefaultImageFile(
