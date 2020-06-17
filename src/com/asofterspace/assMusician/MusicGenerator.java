@@ -60,6 +60,9 @@ public class MusicGenerator {
 	private long[] fadeDataLeft;
 	private long[] fadeDataRight;
 
+	private int fourierLen;
+	private int[][] fouriers;
+
 	private int graphImageHeight = 256;
 	private GraphImage wavGraphImg;
 
@@ -146,11 +149,11 @@ public class MusicGenerator {
 
 		// Fourier analysis...
 
-		int fourierLen = millisToChannelPos((1000 * framesPerFourier) / frameRate);
+		fourierLen = millisToChannelPos((1000 * framesPerFourier) / frameRate);
 		int fourierNum = 0;
 		int fourierMax = 0;
 		int fourierAmount = wavSoundData.getLength() / fourierLen;
-		int[][] fouriers = new int[fourierAmount][];
+		fouriers = new int[fourierAmount][];
 
 		while (true) {
 			System.out.println("Processed " + fourierNum + " / " + fourierAmount + " Fouriers, max so far: " + fourierMax + "...");
@@ -704,6 +707,64 @@ public class MusicGenerator {
 		System.out.println("We detected " + bpm + " beats per minute, " +
 			"with the largest bucket containing " + largestBucketContentAmount + " values...");
 
+		int generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
+
+
+		// ALGORITHM 4
+
+		// Instead of keeping the maximumPositions which we had so far, we use new ones which we
+		// base on the Fourier transform and the lowest frequencies we get from it...
+		// to do so, we split the entire song into pieces the size of two beats, and take the highest
+		// Fourier of the lowest frequency as beat to align within that two-beat window!
+
+		maximumPositions = new ArrayList<>();
+
+		/*
+		for (int i = 0; i < fouriers.length; i++) {
+			if (fouriers[i][fouriers[i].length - 1] > 4*3*5000) {
+				maximumPositions.add(i * fourierLen);
+			}
+		}
+		*/
+
+		int lastStart = 0;
+		for (int i = generatedBeatDistance; i < wavDataLeft.length; i += generatedBeatDistance) {
+			int maxVal = 0;
+			int maxPos = 0;
+			for (int j = lastStart; j < i; j += fourierLen) {
+				int f = (j / fourierLen);
+				if (fouriers[f][fouriers[f].length - 1] > maxVal) {
+					maxPos = j;
+					maxVal = fouriers[f][fouriers[f].length - 1];
+				}
+			}
+			maximumPositions.add(maxPos);
+			lastStart = i;
+		}
+
+		// output new file containing these new positions
+
+		GraphImage graphWithFourierImg = new GraphImage();
+		graphWithFourierImg.setInnerWidthAndHeight(channelPosToMillis(wavDataLeft.length) / 100, graphImageHeight);
+
+		List<GraphDataPoint> wavData = new ArrayList<>();
+		int position = 0;
+		for (Integer wavInt : wavDataLeft) {
+			wavData.add(new GraphDataPoint(position, wavInt));
+			position++;
+		}
+		graphWithFourierImg.setDataColor(new ColorRGB(0, 0, 255));
+		graphWithFourierImg.setAbsoluteDataPoints(wavData);
+
+		for (Integer pos : maximumPositions) {
+			graphWithFourierImg.drawVerticalLineAt(pos, new ColorRGB(255, 0, 128));
+		}
+
+		DefaultImageFile wavFourierImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_beats.png");
+		wavFourierImgFile.assign(graphWithFourierImg);
+		wavFourierImgFile.save();
+
+
 		// generate beats based on the detected bpm, but still try to locally align to the closest
 		// detected beat, e.g. align to the next one to the right if there is one to the left or
 		// right of the current beat and the distance to it is less than 1/10 of a beat...
@@ -712,7 +773,6 @@ public class MusicGenerator {
 			bpmBasedBeats.add(i);
 			wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
 		}*/
-		int generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
 		int uncertainty = generatedBeatDistance / 5;
 		int maxPosI = 0;
 		// such that we do not have to worry about overflowing the maximumPositions list,
