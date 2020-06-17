@@ -317,7 +317,7 @@ public class VideoGenerator {
 				y = curFourier.length - (i + 1);
 				x = width + 1 - (((curFourier[i] * curiness) + (nextFourier[i] * nextiness)) / (framesPerFourier * 5000));
 				img.drawLine(x, 4*y+3, width, 4*y+3, blue);
-				int newX = 0;
+				int newX = width;
 				if (i+1 < curFourier.length) {
 					newX = width + 1 - (((curFourier[i+1] * curiness) + (nextFourier[i+1] * nextiness)) / (framesPerFourier * 5000));
 				}
