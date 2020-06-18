@@ -213,7 +213,7 @@ public class MusicGenerator {
 
 			fouriers[fourierNum] = fourier;
 
-			if (fourierNum % (fourierAmount / 16) == 0) {
+			if (fourierNum % (fourierAmount / 32) == 0) {
 				debugOut.add("    ::: [" + fourierNum + "] Fourier max: " + fourierMax);
 			}
 
@@ -291,7 +291,7 @@ public class MusicGenerator {
 		wavImgFile.assign(wavGraphImg);
 		wavImgFile.save();
 
-		addDrumsBasedOnBeats(drumBeats);
+		addDrumsBasedOnBeats(drumBeats, debugOut);
 
 		debugOut.add("Song Finalization");
 		debugOut.add(": Start Post-Processing");
@@ -466,7 +466,7 @@ public class MusicGenerator {
 	// returns a list of positions at which beats were, in the very end, added in the song
 	private List<Beat> getDrumBeats(List<String> debugOut) {
 
-		debugOut.add("Starting Drum Beat Detection");
+		debugOut.add("Starting Beat Detection");
 
 		/*
 		// ALGORITHM 1
@@ -1407,7 +1407,7 @@ public class MusicGenerator {
 			generatedBeatDistance = generatedBeatDistance / ACTUAL_GEN_RING_SIZE;
 			generatedBeatDistance = (origGeneratedBeatDistance + generatedBeatDistance) / 2;
 			System.out.println("generatedBeatDistance: " + generatedBeatDistance + " orig: " + origGeneratedBeatDistance);
-			if (i % (wavDataLeft.length / 16) == 0) {
+			if (i % (wavDataLeft.length / 32) == 0) {
 				debugOut.add("    ::: [" + i + "] generated beat distance: " + generatedBeatDistance + " pos");
 			}
 			prevI = i;
@@ -1568,7 +1568,8 @@ public class MusicGenerator {
 		int SMOOTH_AMOUNT = 3;
 		debugOut.add("  :: smoothening " + SMOOTH_AMOUNT + " times");
 		for (int i = 0; i < SMOOTH_AMOUNT; i++) {
-			bpmBasedBeats = smoothenBeats(bpmBasedBeats);
+			debugOut.add("  :: smoothening #" + i);
+			bpmBasedBeats = smoothenBeats(bpmBasedBeats, debugOut);
 		}
 
 		Collections.sort(bpmBasedBeats);
@@ -1650,16 +1651,23 @@ public class MusicGenerator {
 		return beats;
 	}
 
-	private List<Integer> smoothenBeats(List<Integer> bpmBasedBeats) {
+	private List<Integer> smoothenBeats(List<Integer> bpmBasedBeats, List<String> debugOut) {
 
 		Collections.sort(bpmBasedBeats);
 
 		if (bpmBasedBeats.size() > 1) {
 			List<Integer> smoothBeats = new ArrayList<>();
 			smoothBeats.add(bpmBasedBeats.get(0));
+			debugOut.add("    ::: [0] before: " + bpmBasedBeats.get(0) + ", after: " + bpmBasedBeats.get(0));
 			smoothBeats.add(bpmBasedBeats.get(1));
+			debugOut.add("    ::: [1] before: " + bpmBasedBeats.get(1) + ", after: " + bpmBasedBeats.get(1));
 			for (int i = 2; i < bpmBasedBeats.size() - 2; i++) {
-				smoothBeats.add((bpmBasedBeats.get(i-2) + 2*bpmBasedBeats.get(i-1) + bpmBasedBeats.get(i) + 2*bpmBasedBeats.get(i+1) + bpmBasedBeats.get(i+2)) / 7);
+				int before = bpmBasedBeats.get(i);
+				int after = (bpmBasedBeats.get(i-2) + 2*bpmBasedBeats.get(i-1) + before + 2*bpmBasedBeats.get(i+1) + bpmBasedBeats.get(i+2)) / 7;
+				smoothBeats.add(after);
+				if (i < 16) {
+					debugOut.add("    ::: [" + i + "] before: " + before + ", after: " + after);
+				}
 			}
 			smoothBeats.add(bpmBasedBeats.get(bpmBasedBeats.size() - 2));
 			smoothBeats.add(bpmBasedBeats.get(bpmBasedBeats.size() - 1));
@@ -1676,7 +1684,9 @@ public class MusicGenerator {
 		return dividend / divisor;
 	}
 
-	private void addDrumsBasedOnBeats(List<Beat> beats) {
+	private void addDrumsBasedOnBeats(List<Beat> beats, List<String> debugOut) {
+
+		debugOut.add("Starting Drum Addition");
 
 		GraphImage graphImg = new GraphImage();
 		graphImg.setInnerWidthAndHeight(channelPosToMillis(wavDataLeft.length) / 100, graphImageHeight);
@@ -1694,6 +1704,8 @@ public class MusicGenerator {
 
 		BeatStats stats = new BeatStats(beats);
 
+		debugOut.add(": Starting Beat Input Analysis");
+
 		System.out.println("");
 		System.out.println("averageLength: " + stats.getAverageLength());
 		System.out.println("averageLoudness: " + stats.getAverageLoudness());
@@ -1701,6 +1713,16 @@ public class MusicGenerator {
 		System.out.println("maxLength: " + stats.getMaxLength());
 		System.out.println("maxLoudness: " + stats.getMaxLoudness());
 		System.out.println("maxJigglieness: " + stats.getMaxJigglieness());
+
+		debugOut.add("  :: received " + beats.size() + " beats as input");
+		debugOut.add("  :: average length: " + stats.getAverageLength());
+		debugOut.add("  :: average loudness: " + stats.getAverageLoudness());
+		debugOut.add("  :: average igglieness: " + stats.getAverageJigglieness());
+		debugOut.add("  :: max length: " + stats.getMaxLength());
+		debugOut.add("  :: max loudness: " + stats.getMaxLoudness());
+		debugOut.add("  :: max jigglieness: " + stats.getMaxJigglieness());
+
+		debugOut.add(": Starting Drum Sound Addition");
 
 		for (int b = 0; b < beats.size(); b++) {
 			Beat beat = beats.get(b);

@@ -254,9 +254,9 @@ public class VideoGenerator {
 			int titleX = (width - textTitle.getWidth()) / 2;
 			int titleY = (8 * height) / 1080;
 			if (drawAllWhite) {
-				img.draw(textTitleWhite, titleX, titleY);
+				img.draw(textTitleWhite, titleX, titleY, trueBlack);
 			} else {
-				img.draw(textTitle, titleX, titleY);
+				img.draw(textTitle, titleX, titleY, trueBlack);
 			}
 
 			// stars
