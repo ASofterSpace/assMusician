@@ -868,14 +868,14 @@ public class MusicGenerator {
 		}
 		*/
 
-		debugOut.add(" :: using " + fouriers.length + " Fourier levels of size " + fouriers[0].length);
+		debugOut.add("  :: using " + fouriers.length + " Fourier levels of size " + fouriers[0].length);
 
 		List<Pair<Integer, Integer>> possibleMaximumPositions = new ArrayList<>();
 		List<Integer> allMaximumPositionsForAlignment = new ArrayList<>();
 		int lastStart = 0;
-		debugOut.add(" :: using generated beat distance " + generatedBeatDistance + " pos");
-		debugOut.add(" :: using Fourier length " + fourierLen + " pos");
-		debugOut.add(" :: resulting resolution: " + (generatedBeatDistance / fourierLen) + " (higher is better)");
+		debugOut.add("  :: using generated beat distance " + generatedBeatDistance + " pos");
+		debugOut.add("  :: using Fourier length " + fourierLen + " pos");
+		debugOut.add("  :: resulting resolution: " + (generatedBeatDistance / fourierLen) + " (higher is better)");
 		for (int i = generatedBeatDistance; i < wavDataLeft.length; i += generatedBeatDistance) {
 			int maxVal = 0;
 			int maxPos = 0;
@@ -892,7 +892,7 @@ public class MusicGenerator {
 			lastStart = i;
 		}
 
-		debugOut.add(" :: found " + possibleMaximumPositions.size() + " possible maximum positions");
+		debugOut.add("  :: found " + possibleMaximumPositions.size() + " possible maximum positions");
 
 		Collections.sort(possibleMaximumPositions, new Comparator<Pair<Integer, Integer>>() {
 			public int compare(Pair<Integer, Integer> a, Pair<Integer, Integer> b) {
@@ -902,7 +902,7 @@ public class MusicGenerator {
 
 		int midVal = possibleMaximumPositions.get(possibleMaximumPositions.size() / 2).getRight();
 
-		debugOut.add(" :: mid val: " + midVal);
+		debugOut.add("  :: mid val: " + midVal);
 
 		// only get the louder half of them for now (for bpm detection)
 		for (int i = 0; i < possibleMaximumPositions.size(); i++) {
@@ -911,7 +911,7 @@ public class MusicGenerator {
 			}
 		}
 
-		debugOut.add(" :: louder half of maximum positions containing " + maximumPositions.size() + " values");
+		debugOut.add("  :: louder half of maximum positions containing " + maximumPositions.size() + " values");
 
 		Collections.sort(maximumPositions);
 
