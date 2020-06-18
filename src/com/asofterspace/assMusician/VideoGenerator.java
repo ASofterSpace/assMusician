@@ -45,7 +45,7 @@ public class VideoGenerator {
 	// like, they are there (and stay there for a second or so) and then the actual stuff fades in?
 	public void generateVideoBasedOnBeats(List<Beat> beats, int totalFrameAmount, int width, int height,
 		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle,
-		int framesPerFourier, int[][] fouriers) {
+		int framesPerFourier, int[][] fouriers, List<String> debugLog) {
 
 		System.out.println("");
 		System.out.println("Generating " + totalFrameAmount + " frames...");
@@ -228,6 +228,27 @@ public class VideoGenerator {
 			// background
 			Image img = new Image(width, height, black);
 			img.setLineWidth(3);
+
+			// debug log
+			int fontHeight = 16;
+			int textHeight = Image.getTextHeight("Neuropol", fontHeight);
+			int overallScrollHeight = (debugLog.size() * textHeight) + height;
+			for (int i = 0; i < debugLog.size(); i++) {
+				int top = (i*textHeight) + height - ((step * overallScrollHeight) / totalFrameAmount);
+				int left = (11 * width) / 100;
+				if (top < -textHeight) {
+					continue;
+				}
+				if (top > height) {
+					break;
+				}
+				int highlightArea = 2 * height / 3;
+				ColorRGB textCol = darkBlue;
+				if ((top > highlightArea) && (top <= highlightArea + textHeight)) {
+					textCol = blue;
+				}
+				img.drawText(debugLog.get(i), top, null, null, left, "Neuropol", fontHeight, true, textCol);
+			}
 
 			// title
 			int titleX = (width - textTitle.getWidth()) / 2;

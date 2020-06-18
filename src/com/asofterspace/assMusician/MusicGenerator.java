@@ -12,6 +12,7 @@ import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
+import com.asofterspace.toolbox.io.SimpleFile;
 import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.music.Beat;
 import com.asofterspace.toolbox.music.BeatStats;
@@ -73,8 +74,12 @@ public class MusicGenerator {
 	public final static int width = 1920;
 	public final static int height = 1080;
 	public final static int frameRate = 60;
-	// we have 6 frames for one Fourier transform
+	// we have 3 frames for one Fourier transform
 	public final static int framesPerFourier = 3;
+	// we interweave 2 Fouriers, meaning that instead of doing one, then the next,
+	// we do one, then one from half until half of next, then next, then one from half of next until half of next next
+	// TODO :: actually do this!
+	public final static int interwovenFouriers = 2;
 	/**/
 	/*
 	public final static int width = 640;
@@ -111,6 +116,13 @@ public class MusicGenerator {
 
 	public void addDrumsToSong(File originalSong) {
 
+		List<String> debugOut = new ArrayList<>();
+
+		debugOut.add("{start log}");
+
+		debugOut.add("Song Analysis");
+		debugOut.add(": Load Audio");
+
 		System.out.println("[" + DateUtils.serializeDateTime(new Date()) + "] Adding drums to " + originalSong.getLocalFilename());
 
 		workDir.clear();
@@ -136,25 +148,49 @@ public class MusicGenerator {
 		// load the extracted audio
 		WavFile wav = new WavFile(workSong);
 		this.byteRate = wav.getByteRate();
+		debugOut.add("  :: input byte rate: " + this.byteRate);
 		this.bytesPerSample = wav.getBitsPerSample() / 8;
+		debugOut.add("  :: input bytes per sample: " + this.bytesPerSample);
 		SoundData wavSoundData = wav.getSoundData();
+		debugOut.add("  :: sound data length: " + wavSoundData.getLength() + " pos");
 
 		// cut off silence from the front and back (basically trim() for the wav file... ^^)
 		// but add one second of silence in the end!
-		wavSoundData.trimAndAdd(millisToChannelPos(1000));
+		debugOut.add(": Start Pre-Processing");
+		int addAmountMS = 1000;
+		int addAmount = millisToChannelPos(addAmountMS);
+		debugOut.add("  :: trim and add: " + addAmountMS + " ms");
+		debugOut.add("  :: trim and add: " + addAmount + " pos");
+		wavSoundData.trimAndAdd(addAmount);
 		// fade in and out for 1 second each
-		wavSoundData.fadeIn(millisToChannelPos(1000));
-		wavSoundData.fadeOut(millisToChannelPos(1000));
+		int fadeInAmountMS = 1000;
+		int fadeInAmount = millisToChannelPos(fadeInAmountMS);
+		debugOut.add("  :: fade in: " + fadeInAmountMS + " ms");
+		debugOut.add("  :: fade in: " + fadeInAmount + " pos");
+		wavSoundData.fadeIn(fadeInAmount);
+		int fadeOutAmountMS = 1000;
+		int fadeOutAmount = millisToChannelPos(fadeOutAmountMS);
+		debugOut.add("  :: fade out: " + fadeOutAmountMS + " ms");
+		debugOut.add("  :: fade out: " + fadeOutAmount + " pos");
+		wavSoundData.fadeOut(fadeOutAmount);
+
+		debugOut.add("  :: sound data length: " + wavSoundData.getLength() + " pos");
 
 		Waveform origWaveform = new Waveform(wavSoundData);
 
 
 		// Fourier analysis...
 
+		debugOut.add(": Start Fourier Analysis");
+
+		debugOut.add("  :: frame per Fourier: " + framesPerFourier + " pos");
+		debugOut.add("  :: frame rate: " + frameRate);
 		fourierLen = millisToChannelPos((1000 * framesPerFourier) / frameRate);
+		debugOut.add("  :: Fourier length: " + fourierLen + " pos");
 		int fourierNum = 0;
 		int fourierMax = 0;
 		int fourierAmount = wavSoundData.getLength() / fourierLen;
+		debugOut.add("  :: Fourier amount: " + fourierAmount);
 		fouriers = new int[fourierAmount][];
 
 		while (true) {
@@ -177,6 +213,10 @@ public class MusicGenerator {
 
 			fouriers[fourierNum] = fourier;
 
+			if (fourierNum % (fourierAmount / 16) == 0) {
+				debugOut.add("    ::: [" + fourierNum + "] Fourier max: " + fourierMax);
+			}
+
 			/*
 			// output Fourier as histogram
 			List<GraphDataPoint> fourierData = new ArrayList<>();
@@ -195,6 +235,8 @@ public class MusicGenerator {
 
 			fourierNum++;
 		}
+
+		debugOut.add("  :: Fourier max: " + fourierMax);
 
 
 		// go over to directly working on the wave data...
@@ -243,7 +285,7 @@ public class MusicGenerator {
 		);
 
 		// add drums
-		List<Beat> drumBeats = getDrumBeats();
+		List<Beat> drumBeats = getDrumBeats(debugOut);
 
 		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition.png");
 		wavImgFile.assign(wavGraphImg);
@@ -251,8 +293,15 @@ public class MusicGenerator {
 
 		addDrumsBasedOnBeats(drumBeats);
 
+		debugOut.add("Song Finalization");
+		debugOut.add(": Start Post-Processing");
+
 		// add rev sound at the beginning at high volume
-		addWavMono(WAV_REV_DRUM, 0, 8);
+		int revPos = 0;
+		int revLoudness = 8;
+		addWavMono(WAV_REV_DRUM, revPos, revLoudness);
+		debugOut.add("  :: add rev sound at " + revPos + " pos");
+		debugOut.add("  :: rev sound loudness: " + revLoudness);
 
 		/* NO NEED TO FADE ANYMORE, AS WE ADJUST DRUM VOLUME BASED ON BEAT VOLUME, WHICH IS EVEN BETTER
 		// fade in the faded wav
@@ -276,16 +325,27 @@ public class MusicGenerator {
 
 		// handle the overflow by normalizing the entire song
 		SoundData soundData = new SoundData(wavDataLeft, wavDataRight);
+		debugOut.add("  :: normalizing sound data");
+		debugOut.add("  :: max before: " + soundData.getMax());
 		soundData.normalize();
+		debugOut.add("  :: max after: " + soundData.getMax());
 
 		Waveform newWaveform = new Waveform(soundData);
 
 		// save the new song as audio
+		debugOut.add(": Save Audio");
 		WavFile newSongFile = new WavFile(workDir, "our_song.wav");
-		newSongFile.setNumberOfChannels(2);
+		int outChannelNum = 2;
+		debugOut.add("  :: number of channels: " + outChannelNum);
+		newSongFile.setNumberOfChannels(outChannelNum);
+		debugOut.add("  :: sample rate: " + wav.getSampleRate());
 		newSongFile.setSampleRate(wav.getSampleRate());
+		debugOut.add("  :: byte rate: " + byteRate);
 		newSongFile.setByteRate(byteRate);
+		debugOut.add("  :: bytes per sample: " + bytesPerSample);
+		debugOut.add("  :: bits per sample: " + (bytesPerSample * 8));
 		newSongFile.setBitsPerSample(bytesPerSample * 8);
+		debugOut.add("  :: sound data length: " + soundData.getLength());
 		newSongFile.setSoundData(soundData);
 		newSongFile.save();
 
@@ -349,9 +409,14 @@ public class MusicGenerator {
 			if (songTitle.contains(".")) {
 				songTitle = songTitle.substring(0, songTitle.lastIndexOf("."));
 			}
+			debugOut.add("  :: input song title: " + songTitle);
 			songTitle += " (Remix with Drums)";
+			debugOut.add("  :: output song title: " + songTitle);
+
+			debugOut.add("{end log}");
+
 			vidGenny.generateVideoBasedOnBeats(drumBeats, totalFrameAmount, width, height, wavGraphImg,
-				origWaveform, newWaveform, songTitle, framesPerFourier, fouriers);
+				origWaveform, newWaveform, songTitle, framesPerFourier, fouriers, debugOut);
 		}
 
 		// splice the generated audio together with the generated video
@@ -377,6 +442,9 @@ public class MusicGenerator {
 		// (and in the description, link to the original song)
 		// TODO
 
+		SimpleFile debugLogFile = new SimpleFile(workDir, "debug.txt");
+		debugLogFile.saveContents(debugOut);
+
 		System.out.println("[" + DateUtils.serializeDateTime(new Date()) + "] " + originalSong.getLocalFilename() + " done!");
 	}
 
@@ -396,7 +464,9 @@ public class MusicGenerator {
 	// * also make fun noises with water in the bathtub, record them, and put them instead of
 	//   drums just for fun / April 1st edition? :D
 	// returns a list of positions at which beats were, in the very end, added in the song
-	private List<Beat> getDrumBeats() {
+	private List<Beat> getDrumBeats(List<String> debugOut) {
+
+		debugOut.add("Starting Drum Beat Detection");
 
 		/*
 		// ALGORITHM 1
@@ -461,6 +531,8 @@ public class MusicGenerator {
 
 		// ALGORITHM 3
 
+		debugOut.add(": Starting Algorithm 3");
+
 		// We first iterate over the entire song and try to find maxima, by finding
 		// first the maxima over each 0.025 s region, and then we go over all the maxima
 		// from end to start and keep only the ones which are preceded by lower ones
@@ -469,7 +541,11 @@ public class MusicGenerator {
 		List<Integer> potentialMaximumPositions = new ArrayList<>();
 		int localMaxPos = 0;
 		int localMax = 0;
-		int regionSize = millisToChannelPos(25);
+		int regionSizeMS = 25;
+		int regionSize = millisToChannelPos(regionSizeMS);
+		debugOut.add("  :: region size: " + regionSizeMS + " ms");
+		debugOut.add("  :: region size: " + regionSize + " pos");
+
 		for (int i = 0; i < wavDataLeft.length; i++) {
 			if (wavDataLeft[i] > localMax) {
 				localMax = wavDataLeft[i];
@@ -481,6 +557,9 @@ public class MusicGenerator {
 				localMaxPos = i;
 			}
 		}
+
+		debugOut.add("  :: " + potentialMaximumPositions.size() + " potential maximum positions found");
+
 		/*
 		for (int i = potentialMaximumPositions.size() - 1; i > 2; i--) {
 
@@ -517,6 +596,8 @@ public class MusicGenerator {
 			}
 		}
 
+		debugOut.add("  :: " + moreLikelyMaximumPositions.size() + " more likely maximum positions found");
+
 		// we now iterate once more, getting the highest / most maximum-y of the maxima
 		for (int i = 0; i < wavDataLeft.length; i += millisToChannelPos(100)) {
 			int highestPos = -1;
@@ -534,6 +615,8 @@ public class MusicGenerator {
 				maximumPositions.add(highestPos);
 			}
 		}
+
+		debugOut.add("  :: " + maximumPositions.size() + " most maximum-y maxima found");
 
 		Collections.sort(maximumPositions);
 
@@ -599,6 +682,8 @@ public class MusicGenerator {
 		// We then have lots and lots of estimates for the bpm, which we all put into buckets - and the
 		// largest bucket wins!
 
+		debugOut.add(": Starting Algorithm 3.6");
+
 		Collections.sort(maximumPositions);
 
 		// each bpm candidate is an int representing a bpm value times 10 (so that we have a bit more accuracy),
@@ -607,10 +692,19 @@ public class MusicGenerator {
 		int MIN_BPM = 90;
 		int MAX_BPM = 180;
 		int LOOKBACK = 1;
+
+		debugOut.add("  :: bucket accuracy factor: " + BUCKET_ACCURACY_FACTOR);
+		debugOut.add("  :: min bpm: " + MIN_BPM);
+		debugOut.add("  :: max bpm: " + MAX_BPM);
+		debugOut.add("  :: lookback: " + LOOKBACK);
+
 		Map<Integer, Integer> bpmCandidates = new HashMap<>();
 		for (int curBpm = MIN_BPM*1000*BUCKET_ACCURACY_FACTOR; curBpm < MAX_BPM*1000*BUCKET_ACCURACY_FACTOR + 1; curBpm++) {
 			bpmCandidates.put(curBpm, 0);
 		}
+
+		int candFound = 0;
+		int candDistinct = 0;
 
 		for (int i = 0; i < maximumPositions.size(); i++) {
 			// actually, instead of looking at all pairs...
@@ -640,12 +734,20 @@ public class MusicGenerator {
 				}
 
 				if (bpmCandidates.get(curBpm) != null) {
+					if (bpmCandidates.get(curBpm) == 0) {
+						candDistinct++;
+					}
 					bpmCandidates.put(curBpm, bpmCandidates.get(curBpm) + 1);
 				} else {
 					bpmCandidates.put(curBpm, 1);
+					candDistinct++;
 				}
+				candFound++;
 			}
 		}
+
+		debugOut.add("  :: " + candFound + " bpm candidates found overall");
+		debugOut.add("  :: " + candDistinct + " distinct bpm candidates found");
 
 		// output buckets as histogram
 		int graphWidth = (MAX_BPM - MIN_BPM) * BUCKET_ACCURACY_FACTOR * 10;
@@ -662,12 +764,39 @@ public class MusicGenerator {
 		histogramImgFile.assign(histogramImg);
 		histogramImgFile.save();
 
+		// now find the largest bucket
+		int largestBucketContentAmount = 0;
+		int largestBucketBpm = 0;
+		int bucketAmount = 0;
+
+		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
+			bucketAmount++;
+			if (entry.getValue() >= largestBucketContentAmount) {
+				largestBucketContentAmount = entry.getValue();
+				largestBucketBpm = entry.getKey();
+			}
+		}
+
+		double bpm = largestBucketBpm / (BUCKET_ACCURACY_FACTOR*1000.0);
+
+		debugOut.add("  :: " + bucketAmount + " buckets used");
+		debugOut.add("  :: largest bucket containing " + largestBucketContentAmount + " values");
+		debugOut.add("  :: largest bucket value: " + largestBucketBpm);
+		debugOut.add("  :: bpm based on largest bucket: " + bpm);
+		int generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
+		debugOut.add("  :: generated beat distance: " + generatedBeatDistance + " pos");
+
 		// smoothen the buckets a little bit - we do not lose accuracy (as we do not just widen
 		// the buckets into less precise ones), but we gain resistance to small variations in bpm
+
+		debugOut.add("  :: smoothening the buckets");
+		int SMOOTHENING_WIDTH = 1500;
+		debugOut.add("  :: smoothening width: " + SMOOTHENING_WIDTH);
+
 		Map<Integer, Integer> smoothBpmCandidates = new HashMap<>();
 		for (int curBpm = MIN_BPM*1000*BUCKET_ACCURACY_FACTOR; curBpm < MAX_BPM*1000*BUCKET_ACCURACY_FACTOR + 1; curBpm++) {
 			int curAmount = 0;
-			for (int i = 1; i < 1500; i++) {
+			for (int i = 1; i < SMOOTHENING_WIDTH; i++) {
 				if (bpmCandidates.get(curBpm-i) != null) {
 					curAmount += bpmCandidates.get(curBpm-i);
 				}
@@ -694,25 +823,34 @@ public class MusicGenerator {
 		histogramImgFile.save();
 
 		// now find the largest bucket
-		int largestBucketContentAmount = 0;
-		int largestBucketBpm = 0;
+		largestBucketContentAmount = 0;
+		largestBucketBpm = 0;
+		bucketAmount = 0;
 
 		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
+			bucketAmount++;
 			if (entry.getValue() >= largestBucketContentAmount) {
 				largestBucketContentAmount = entry.getValue();
 				largestBucketBpm = entry.getKey();
 			}
 		}
 
-		double bpm = largestBucketBpm / (BUCKET_ACCURACY_FACTOR*1000.0);
+		bpm = largestBucketBpm / (BUCKET_ACCURACY_FACTOR*1000.0);
+
+		debugOut.add("  :: " + bucketAmount + " buckets used");
+		debugOut.add("  :: largest bucket containing " + largestBucketContentAmount + " values");
+		debugOut.add("  :: largest bucket value: " + largestBucketBpm);
+		debugOut.add("  :: bpm based on largest bucket: " + bpm);
+		generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
+		debugOut.add("  :: generated beat distance: " + generatedBeatDistance + " pos");
 
 		System.out.println("We detected " + bpm + " beats per minute, " +
 			"with the largest bucket containing " + largestBucketContentAmount + " values...");
 
-		int generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
-
 
 		// ALGORITHM 4
+
+		debugOut.add(": Starting Algorithm 4");
 
 		// Instead of keeping the maximumPositions which we had so far, we use new ones which we
 		// base on the Fourier transform and the lowest frequencies we get from it...
@@ -730,9 +868,14 @@ public class MusicGenerator {
 		}
 		*/
 
+		debugOut.add(" :: using " + fouriers.length + " Fourier levels of size " + fouriers[0].length);
+
 		List<Pair<Integer, Integer>> possibleMaximumPositions = new ArrayList<>();
 		List<Integer> allMaximumPositionsForAlignment = new ArrayList<>();
 		int lastStart = 0;
+		debugOut.add(" :: using generated beat distance " + generatedBeatDistance + " pos");
+		debugOut.add(" :: using Fourier length " + fourierLen + " pos");
+		debugOut.add(" :: resulting resolution: " + (generatedBeatDistance / fourierLen) + " (higher is better)");
 		for (int i = generatedBeatDistance; i < wavDataLeft.length; i += generatedBeatDistance) {
 			int maxVal = 0;
 			int maxPos = 0;
@@ -749,6 +892,8 @@ public class MusicGenerator {
 			lastStart = i;
 		}
 
+		debugOut.add(" :: found " + possibleMaximumPositions.size() + " possible maximum positions");
+
 		Collections.sort(possibleMaximumPositions, new Comparator<Pair<Integer, Integer>>() {
 			public int compare(Pair<Integer, Integer> a, Pair<Integer, Integer> b) {
 				return a.getRight() - b.getRight();
@@ -757,12 +902,16 @@ public class MusicGenerator {
 
 		int midVal = possibleMaximumPositions.get(possibleMaximumPositions.size() / 2).getRight();
 
+		debugOut.add(" :: mid val: " + midVal);
+
 		// only get the louder half of them for now (for bpm detection)
 		for (int i = 0; i < possibleMaximumPositions.size(); i++) {
 			if (possibleMaximumPositions.get(i).getRight() >= midVal) {
 				maximumPositions.add(possibleMaximumPositions.get(i).getLeft());
 			}
 		}
+
+		debugOut.add(" :: louder half of maximum positions containing " + maximumPositions.size() + " values");
 
 		Collections.sort(maximumPositions);
 
@@ -791,6 +940,8 @@ public class MusicGenerator {
 
 		// ALGORITHM 4.1
 
+		debugOut.add(": Starting Algorithm 4.1");
+
 		// now do beat detection AGAIN - this time, based on the fourier-based maxima
 		// TODO :: algo 4.1 has been replaced by algo 4.2, stop calculating it!
 
@@ -798,6 +949,9 @@ public class MusicGenerator {
 		for (int curBpm = MIN_BPM*1000*BUCKET_ACCURACY_FACTOR; curBpm < MAX_BPM*1000*BUCKET_ACCURACY_FACTOR + 1; curBpm++) {
 			bpmCandidates.put(curBpm, 0);
 		}
+
+		candFound = 0;
+		candDistinct = 0;
 
 		for (int i = 0; i < maximumPositions.size(); i++) {
 			// actually, instead of looking at all pairs...
@@ -827,12 +981,20 @@ public class MusicGenerator {
 				}
 
 				if (bpmCandidates.get(curBpm) != null) {
+					if (bpmCandidates.get(curBpm) == 0) {
+						candDistinct++;
+					}
 					bpmCandidates.put(curBpm, bpmCandidates.get(curBpm) + 1);
 				} else {
 					bpmCandidates.put(curBpm, 1);
+					candDistinct++;
 				}
+				candFound++;
 			}
 		}
+
+		debugOut.add("  :: " + candFound + " bpm candidates found overall");
+		debugOut.add("  :: " + candDistinct + " distinct bpm candidates found");
 
 		// output buckets as histogram
 		graphWidth = (MAX_BPM - MIN_BPM) * BUCKET_ACCURACY_FACTOR * 10;
@@ -849,12 +1011,39 @@ public class MusicGenerator {
 		histogramImgFile.assign(histogramImg);
 		histogramImgFile.save();
 
+		// now find the largest bucket
+		largestBucketContentAmount = 0;
+		largestBucketBpm = 0;
+		bucketAmount = 0;
+
+		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
+			bucketAmount++;
+			if (entry.getValue() >= largestBucketContentAmount) {
+				largestBucketContentAmount = entry.getValue();
+				largestBucketBpm = entry.getKey();
+			}
+		}
+
+		bpm = largestBucketBpm / (BUCKET_ACCURACY_FACTOR*1000.0);
+
+		debugOut.add("  :: " + bucketAmount + " buckets used");
+		debugOut.add("  :: largest bucket containing " + largestBucketContentAmount + " values");
+		debugOut.add("  :: largest bucket value: " + largestBucketBpm);
+		debugOut.add("  :: bpm based on largest bucket: " + bpm);
+		generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
+		debugOut.add("  :: generated beat distance: " + generatedBeatDistance + " pos");
+
 		// smoothen the buckets a little bit - we do not lose accuracy (as we do not just widen
 		// the buckets into less precise ones), but we gain resistance to small variations in bpm
+
+		debugOut.add("  :: smoothening the buckets");
+		SMOOTHENING_WIDTH = 1500;
+		debugOut.add("  :: smoothening width: " + SMOOTHENING_WIDTH);
+
 		smoothBpmCandidates = new HashMap<>();
 		for (int curBpm = MIN_BPM*1000*BUCKET_ACCURACY_FACTOR; curBpm < MAX_BPM*1000*BUCKET_ACCURACY_FACTOR + 1; curBpm++) {
 			int curAmount = 0;
-			for (int i = 1; i < 1500; i++) {
+			for (int i = 1; i < SMOOTHENING_WIDTH; i++) {
 				if (bpmCandidates.get(curBpm-i) != null) {
 					curAmount += bpmCandidates.get(curBpm-i);
 				}
@@ -883,8 +1072,10 @@ public class MusicGenerator {
 		// now find the largest bucket
 		largestBucketContentAmount = 0;
 		largestBucketBpm = 0;
+		bucketAmount = 0;
 
 		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
+			bucketAmount++;
 			if (entry.getValue() >= largestBucketContentAmount) {
 				largestBucketContentAmount = entry.getValue();
 				largestBucketBpm = entry.getKey();
@@ -893,36 +1084,27 @@ public class MusicGenerator {
 
 		bpm = largestBucketBpm / (BUCKET_ACCURACY_FACTOR*1000.0);
 
+		debugOut.add("  :: " + bucketAmount + " buckets used");
+		debugOut.add("  :: largest bucket containing " + largestBucketContentAmount + " values");
+		debugOut.add("  :: largest bucket value: " + largestBucketBpm);
+		debugOut.add("  :: bpm based on largest bucket: " + bpm);
+		generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
+		debugOut.add("  :: generated beat distance: " + generatedBeatDistance + " pos");
+
 		System.out.println("We detected " + bpm + " beats per minute based on the Fourier beats, " +
 			"with the largest bucket containing " + largestBucketContentAmount + " values...");
 
-		generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 		// ALGORITHM 4.2
+
+		debugOut.add(": Starting Algorithm 4.2");
 
 		// now do beat detection AGAIN - this time, based on the fourier-based maxima, and with a different
 		// algorithm - instead of putting bpms into buckets, we want to look at the histogram of all the
 		// one-beat distances and see if we can find some truth in that...
 
 		int maxDist = 0;
+		int minDist = Integer.MAX_VALUE;
 		List<Integer> distances = new ArrayList<>();
 		System.out.println("\n\nDistances unsorted:\n");
 		for (int i = 1; i < maximumPositions.size(); i++) {
@@ -930,10 +1112,16 @@ public class MusicGenerator {
 			if (curDist > maxDist) {
 				maxDist = curDist;
 			}
+			if (curDist < minDist) {
+				minDist = curDist;
+			}
 			distances.add(curDist);
 			System.out.println("  "+ curDist + " from " + maximumPositions.get(i) + " to " + maximumPositions.get(i-1));
 		}
 
+		debugOut.add("  :: " + distances.size() + " distances calculated");
+		debugOut.add("  :: max dist: " + maxDist);
+		debugOut.add("  :: min dist: " + minDist);
 		System.out.println("\n\n");
 
 		Collections.sort(distances);
@@ -948,14 +1136,20 @@ public class MusicGenerator {
 			beatLenCandidates.put(i, 0);
 		}
 
+		int beatLenAmount = 0;
+		int beatLenDistinct = 0;
 		for (int i = 1; i < maximumPositions.size(); i++) {
 			int curDist = maximumPositions.get(i) - maximumPositions.get(i - 1);
 			if (beatLenCandidates.get(curDist) != null) {
 				beatLenCandidates.put(curDist, beatLenCandidates.get(curDist) + 1);
 			} else {
 				beatLenCandidates.put(curDist, 1);
+				beatLenDistinct++;
 			}
+			beatLenAmount++;
 		}
+		debugOut.add("  :: calculated " + beatLenDistinct + " distinct best length candidates");
+		debugOut.add("  :: calculated " + beatLenAmount + " best length candidates overall");
 
 		// output buckets as histogram
 		graphWidth = maxDist;
@@ -966,6 +1160,7 @@ public class MusicGenerator {
 		for (Map.Entry<Integer, Integer> entry : beatLenCandidates.entrySet()) {
 			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
 		}
+		debugOut.add("  :: obtained " + beatLenCandidates.entrySet().size() + " buckets");
 		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
 		histogramImg.setAbsoluteDataPoints(histData);
 		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_histogram_for_len_beats.png");
@@ -979,6 +1174,7 @@ public class MusicGenerator {
 			smoothBeatLenCandidates.put(curLen, 0);
 		}
 		int smoothenBy = 4096;
+		debugOut.add("  :: smoothening the buckets by " + smoothenBy);
 		for (int curLen = 1; curLen <= maxDist; curLen++) {
 			if (beatLenCandidates.get(curLen) != null) {
 				if (beatLenCandidates.get(curLen) > 0) {
@@ -1067,35 +1263,25 @@ public class MusicGenerator {
 			}
 		}
 
+		debugOut.add("  :: " + largestBucketContentAmount + " values in the largest bucket");
+		debugOut.add("  :: beat length based on largest bucket: " + largestBucketBeatLen + " pos");
+
 		int largestBucketBeatLenInMS = channelPosToMillis(largestBucketBeatLen);
+		debugOut.add("  :: beat length based on largest bucket: " + largestBucketBeatLenInMS + " ms");
 
 		if (largestBucketBeatLenInMS != 0) {
 			bpm = 1000 * 60.0 / largestBucketBeatLenInMS;
+			debugOut.add("  :: bpm: " + bpm);
 
 			System.out.println("We detected " + bpm + " beats per minute based on the Fourier beats length histogram, " +
 				"with the largest bucket containing " + largestBucketContentAmount + " values...");
 		} else {
 			System.out.println("Falling back on " + bpm + " beats per minute due to a division by zero!");
+			debugOut.add("  :: division by zero - fallback bpm: " + bpm);
 		}
 
 		generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		debugOut.add("  :: generated beat distance: " + generatedBeatDistance + " pos");
 
 
 		// generate beats based on the detected bpm, but still try to locally align to the closest
@@ -1117,10 +1303,14 @@ public class MusicGenerator {
 
 		// ALGORITHM 5
 
+		debugOut.add(": Starting Algorithm 5");
+
 		// in addition to all else, here keep a rolling average of the last 10 beat distances that we actually
 		// put into the song, and use as predictor for the next beat distances the average of that and the
 		// generated distance rather than just the generated distance purely
 		int ACTUAL_GEN_RING_SIZE = 10;
+		debugOut.add("  :: generator ring size: " + ACTUAL_GEN_RING_SIZE);
+
 		int[] actualGeneratedDistances = new int[ACTUAL_GEN_RING_SIZE];
 		int actualGeneratedI = 0;
 		for (int i = 0; i < ACTUAL_GEN_RING_SIZE; i++) {
@@ -1131,14 +1321,28 @@ public class MusicGenerator {
 		int origGeneratedBeatDistance = generatedBeatDistance;
 
 		System.out.println("");
+
+		int uncertaintyFrontSetting = 4;
+		int uncertaintyBackSetting = 5;
+		int uncertaintyBackInsertBeatSetting = 10;
+		debugOut.add("  :: uncertainty front setting: " + uncertaintyFrontSetting + " / 10");
+		debugOut.add("  :: uncertainty back setting: " + uncertaintyBackSetting + " / 10");
+		debugOut.add("  :: uncertainty back insert beat setting: " + uncertaintyBackInsertBeatSetting + " / 10");
+
+		debugOut.add("  :: orig generated beat distance: " + origGeneratedBeatDistance + " pos");
+
+		int insertedMidAlignedBeats = 0;
+		int insertedAlignedBeats = 0;
+		int insertedUnalignedBeats = 0;
+
 		for (int i = 0; i < wavDataLeft.length; i += generatedBeatDistance) {
 
 			// regular alignment: 20% to the front, 20% to the back will be aligned, 60% of a beat would be unaligned
 			// int uncertainty = generatedBeatDistance / 5;
 			// semi-aggressive alignment: 40% to the front, 50% to the back will be aligned, 50% to 100% to the back we align but add a beat
-			int uncertaintyFront = (generatedBeatDistance * 4) / 10;
-			int uncertaintyBack = (generatedBeatDistance * 5) / 10;
-			int uncertaintyBackInsertBeat = (generatedBeatDistance * 10) / 10;
+			int uncertaintyFront = (generatedBeatDistance * uncertaintyFrontSetting) / 10;
+			int uncertaintyBack = (generatedBeatDistance * uncertaintyBackSetting) / 10;
+			int uncertaintyBackInsertBeat = (generatedBeatDistance * uncertaintyBackInsertBeatSetting) / 10;
 			// aggressive alignment: 50% to the front, 50% to the back will be aligned, 0% of a beat would be unaligned
 			// int uncertainty = generatedBeatDistance / 2;
 
@@ -1175,16 +1379,19 @@ public class MusicGenerator {
 					if (actualGeneratedI >= ACTUAL_GEN_RING_SIZE) {
 						actualGeneratedI = 0;
 					}
+					insertedMidAlignedBeats++;
 				}
 				i = newI;
 				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
 				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
 				mayBeat.setPosition(i);
 				mayBeat.setIsAligned(true);
+				insertedAlignedBeats++;
 			} else {
 				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
 				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
 				mayBeat.setIsAligned(false);
+				insertedUnalignedBeats++;
 			}
 			mayBeats.add(mayBeat);
 
@@ -1200,9 +1407,16 @@ public class MusicGenerator {
 			generatedBeatDistance = generatedBeatDistance / ACTUAL_GEN_RING_SIZE;
 			generatedBeatDistance = (origGeneratedBeatDistance + generatedBeatDistance) / 2;
 			System.out.println("generatedBeatDistance: " + generatedBeatDistance + " orig: " + origGeneratedBeatDistance);
+			if (i % (wavDataLeft.length / 16) == 0) {
+				debugOut.add("    ::: [" + i + "] generated beat distance: " + generatedBeatDistance + " pos");
+			}
 			prevI = i;
 		}
 		System.out.println("");
+
+		debugOut.add("  :: generated " + insertedAlignedBeats + " aligned beats");
+		debugOut.add("  :: generated " + insertedMidAlignedBeats + " mid aligned beats");
+		debugOut.add("  :: generated " + insertedUnalignedBeats + " unaligned beats");
 
 		/*
 		for (int i = 0; i < wavDataLeft.length; i += generatedBeatDistance) {
@@ -1262,6 +1476,8 @@ public class MusicGenerator {
 		wavImgFileFourier.save();
 
 		// ALGORITHM 3.8
+
+		debugOut.add(": Starting Algorithm 3.8");
 
 		// Aaaaand - you thought we were done, huh? :D - we continue... now we are looking at this:
 		//  detected beats: |  |  |
@@ -1333,9 +1549,13 @@ public class MusicGenerator {
 			*/
 		}
 
+		debugOut.add("  :: " + bpmBasedBeats.size() + " beats generated");
+
 		Collections.sort(bpmBasedBeats);
 
 		// ALGORITHM 3.7
+
+		debugOut.add(": Starting Algorithm 3.7");
 
 		// Now, after all that is done... the beats are detected, the bpm decided, the beats generated
 		// and subsequently aligned against the ones previously detected... we have a problem: as we
@@ -1346,6 +1566,7 @@ public class MusicGenerator {
 		// 1, 2.9, 4.9, 6.8... and again! ... and then we are good! :D
 
 		int SMOOTH_AMOUNT = 3;
+		debugOut.add("  :: smoothening " + SMOOTH_AMOUNT + " times");
 		for (int i = 0; i < SMOOTH_AMOUNT; i++) {
 			bpmBasedBeats = smoothenBeats(bpmBasedBeats);
 		}
@@ -1377,6 +1598,7 @@ public class MusicGenerator {
 		long curBeatLoudness = 0;
 		long curBeatJigglieness = 0;
 		long jiggleModifier = 16*16*16;
+		debugOut.add("  :: jiggle modifier: " + jiggleModifier);
 		Beat prevBeat = null;
 
 		// add one far beyond the end so that we do not have to check for there being one all the time
@@ -1422,6 +1644,7 @@ public class MusicGenerator {
 			prevBeat.setLength(len);
 		}
 
+		debugOut.add("  :: " + beats.size() + " beats detected");
 		System.out.println("We detected " + beats.size() + " beats!");
 
 		return beats;
