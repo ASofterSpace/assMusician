@@ -43,6 +43,8 @@ public class VideoGenerator {
 
 	// TODO :: add asofterspace fun logos to the start of the video?
 	// like, they are there (and stay there for a second or so) and then the actual stuff fades in?
+	// * add blocks that are moving around, zooming here, staying a while, zooming there, staying a while,
+	//   like during the opening credits of the movie Deja Vu
 	public void generateVideoBasedOnBeats(List<Beat> beats, int totalFrameAmount, int width, int height,
 		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle,
 		int framesPerFourier, int[][] fouriers, List<String> debugLog) {

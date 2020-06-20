@@ -141,10 +141,12 @@ public class GeometryMonster {
 
 			// ... once every 32 seconds, do something funny - that is, take on a preconfigured shape...
 			if (rand.nextInt(MusicGenerator.frameRate * 32) == 0) {
-				int shape = rand.nextInt(8);
+				int shape = rand.nextInt(9);
 				int robin = 0;
 				double posX = width / 4.0;
 				double posY = height / 4.0;
+				double posX45 = (45 * width) / 100.0;
+				double posY45 = (45 * height) / 100.0;
 
 				switch (shape) {
 
@@ -346,7 +348,7 @@ public class GeometryMonster {
 						break;
 
 					// diamond sideways
-					default:
+					case 7:
 						if (points.size() < 7) {
 							break;
 						}
@@ -373,6 +375,47 @@ public class GeometryMonster {
 									break;
 								default:
 									point.setTarget(new Point<Double, Double>(width - posX, height / 2.0));
+									robin = -1;
+									break;
+							}
+							robin++;
+						}
+						break;
+
+					// four-legged starfish
+					default:
+						if (points.size() < 9) {
+							break;
+						}
+						activateShapeGuard();
+						for (GeometryPoint point : points) {
+							switch (robin) {
+								case 0:
+									point.setTarget(new Point<Double, Double>(-3.0, -3.0));
+									break;
+								case 1:
+									point.setTarget(new Point<Double, Double>(width + 3.0, -3.0));
+									break;
+								case 2:
+									point.setTarget(new Point<Double, Double>(width + 3.0, height + 3.0));
+									break;
+								case 3:
+									point.setTarget(new Point<Double, Double>(-3.0, height + 3.0));
+									break;
+								case 4:
+									point.setTarget(new Point<Double, Double>(posX45, posY45));
+									break;
+								case 5:
+									point.setTarget(new Point<Double, Double>(width - posX45, posY45));
+									break;
+								case 6:
+									point.setTarget(new Point<Double, Double>(width - posX45, height - posY45));
+									break;
+								case 7:
+									point.setTarget(new Point<Double, Double>(posX45, height - posY45));
+									break;
+								default:
+									point.setTarget(new Point<Double, Double>(width / 2.0, height / 2.0));
 									robin = -1;
 									break;
 							}
