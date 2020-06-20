@@ -8,6 +8,7 @@ import com.asofterspace.toolbox.music.Beat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 
 public class BeatGenerator {
@@ -18,10 +19,13 @@ public class BeatGenerator {
 
 	private int alignmentQuality;
 
+	private Random rand;
+
 
 	public BeatGenerator(List<String> debugLog) {
 		this.debugLog = debugLog;
 		debugLog.add("  :: beat generator created");
+		rand = new Random();
 	}
 
 	public int getAlignmentQuality() {
@@ -35,7 +39,14 @@ public class BeatGenerator {
 	public void generateBeatsFor(AbsMaxPos absMax, List<AbsMaxPos> absMaxPositions, int dataLength, int generatedBeatDistance,
 		int uncertaintyFrontSetting, int uncertaintyBackSetting) {
 
-		debugLog.add("  :: generating beats starting at " + absMax);
+		boolean doLog = false;
+		if (rand.nextInt(42) == 0) {
+			doLog = true;
+		}
+
+		if (doLog) {
+			debugLog.add("  :: generating beats starting at " + absMax);
+		}
 
 		beats = new ArrayList<>();
 
@@ -131,8 +142,10 @@ public class BeatGenerator {
 
 		Collections.sort(beats);
 
-		debugLog.add("    ::: generated " + insertedAlignedBeats + " aligned beats");
-		debugLog.add("    ::: generated " + insertedUnalignedBeats + " unaligned beats");
-		debugLog.add("    ::: overall alignment quality: " + alignmentQuality);
+		if (doLog) {
+			debugLog.add("    ::: generated " + insertedAlignedBeats + " aligned beats");
+			debugLog.add("    ::: generated " + insertedUnalignedBeats + " unaligned beats");
+			debugLog.add("    ::: overall alignment quality: " + alignmentQuality);
+		}
 	}
 }

@@ -820,26 +820,41 @@ public class MusicGenerator {
 
 		BeatGenerator beatGenny = new BeatGenerator(debugLog);
 
+		List<Integer> generatedBeatDistances = new ArrayList<>();
+		generatedBeatDistances.add(generatedBeatDistance);
+		for (int i = 0; i < 8; i++) {
+			generatedBeatDistances.add(generatedBeatDistance - ((i*generatedBeatDistance) / 100));
+		}
+		for (int i = 0; i < 8; i++) {
+			generatedBeatDistances.add(generatedBeatDistance + ((i*generatedBeatDistance) / 100));
+		}
+
 		AbsMaxPos bestAbsMax = null;
 		int bestAlignmentQuality = -1;
+		int bestGeneratedBeatDistance = generatedBeatDistance;
 		int uncertaintyFrontSetting = 1;
 		int uncertaintyBackSetting = 1;
-		debugLog.add("  :: uncertainty front setting: " + uncertaintyFrontSetting + " / 10");
-		debugLog.add("  :: uncertainty back setting: " + uncertaintyBackSetting + " / 10");
-		debugLog.add("  :: generated beat distance: " + generatedBeatDistance + " pos");
 
-		for (int i = absMaxPositions.size() / 2; i < absMaxPositions.size(); i++) {
-			AbsMaxPos absMaxPos = absMaxPositions.get(i);
-			beatGenny.generateBeatsFor(absMaxPos, absMaxPositionsTemporalOrdered, wavDataLeft.length, generatedBeatDistance, uncertaintyFrontSetting, uncertaintyBackSetting);
-			if (beatGenny.getAlignmentQuality() > bestAlignmentQuality) {
-				bestAbsMax = absMaxPos;
-				bestAlignmentQuality = beatGenny.getAlignmentQuality();
+		for (Integer curGeneratedBeatDistance : generatedBeatDistances) {
+			debugLog.add("  :: uncertainty front setting: " + uncertaintyFrontSetting + " / 10");
+			debugLog.add("  :: uncertainty back setting: " + uncertaintyBackSetting + " / 10");
+			debugLog.add("  :: generated beat distance: " + curGeneratedBeatDistance + " pos");
+
+			for (int i = absMaxPositions.size() / 2; i < absMaxPositions.size(); i++) {
+				AbsMaxPos absMaxPos = absMaxPositions.get(i);
+				beatGenny.generateBeatsFor(absMaxPos, absMaxPositionsTemporalOrdered, wavDataLeft.length, curGeneratedBeatDistance, uncertaintyFrontSetting, uncertaintyBackSetting);
+				if (beatGenny.getAlignmentQuality() > bestAlignmentQuality) {
+					bestAbsMax = absMaxPos;
+					bestAlignmentQuality = beatGenny.getAlignmentQuality();
+					bestGeneratedBeatDistance = curGeneratedBeatDistance;
+				}
 			}
 		}
 
 		debugLog.add("  :: best abs max: " + bestAbsMax);
+		debugLog.add("  :: best generated beat distance: " + bestGeneratedBeatDistance);
 		debugLog.add("  :: best alignment quality: " + bestAlignmentQuality);
-		beatGenny.generateBeatsFor(bestAbsMax, absMaxPositionsTemporalOrdered, wavDataLeft.length, generatedBeatDistance, uncertaintyFrontSetting, uncertaintyBackSetting);
+		beatGenny.generateBeatsFor(bestAbsMax, absMaxPositionsTemporalOrdered, wavDataLeft.length, bestGeneratedBeatDistance, uncertaintyFrontSetting, uncertaintyBackSetting);
 		List<Integer> bpmBasedBeats = beatGenny.getBeats();
 
 
