@@ -47,6 +47,8 @@ public class VideoGenerator {
 		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle,
 		int framesPerFourier, int[][] fouriers, List<String> debugLog) {
 
+		debugLog.add(": Starting Frame Generation");
+
 		System.out.println("");
 		System.out.println("Generating " + totalFrameAmount + " frames...");
 
@@ -55,6 +57,7 @@ public class VideoGenerator {
 		Random rand = new Random();
 		// nice round number
 		int STAR_AMOUNT = 64;
+		debugLog.add("  :: " + STAR_AMOUNT + " stars");
 		List<Star> stars = new ArrayList<>();
 		for (int i = 0; i < STAR_AMOUNT; i++) {
 			stars.add(new Star(rand.nextInt(width), rand.nextInt(height/2)));
@@ -63,6 +66,7 @@ public class VideoGenerator {
 		for (Beat beat : beats) {
 			streetElements.add(new StreetElement(musicGen.beatToFrame(beat)));
 		}
+		debugLog.add("  :: " + beats.size() + " street elements");
 		GeometryMonster geometryMonster = new GeometryMonster(width, height);
 
 		// a map from frame number to beat detected there
@@ -74,8 +78,19 @@ public class VideoGenerator {
 		ColorRGB trueBlack = new ColorRGB(0, 0, 0);
 		ColorRGB trueWhite = new ColorRGB(255, 255, 255);
 		ColorRGB origBlack = new ColorRGB(0, 0, 0);
+		// the original blue
 		ColorRGB origBlue = ColorRGB.randomColorfulBright();
-		ColorRGB origDarkBlue = ColorRGB.intermix(origBlack, origBlue, 0.5);
+		debugLog.add("  :: first color: " + origBlue);
+		// the next target blue
+		ColorRGB targetBlue = ColorRGB.randomColorfulBright();
+		// the midpoint between original and target
+		ColorRGB midBlue = ColorRGB.max(origBlue, targetBlue);
+		debugLog.add("  :: first mid color: " + midBlue);
+		debugLog.add("  :: first target color: " + targetBlue);
+		double targetColorProgress = 0;
+		// the original blue, again - but intermixed with the midpoint or target (as just "blue" will be),
+		// but NOT set to all white upon whiteout (different from how just "blue" behaves!)
+		ColorRGB geoBlue = origBlue;
 
 		int startColorInversion = -10 * MusicGenerator.frameRate;
 
@@ -85,34 +100,26 @@ public class VideoGenerator {
 		Image textOrig = textOrigFile.getImage();
 		textOrig.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
 		Image textOrigWhite = textOrig.copy();
-		textOrig.multiply(origBlue);
 
 		DefaultImageFile textRemixFile = new DefaultImageFile("video/remix.png");
 		Image textRemix = textRemixFile.getImage();
 		textRemix.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
 		Image textRemixWhite = textRemix.copy();
-		textRemix.multiply(origBlue);
 
 		DefaultImageFile textLengthFile = new DefaultImageFile("video/length.png");
 		Image textLength = textLengthFile.getImage();
 		textLength.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
 		Image textLengthWhite = textLength.copy();
-		textLength.multiply(origBlue);
 
 		DefaultImageFile textLoudnessFile = new DefaultImageFile("video/loudness.png");
 		Image textLoudness = textLoudnessFile.getImage();
 		textLoudness.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
 		Image textLoudnessWhite = textLoudness.copy();
-		textLoudness.multiply(origBlue);
 
 		DefaultImageFile textJitterienessFile = new DefaultImageFile("video/jitterieness.png");
 		Image textJitterieness = textJitterienessFile.getImage();
 		textJitterieness.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
 		Image textJitterienessWhite = textJitterieness.copy();
-		textJitterieness.multiply(origBlue);
-
-		Image textTitle = Image.createTextImage(songTitle, "Neuropol", 29, true, origBlue, trueBlack);
-		Image textTitleWhite = Image.createTextImage(songTitle, "Neuropol", 29, true, trueWhite, trueBlack);
 
 		double currentLoudnessScaled = 0;
 		int lastLength = 0;
@@ -123,6 +130,8 @@ public class VideoGenerator {
 		boolean encounteredChanged = false;
 		boolean firstChanged = false;
 		boolean curChanged = false;
+
+		debugLog.add("{end log}");
 
 		for (int step = 0; step < totalFrameAmount; step++) {
 
@@ -200,8 +209,25 @@ public class VideoGenerator {
 			}
 
 			ColorRGB black = origBlack;
+
+			// we want to change color twice, each color change goes to mid, then to the color, so we need 2*2 = 4
+			targetColorProgress += 4.0 / totalFrameAmount;
+
 			ColorRGB blue = origBlue;
-			ColorRGB darkBlue = origDarkBlue;
+			if (targetColorProgress < 1) {
+				blue = ColorRGB.intermix(origBlue, midBlue, 1 - targetColorProgress);
+			} else if (targetColorProgress < 2) {
+				blue = ColorRGB.intermix(midBlue, targetBlue, 2 - targetColorProgress);
+			} else {
+				targetColorProgress = 0;
+				origBlue = targetBlue;
+				targetBlue = ColorRGB.randomColorfulBright();
+				midBlue = ColorRGB.max(origBlue, targetBlue);
+				blue = origBlue;
+			}
+			geoBlue = blue;
+			ColorRGB darkBlue = ColorRGB.intermix(black, blue, 0.5);
+
 			int ssCI = step - startColorInversion;
 			boolean drawAllWhite = false;
 			// when flickering, have everything being bright be a bit shorter than everything being dark
@@ -251,13 +277,10 @@ public class VideoGenerator {
 			}
 
 			// title
+			Image textTitle = Image.createTextImage(songTitle, "Neuropol", 29, true, blue, trueBlack);
 			int titleX = (width - textTitle.getWidth()) / 2;
 			int titleY = (8 * height) / 1080;
-			if (drawAllWhite) {
-				img.draw(textTitleWhite, titleX, titleY, trueBlack);
-			} else {
-				img.draw(textTitle, titleX, titleY, trueBlack);
-			}
+			img.draw(textTitle, titleX, titleY, trueBlack);
 
 			// stars
 			for (Star star : stars) {
@@ -280,24 +303,30 @@ public class VideoGenerator {
 			if (drawAllWhite) {
 				img.draw(textLengthWhite, (15 * width) / 1920, (109 * height) / 1080);
 			} else {
-				img.draw(textLength, (15 * width) / 1920, (109 * height) / 1080);
+				Image curText = textLength.copy();
+				curText.multiply(blue);
+				img.draw(curText, (15 * width) / 1920, (109 * height) / 1080);
 			}
 			img.drawText(""+lastLoudness, (187 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
 			img.drawLine(0, (height * 225) / 1080, (int) (width * 0.098), (height * 225) / 1080, blue);
 			if (drawAllWhite) {
 				img.draw(textLoudnessWhite, (15 * width) / 1920, (232 * height) / 1080);
 			} else {
-				img.draw(textLoudness, (15 * width) / 1920, (232 * height) / 1080);
+				Image curText = textLoudness.copy();
+				curText.multiply(blue);
+				img.draw(curText, (15 * width) / 1920, (232 * height) / 1080);
 			}
 			img.drawText(""+lastJitterieness, (310 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
 			img.drawLine(0, (height * 348) / 1080, (int) (width * 0.098), (height * 348) / 1080, blue);
 			if (drawAllWhite) {
 				img.draw(textJitterienessWhite, (15 * width) / 1920, (355 * height) / 1080);
 			} else {
-				img.draw(textJitterieness, (15 * width) / 1920, (355 * height) / 1080);
+				Image curText = textJitterieness.copy();
+				curText.multiply(blue);
+				img.draw(curText, (15 * width) / 1920, (355 * height) / 1080);
 			}
 
-			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue, origBlue, firstChanged, curChanged, encounteredChanged);
+			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue, geoBlue, firstChanged, curChanged, encounteredChanged);
 
 			img.setLineWidth(1);
 
@@ -308,7 +337,9 @@ public class VideoGenerator {
 			if (drawAllWhite) {
 				img.draw(textOrigWhite, x, y);
 			} else {
-				img.draw(textOrig, x, y);
+				Image curText = textOrig.copy();
+				curText.multiply(blue);
+				img.draw(curText, x, y);
 			}
 
 			newWaveform.drawOnImage(img, width, (int)(height*0.965), step, totalFrameAmount, blue, darkBlue, trueWhite);
@@ -318,7 +349,9 @@ public class VideoGenerator {
 			if (drawAllWhite) {
 				img.draw(textRemixWhite, x, y);
 			} else {
-				img.draw(textRemix, x, y);
+				Image curText = textRemix.copy();
+				curText.multiply(blue);
+				img.draw(curText, x, y);
 			}
 
 			// draw Fourier at the top right, turned sideways, with lower base stuff shown at the bottom

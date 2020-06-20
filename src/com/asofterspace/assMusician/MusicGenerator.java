@@ -3,6 +3,7 @@
  */
 package com.asofterspace.assMusician;
 
+import com.asofterspace.assMusician.music.AbsMaxPos;
 import com.asofterspace.assMusician.video.elements.Waveform;
 import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.DefaultImageFile;
@@ -20,7 +21,6 @@ import com.asofterspace.toolbox.music.SoundData;
 import com.asofterspace.toolbox.music.WavFile;
 import com.asofterspace.toolbox.utils.CallbackWithString;
 import com.asofterspace.toolbox.utils.DateUtils;
-import com.asofterspace.toolbox.utils.Pair;
 import com.asofterspace.toolbox.Utils;
 
 import java.util.ArrayList;
@@ -179,66 +179,6 @@ public class MusicGenerator {
 		Waveform origWaveform = new Waveform(wavSoundData);
 
 
-		// Fourier analysis...
-
-		debugOut.add(": Start Fourier Analysis");
-
-		debugOut.add("  :: frame per Fourier: " + framesPerFourier + " pos");
-		debugOut.add("  :: frame rate: " + frameRate);
-		fourierLen = millisToChannelPos((1000 * framesPerFourier) / frameRate);
-		debugOut.add("  :: Fourier length: " + fourierLen + " pos");
-		int fourierNum = 0;
-		int fourierMax = 0;
-		int fourierAmount = wavSoundData.getLength() / fourierLen;
-		debugOut.add("  :: Fourier amount: " + fourierAmount);
-		fouriers = new int[fourierAmount][];
-
-		while (true) {
-			System.out.println("Processed " + fourierNum + " / " + fourierAmount + " Fouriers, max so far: " + fourierMax + "...");
-
-			if ((fourierNum+1)*fourierLen >= wavSoundData.getLength()) {
-				break;
-			}
-			if (fourierNum >= fourierAmount) {
-				break;
-			}
-
-			int[] fourier = wavSoundData.getSmallFourier(fourierNum*fourierLen, (fourierNum+1)*fourierLen);
-
-			for (int k = 0; k < fourier.length / 2; k++) {
-				if (fourier[k] > fourierMax) {
-					fourierMax = fourier[k];
-				}
-			}
-
-			fouriers[fourierNum] = fourier;
-
-			if (fourierNum % (fourierAmount / 32) == 0) {
-				debugOut.add("    ::: [" + fourierNum + "] Fourier max: " + fourierMax);
-			}
-
-			/*
-			// output Fourier as histogram
-			List<GraphDataPoint> fourierData = new ArrayList<>();
-			fourierData.add(new GraphDataPoint(-1, fourierMax));
-			for (int k = 0; k < fourier.length / 2; k++) {
-				fourierData.add(new GraphDataPoint(k/5, Math.abs(fourier[k])));
-			}
-			GraphImage fourierImg = new GraphImage();
-			fourierImg.setInnerWidthAndHeight(fourier.length/5, 512);
-			fourierImg.setDataColor(new ColorRGB(0, 0, 255));
-			fourierImg.setRelativeDataPoints(fourierData);
-			DefaultImageFile fourierImgFile = new DefaultImageFile(workDir, "waveform_fourier_" + fourierNum + ".png");
-			fourierImgFile.assign(fourierImg);
-			fourierImgFile.save();
-			*/
-
-			fourierNum++;
-		}
-
-		debugOut.add("  :: Fourier max: " + fourierMax);
-
-
 		// go over to directly working on the wave data...
 
 		wavDataLeft = wavSoundData.getLeftDataCopy();
@@ -252,9 +192,9 @@ public class MusicGenerator {
 		}
 		// scale(0.5);
 
-		// the visual output graph gets 600 px width per minute of song
+		// the visual output graph gets 1200 px width per minute of song
 		wavGraphImg = new GraphImage();
-		wavGraphImg.setInnerWidthAndHeight(channelPosToMillis(wavDataLeft.length) / 100, graphImageHeight);
+		wavGraphImg.setInnerWidthAndHeight(channelPosToMillis(wavDataLeft.length) / 50, graphImageHeight);
 
 		List<GraphDataPoint> wavData = new ArrayList<>();
 		int position = 0;
@@ -390,7 +330,82 @@ public class MusicGenerator {
 
 		} else {
 
+			// Fourier analysis...
+
+			debugOut.add(": Fourier Analysis");
+
+			debugOut.add("  :: frame per Fourier: " + framesPerFourier + " pos");
+			debugOut.add("  :: frame rate: " + frameRate);
+			fourierLen = millisToChannelPos((1000 * framesPerFourier) / frameRate);
+			debugOut.add("  :: Fourier length: " + fourierLen + " pos");
+			int fourierNum = 0;
+			int fourierMax = 0;
+			int fourierAmount = wavSoundData.getLength() / fourierLen;
+			debugOut.add("  :: Fourier amount: " + fourierAmount);
+			fouriers = new int[fourierAmount][];
+
+			while (true) {
+				System.out.println("Processed " + fourierNum + " / " + fourierAmount + " Fouriers, max so far: " + fourierMax + "...");
+
+				if ((fourierNum+1)*fourierLen >= wavSoundData.getLength()) {
+					break;
+				}
+				if (fourierNum >= fourierAmount) {
+					break;
+				}
+
+				int[] fourier = wavSoundData.getSmallFourier(fourierNum*fourierLen, (fourierNum+1)*fourierLen);
+
+				for (int k = 0; k < fourier.length / 2; k++) {
+					if (fourier[k] > fourierMax) {
+						fourierMax = fourier[k];
+					}
+				}
+
+				fouriers[fourierNum] = fourier;
+
+				if (fourierNum % (fourierAmount / 32) == 0) {
+					debugOut.add("    ::: [" + fourierNum + "] Fourier max: " + fourierMax);
+				}
+
+				/*
+				// output Fourier as histogram
+				List<GraphDataPoint> fourierData = new ArrayList<>();
+				fourierData.add(new GraphDataPoint(-1, fourierMax));
+				for (int k = 0; k < fourier.length / 2; k++) {
+					fourierData.add(new GraphDataPoint(k/5, Math.abs(fourier[k])));
+				}
+				GraphImage fourierImg = new GraphImage();
+				fourierImg.setInnerWidthAndHeight(fourier.length/5, 512);
+				fourierImg.setDataColor(new ColorRGB(0, 0, 255));
+				fourierImg.setRelativeDataPoints(fourierData);
+				DefaultImageFile fourierImgFile = new DefaultImageFile(workDir, "waveform_fourier_" + fourierNum + ".png");
+				fourierImgFile.assign(fourierImg);
+				fourierImgFile.save();
+				*/
+
+				fourierNum++;
+			}
+
+			debugOut.add("  :: Fourier max: " + fourierMax);
+
+			debugOut.add("Video Generation");
+			debugOut.add(": Setup");
+
+			String songTitle = originalSong.getLocalFilename();
+			if (songTitle.contains(".")) {
+				songTitle = songTitle.substring(0, songTitle.lastIndexOf("."));
+			}
+			debugOut.add("  :: input song title: " + songTitle);
+			songTitle += " (Remix with Drums)";
+			debugOut.add("  :: output song title: " + songTitle);
+
 			int totalFrameAmount = calcTotalFrameAmount();
+			debugOut.add("  :: video width: " + width + " px");
+			debugOut.add("  :: video height: " + height + " px");
+			debugOut.add("  :: frame rate: " + frameRate + " frames / sec");
+			debugOut.add("  :: frames per Fourier: " + framesPerFourier);
+			debugOut.add("  :: calculated frame amount: " + totalFrameAmount);
 
 			VideoGenerator vidGenny = new VideoGenerator(this, workDir);
 
@@ -404,16 +419,6 @@ public class MusicGenerator {
 			}
 			wavGraphImg.setDataColor(new ColorRGB(0, 0, 255));
 			wavGraphImg.setAbsoluteDataPoints(wavData);
-
-			String songTitle = originalSong.getLocalFilename();
-			if (songTitle.contains(".")) {
-				songTitle = songTitle.substring(0, songTitle.lastIndexOf("."));
-			}
-			debugOut.add("  :: input song title: " + songTitle);
-			songTitle += " (Remix with Drums)";
-			debugOut.add("  :: output song title: " + songTitle);
-
-			debugOut.add("{end log}");
 
 			vidGenny.generateVideoBasedOnBeats(drumBeats, totalFrameAmount, width, height, wavGraphImg,
 				origWaveform, newWaveform, songTitle, framesPerFourier, fouriers, debugOut);
@@ -529,6 +534,8 @@ public class MusicGenerator {
 		}
 		*/
 
+/*
+
 		// ALGORITHM 3
 
 		debugOut.add(": Starting Algorithm 3");
@@ -560,23 +567,6 @@ public class MusicGenerator {
 
 		debugOut.add("  :: " + potentialMaximumPositions.size() + " potential maximum positions found");
 
-		/*
-		for (int i = potentialMaximumPositions.size() - 1; i > 2; i--) {
-
-				// if the previous maximum is smaller
-			if ((wavDataLeft[potentialMaximumPositions.get(i-1)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
-				// and the previous-previous maximum is smaller
-				(wavDataLeft[potentialMaximumPositions.get(i-2)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
-				// and the previous-previous-previous maximum is smaller
-				(wavDataLeft[potentialMaximumPositions.get(i-3)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
-				// and this maximum is above volume 1/8
-				(wavDataLeft[potentialMaximumPositions.get(i)] > 16*16*16)) {
-
-				// then we actually fully accept it as maximum :)
-				maximumPositions.add(potentialMaximumPositions.get(i));
-			}
-		}
-		*/
 		Map<Integer, Integer> moreLikelyMaximumPositions = new HashMap<>();
 		for (int i = potentialMaximumPositions.size() - 1; i > 2; i--) {
 
@@ -619,6 +609,258 @@ public class MusicGenerator {
 		debugOut.add("  :: " + maximumPositions.size() + " most maximum-y maxima found");
 
 		Collections.sort(maximumPositions);
+*/
+
+
+		// ALGORITHM 6
+
+		debugOut.add(": Starting Algorithm 6");
+
+		// We first iterate over the entire song and try to find maxima, by taking the abs
+		// of the entire waveform, and then sliding a window of length 1 sec over the entire
+		// abs song and within this 1 sec taking the max and checking if it takes more than
+		// twice as long for the song to return to baseline as it did for it to raise from
+		// baseline - basically, we want to detect stuff like this:
+		//    |\  | \    |\
+		// ---| >-|  =---| >--
+		//    |/  |_/    |/
+		// ... so it seems like the rapid ascend and slow descend are actually quite critical
+		// here!
+		// then - after we just detected the presence of these maxima - we want to assign a
+		// quality to them, based on their loudness relative to the overall loudness of the
+		// song, as well as on how long it really does take to return to local baseline
+		// (in all this, we take as local baseline the max of the 25% of lowest values)
+		// oh oh oh - and for all that, we don't want to look at the (abs) data directly, but
+		// instead we want to smooch it all together into 128 "sound pixels" per second, which
+		// are always the max of the actual (abs) data in there! so that we don't have to think
+		// about regular wubbelings!
+
+		int soundPixPerSec = 128;
+		int soundPixelLen = millisToChannelPos(1000) / soundPixPerSec;
+
+		debugOut.add("  :: sound pixels per second: " + soundPixPerSec);
+		debugOut.add("  :: sound pixel length: " + (1000.0 / soundPixPerSec) + " ms");
+		debugOut.add("  :: sound pixel length: " + soundPixelLen + " pos");
+		debugOut.add("  :: input wave length: " + wavDataLeft.length + " pos");
+		int[] absLeft = new int[(wavDataLeft.length / soundPixelLen) + 1];
+		debugOut.add("  :: output abs sound pixels: " + absLeft.length + " spx");
+
+		debugOut.add("  :: settings abs sound pixels to zero");
+		for (int i = 0; i < absLeft.length; i++) {
+			absLeft[i] = 0;
+		}
+
+		debugOut.add("  :: settings abs sound pixels to max of abs input data");
+		for (int i = 0; i < wavDataLeft.length; i++) {
+			absLeft[i / soundPixelLen] = Math.max(absLeft[i / soundPixelLen], Math.abs(wavDataLeft[i]));
+		}
+
+		debugOut.add("  :: determining abs sound pixel stats");
+		int absMin = Integer.MAX_VALUE;
+		int absMax = -1;
+		for (int i = 0; i < absLeft.length; i++) {
+			if (absLeft[i] > absMax) {
+				absMax = absLeft[i];
+			}
+			if (absLeft[i] < absMin) {
+				absMin = absLeft[i];
+			}
+		}
+
+		debugOut.add("  :: detected abs min: " + absMin);
+		debugOut.add("  :: detected abs max: " + absMax);
+
+		if (absMin != 0) {
+			debugOut.add("  :: resetting abs min to zero");
+			absMax -= absMin;
+			absMin -= absMin;
+			debugOut.add("  :: new abs max: " + absMax);
+			debugOut.add("  :: new abs min: " + absMin);
+			for (int i = 0; i < absLeft.length; i++) {
+				absLeft[i] = absLeft[i] - absMin;
+			}
+		}
+
+		List<Integer> absLeftList = new ArrayList<>();
+		for (int i = 0; i < absLeft.length; i++) {
+			absLeftList.add(absLeft[i]);
+		}
+
+		Collections.sort(absLeftList);
+		int abs25 = absLeftList.get(absLeftList.size() / 4);
+		int abs50 = absLeftList.get(absLeftList.size() / 2);
+		int abs75 = absLeftList.get((absLeftList.size() * 3) / 4);
+		int abs80 = absLeftList.get((absLeftList.size() * 4) / 5);
+		debugOut.add("  :: detected abs 25%: " + abs25);
+		debugOut.add("  :: detected abs 50%: " + abs50);
+		debugOut.add("  :: detected abs 75%: " + abs75);
+		debugOut.add("  :: detected abs 80%: " + abs80);
+
+		int windowSize = soundPixPerSec;
+		int windowHalfSize = windowSize / 2;
+		debugOut.add("  :: sliding a " + windowSize + " spx window over the array to find maxima");
+
+		List<AbsMaxPos> absMaxPositions = new ArrayList<>();
+
+		for (int i = windowHalfSize; i < absLeft.length - windowHalfSize; i++) {
+			int curMaxPos = -1;
+			int curMaxVal = -1;
+			for (int j = i - windowHalfSize; j < i + windowHalfSize; j++) {
+				if (absLeft[j] > curMaxVal) {
+					curMaxVal = absLeft[j];
+					curMaxPos = j;
+				}
+			}
+			// the current sound pixel is exactly the maximum of windowHalfSize before and windowHalfSize after it
+			if (curMaxPos == i) {
+				// get information about the immediate environment - that is, three times the window size
+				List<Integer> absLocalList = new ArrayList<>();
+				for (int j = i - 3*windowHalfSize; j < i + 3*windowHalfSize; j++) {
+					if ((j >= 0) && (j < absLeft.length)) {
+						absLocalList.add(absLeft[j]);
+					}
+				}
+				Collections.sort(absLocalList);
+				int absLocalMin = absLocalList.get(0);
+				int absLocal25 = absLocalList.get(absLocalList.size() / 4);
+				int absLocal50 = absLocalList.get(absLocalList.size() / 2);
+				int absLocal75 = absLocalList.get((absLocalList.size() * 3) / 4);
+				int absLocal80 = absLocalList.get((absLocalList.size() * 4) / 5);
+				int absLocalMax = absLocalList.get(absLocalList.size() - 1);
+
+				// get the distance from the max to the start of it going up from 25%
+				int distToStart = 3*windowHalfSize;
+				for (int j = i; j > i - 3*windowHalfSize; j--) {
+					if (j < 0) {
+						break;
+					}
+					if (absLeft[j] < absLocal25) {
+						distToStart = i - j;
+						break;
+					}
+				}
+
+				// get the distance from the max to the end of it going down to 25%
+				int distToEnd = 3*windowHalfSize;
+				for (int j = i; j < i + 3*windowHalfSize; j++) {
+					if (j >= absLeft.length) {
+						break;
+					}
+					if (absLeft[j] < absLocal25) {
+						distToEnd = j - i;
+						break;
+					}
+				}
+
+				AbsMaxPos absMaxPos = new AbsMaxPos(curMaxPos);
+
+				// get 10 points for this value being the local max value, less if it is lower
+				double qual = (10.0 * curMaxVal) / absLocalMax;
+				// get 20 points for this value being double the abs local 50
+				qual += (10.0 * curMaxVal) / absLocal50;
+				// get 20 points for the start distance being twice as short as the end distance
+				qual += (10.0 * distToEnd) / distToStart;
+				absMaxPos.setQuality(qual);
+
+				absMaxPos.setOrigPosition(curMaxPos * soundPixelLen);
+
+				absMaxPositions.add(absMaxPos);
+			}
+		}
+
+		debugOut.add("  :: found " + absMaxPositions.size() + " abs max positions");
+
+		Collections.sort(absMaxPositions, new Comparator<AbsMaxPos>() {
+			public int compare(AbsMaxPos a, AbsMaxPos b) {
+				if (a.getQuality() - b.getQuality() > 0) {
+					return 1;
+				}
+				if (b.getQuality() - a.getQuality() > 0) {
+					return -1;
+				}
+				return 0;
+			}
+		});
+
+		debugOut.add("  :: lowest quality: " + absMaxPositions.get(0).getQuality());
+		debugOut.add("  :: highest quality: " + absMaxPositions.get(absMaxPositions.size() - 1).getQuality());
+
+		List<Integer> maximumPositions = new ArrayList<>();
+		for (int i = absMaxPositions.size() / 2; i < absMaxPositions.size(); i++) {
+			AbsMaxPos absMaxPos = absMaxPositions.get(i);
+			maximumPositions.add(absMaxPos.getOrigPosition());
+		}
+
+		debugOut.add("  :: converted the highest " + maximumPositions.size() + " values into maximum positions");
+
+		/*
+		List<Integer> maximumPositions = new ArrayList<>();
+		List<Integer> potentialMaximumPositions = new ArrayList<>();
+		int localMaxPos = 0;
+		int localMax = 0;
+		int regionSizeMS = 25;
+		int regionSize = millisToChannelPos(regionSizeMS);
+		debugOut.add("  :: region size: " + regionSizeMS + " ms");
+		debugOut.add("  :: region size: " + regionSize + " pos");
+
+		for (int i = 0; i < wavDataLeft.length; i++) {
+			if (wavDataLeft[i] > localMax) {
+				localMax = wavDataLeft[i];
+				localMaxPos = i;
+			}
+			if (i % regionSize == 0) {
+				potentialMaximumPositions.add(localMaxPos);
+				localMax = wavDataLeft[i];
+				localMaxPos = i;
+			}
+		}
+
+		debugOut.add("  :: " + potentialMaximumPositions.size() + " potential maximum positions found");
+
+		Map<Integer, Integer> moreLikelyMaximumPositions = new HashMap<>();
+		for (int i = potentialMaximumPositions.size() - 1; i > 2; i--) {
+
+				// if the previous maximum is smaller
+			if ((wavDataLeft[potentialMaximumPositions.get(i-1)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
+				// and the previous-previous maximum is smaller
+				(wavDataLeft[potentialMaximumPositions.get(i-2)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
+				// and the previous-previous-previous maximum is smaller
+				(wavDataLeft[potentialMaximumPositions.get(i-3)] < wavDataLeft[potentialMaximumPositions.get(i)]) &&
+				// and this maximum is above volume 1/8
+				(wavDataLeft[potentialMaximumPositions.get(i)] > 16*16*16)) {
+
+				// then we actually fully accept it as maximum :)
+				moreLikelyMaximumPositions.put(potentialMaximumPositions.get(i),
+					(3*wavDataLeft[potentialMaximumPositions.get(i)])-(wavDataLeft[potentialMaximumPositions.get(i-1)]+
+					wavDataLeft[potentialMaximumPositions.get(i-2)]+wavDataLeft[potentialMaximumPositions.get(i-3)]));
+			}
+		}
+
+		debugOut.add("  :: " + moreLikelyMaximumPositions.size() + " more likely maximum positions found");
+
+		// we now iterate once more, getting the highest / most maximum-y of the maxima
+		for (int i = 0; i < wavDataLeft.length; i += millisToChannelPos(100)) {
+			int highestPos = -1;
+			int highestAmount = -1;
+			for (int k = i; k < i + millisToChannelPos(100); k++) {
+				Integer val = moreLikelyMaximumPositions.get(k);
+				if (val != null) {
+					if (val > highestAmount) {
+						highestAmount = val;
+						highestPos = k;
+					}
+				}
+			}
+			if (highestPos >= 0) {
+				maximumPositions.add(highestPos);
+			}
+		}
+
+		debugOut.add("  :: " + maximumPositions.size() + " most maximum-y maxima found");
+		*/
+
+		Collections.sort(maximumPositions);
+
 
 /*
 		// now iterate over all the found maximum positions, and whenever the distance between some is small-ish
@@ -848,6 +1090,7 @@ public class MusicGenerator {
 			"with the largest bucket containing " + largestBucketContentAmount + " values...");
 
 
+/*
 		// ALGORITHM 4
 
 		debugOut.add(": Starting Algorithm 4");
@@ -860,13 +1103,12 @@ public class MusicGenerator {
 
 		maximumPositions = new ArrayList<>();
 
-		/*
-		for (int i = 0; i < fouriers.length; i++) {
-			if (fouriers[i][fouriers[i].length - 1] > 4*3*5000) {
-				maximumPositions.add(i * fourierLen);
-			}
-		}
-		*/
+		// we could just use the highest Fouriers directly:
+		//for (int i = 0; i < fouriers.length; i++) {
+		//	if (fouriers[i][fouriers[i].length - 1] > 4*3*5000) {
+		//		maximumPositions.add(i * fourierLen);
+		//	}
+		//}
 
 		debugOut.add("  :: using " + fouriers.length + " Fourier levels of size " + fouriers[0].length);
 
@@ -1192,52 +1434,9 @@ public class MusicGenerator {
 							cur += (smoothenBy - i) * beatLenCandidates.get(curLen);
 							smoothBeatLenCandidates.put(curLen-i, cur);
 						}
-						/*
-						if (smoothBeatLenCandidates.get(curLen+i) != null) {
-							int cur = smoothBeatLenCandidates.get(curLen+i);
-							cur += beatLenCandidates.get(curLen);
-							smoothBeatLenCandidates.put(curLen+i, cur + smoothenBy - i);
-						}
-						if (smoothBeatLenCandidates.get(curLen-i) != null) {
-							int cur = smoothBeatLenCandidates.get(curLen-i);
-							cur += beatLenCandidates.get(curLen);
-							smoothBeatLenCandidates.put(curLen-i, cur + smoothenBy - i);
-						}
-						*/
 					}
 				}
 			}
-/*
-			int curAmount = 0;
-			for (int i = 1; i < 256; i++) {
-				if (beatLenCandidates.get(curLen-i) != null) {
-					curAmount += beatLenCandidates.get(curLen-i);
-				}
-				if (beatLenCandidates.get(curLen+i) != null) {
-					curAmount += beatLenCandidates.get(curLen+i);
-				}
-			}
-			for (int i = 1; i < 128; i++) {
-				if (beatLenCandidates.get(curLen-i) != null) {
-					curAmount += beatLenCandidates.get(curLen-i);
-				}
-				if (beatLenCandidates.get(curLen+i) != null) {
-					curAmount += beatLenCandidates.get(curLen+i);
-				}
-			}
-			for (int i = 1; i < 64; i++) {
-				if (beatLenCandidates.get(curLen-i) != null) {
-					curAmount += beatLenCandidates.get(curLen-i);
-				}
-				if (beatLenCandidates.get(curLen+i) != null) {
-					curAmount += beatLenCandidates.get(curLen+i);
-				}
-			}
-			if (beatLenCandidates.get(curLen) != null) {
-				curAmount += beatLenCandidates.get(curLen) * 4;
-			}
-			smoothBeatLenCandidates.put(curLen, curAmount);
-*/
 		}
 		beatLenCandidates = smoothBeatLenCandidates;
 
@@ -1283,6 +1482,8 @@ public class MusicGenerator {
 		generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
 		debugOut.add("  :: generated beat distance: " + generatedBeatDistance + " pos");
 
+*/
+
 
 		// generate beats based on the detected bpm, but still try to locally align to the closest
 		// detected beat, e.g. align to the next one to the right if there is one to the left or
@@ -1296,7 +1497,7 @@ public class MusicGenerator {
 		int maxPosI = 0;
 		// such that we do not have to worry about overflowing the maximumPositions list,
 		// we just add an extra beat far after everything else
-		maximumPositions = allMaximumPositionsForAlignment;
+		// maximumPositions = allMaximumPositionsForAlignment;
 		Collections.sort(maximumPositions);
 		maximumPositions.add(wavDataLeft.length * 10);
 
@@ -1371,7 +1572,7 @@ public class MusicGenerator {
 					extraBeat.setIsAligned(false);
 					mayBeats.add(extraBeat);
 					wavGraphImg.drawVerticalLineAt(extraI, new ColorRGB(128, 196, 0));
-					graphWithFourierImg.drawVerticalLineAt(extraI, new ColorRGB(128, 196, 0));
+					// graphWithFourierImg.drawVerticalLineAt(extraI, new ColorRGB(128, 196, 0));
 
 					actualGeneratedDistances[actualGeneratedI] = extraI - prevI;
 					prevI = extraI;
@@ -1383,13 +1584,13 @@ public class MusicGenerator {
 				}
 				i = newI;
 				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
-				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+				// graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
 				mayBeat.setPosition(i);
 				mayBeat.setIsAligned(true);
 				insertedAlignedBeats++;
 			} else {
 				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
-				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
+				// graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
 				mayBeat.setIsAligned(false);
 				insertedUnalignedBeats++;
 			}
@@ -1406,6 +1607,10 @@ public class MusicGenerator {
 			}
 			generatedBeatDistance = generatedBeatDistance / ACTUAL_GEN_RING_SIZE;
 			generatedBeatDistance = (origGeneratedBeatDistance + generatedBeatDistance) / 2;
+
+			// DEBUG - prevent speedup or speeddown
+			generatedBeatDistance = origGeneratedBeatDistance;
+
 			System.out.println("generatedBeatDistance: " + generatedBeatDistance + " orig: " + origGeneratedBeatDistance);
 			if (i % (wavDataLeft.length / 32) == 0) {
 				debugOut.add("    ::: [" + i + "] generated beat distance: " + generatedBeatDistance + " pos");
@@ -1471,9 +1676,11 @@ public class MusicGenerator {
 		}
 		*/
 
+		/*
 		DefaultImageFile wavImgFileFourier = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition_fourier_before_smoothen.png");
 		wavImgFileFourier.assign(graphWithFourierImg);
 		wavImgFileFourier.save();
+		*/
 
 		// ALGORITHM 3.8
 
@@ -1575,6 +1782,13 @@ public class MusicGenerator {
 		Collections.sort(bpmBasedBeats);
 
 
+		List<GraphDataPoint> wavData = new ArrayList<>();
+		int position = 0;
+		for (Integer wavInt : wavDataLeft) {
+			wavData.add(new GraphDataPoint(position, wavInt));
+			position++;
+		}
+		/*
 		graphWithFourierImg = new GraphImage();
 		graphWithFourierImg.setInnerWidthAndHeight(channelPosToMillis(wavDataLeft.length) / 100, graphImageHeight);
 		graphWithFourierImg.setDataColor(new ColorRGB(0, 0, 255));
@@ -1590,6 +1804,23 @@ public class MusicGenerator {
 		wavImgFileFourier = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition_fourier_post_smoothen.png");
 		wavImgFileFourier.assign(graphWithFourierImg);
 		wavImgFileFourier.save();
+		*/
+
+		GraphImage postSmoothImg = new GraphImage();
+		postSmoothImg.setInnerWidthAndHeight(channelPosToMillis(wavDataLeft.length) / 100, graphImageHeight);
+		postSmoothImg.setDataColor(new ColorRGB(0, 0, 255));
+		postSmoothImg.setAbsoluteDataPoints(wavData);
+
+		for (Integer pos : maximumPositions) {
+			postSmoothImg.drawVerticalLineAt(pos, new ColorRGB(255, 0, 128));
+		}
+
+		for (Integer i : bpmBasedBeats) {
+			postSmoothImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+		}
+		DefaultImageFile postSmoothImgFile = new DefaultImageFile(workDir, "waveform_drum_post_smoothen.png");
+		postSmoothImgFile.assign(postSmoothImg);
+		postSmoothImgFile.save();
 
 
 		List<Beat> beats = new ArrayList<>();

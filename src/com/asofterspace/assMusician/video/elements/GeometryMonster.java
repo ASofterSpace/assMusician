@@ -9,6 +9,7 @@ import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.utils.Line;
 import com.asofterspace.toolbox.utils.Point;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -63,27 +64,28 @@ public class GeometryMonster {
 
 		double stepDifference = 1.0 / MusicGenerator.frameRate;
 
+		// we want all lines to start slowly changing their colors, five times per second! :)
+		for (GeometryLine line : lines) {
+			ColorRGB newColor = line.getColor();
+			if (rand.nextInt(MusicGenerator.frameRate / 5) == 0) {
+				newColor = line.getColor().getSlightlyDifferent();
+			}
+			int counter = 0;
+			while (baseColor.getDifferenceTo(newColor) > 128) {
+				newColor = line.getColor().getSlightlyDifferent();
+				counter++;
+				if (counter > 128) {
+					newColor = ColorRGB.intermix(baseColor, line.getColor(), 0.5);
+					break;
+				}
+			}
+			line.setColor(newColor);
+		}
+
 		// after we encountered the first drum sound that we added...
 		if (encounteredChanged) {
 
-			// ... we want all lines to start slowly changing their colors, five times per second! :)
-			for (GeometryLine line : lines) {
-				if (rand.nextInt(MusicGenerator.frameRate / 5) == 0) {
-					ColorRGB newColor = line.getColor().getSlightlyDifferent();
-					int counter = 0;
-					while (baseColor.getDifferenceTo(newColor) > 128) {
-						newColor = line.getColor().getSlightlyDifferent();
-						counter++;
-						if (counter > 128) {
-							newColor = ColorRGB.intermix(baseColor, line.getColor(), 0.5);
-							break;
-						}
-					}
-					line.setColor(newColor);
-				}
-			}
-
-			// ... and every 8 seconds...
+			// ... every 8 seconds...
 			// if (firstChanged || (rand.nextInt(MusicGenerator.frameRate * 8) == 0)) {
 
 			// ... nope, actually, everytime we added a drum...
