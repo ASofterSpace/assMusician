@@ -657,18 +657,19 @@ public class MusicGenerator {
 		debugLog.add("  :: highest quality: " + absMaxPositions.get(absMaxPositions.size() - 1).getQuality());
 
 		List<Integer> maximumPositions = new ArrayList<>();
+		for (int i = 0; i < absMaxPositions.size() / 2; i++) {
+			AbsMaxPos absMaxPos = absMaxPositions.get(i);
+			wavGraphImg.drawVerticalLineAt(absMaxPos.getOrigPosition(), new ColorRGB(128, 128, 0));
+		}
 		for (int i = absMaxPositions.size() / 2; i < absMaxPositions.size(); i++) {
 			AbsMaxPos absMaxPos = absMaxPositions.get(i);
 			maximumPositions.add(absMaxPos.getOrigPosition());
+			wavGraphImg.drawVerticalLineAt(absMaxPos.getOrigPosition(), new ColorRGB(255, 0, 0));
 		}
 
 		debugLog.add("  :: converted the highest " + maximumPositions.size() + " values into maximum positions");
 
 		Collections.sort(maximumPositions);
-
-		for (int i = 0; i < maximumPositions.size(); i++) {
-			wavGraphImg.drawVerticalLineAt(maximumPositions.get(i), new ColorRGB(255, 0, 0));
-		}
 
 		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_detection.png");
 		wavImgFile.assign(wavGraphImg);
