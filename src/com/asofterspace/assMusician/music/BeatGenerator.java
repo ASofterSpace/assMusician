@@ -40,7 +40,7 @@ public class BeatGenerator {
 		int uncertaintyFrontSetting, int uncertaintyBackSetting) {
 
 		boolean doLog = false;
-		if (rand.nextInt(42) == 0) {
+		if (rand.nextInt(100) == 0) {
 			doLog = true;
 		}
 

@@ -822,12 +822,14 @@ public class MusicGenerator {
 
 		List<Integer> generatedBeatDistances = new ArrayList<>();
 		generatedBeatDistances.add(generatedBeatDistance);
-		for (int i = 0; i < 8; i++) {
-			generatedBeatDistances.add(generatedBeatDistance - ((i*generatedBeatDistance) / 100));
+		int DIFF_BEAT_AMOUNT = 32;
+		for (int i = 0; i < DIFF_BEAT_AMOUNT; i++) {
+			generatedBeatDistances.add(generatedBeatDistance - ((i*generatedBeatDistance) / 200));
 		}
-		for (int i = 0; i < 8; i++) {
-			generatedBeatDistances.add(generatedBeatDistance + ((i*generatedBeatDistance) / 100));
+		for (int i = 0; i < DIFF_BEAT_AMOUNT; i++) {
+			generatedBeatDistances.add(generatedBeatDistance + ((i*generatedBeatDistance) / 200));
 		}
+		debugLog.add("  :: attempting alignment with " + generatedBeatDistances.size() + " slightly different bpm values");
 
 		AbsMaxPos bestAbsMax = null;
 		int bestAlignmentQuality = -1;

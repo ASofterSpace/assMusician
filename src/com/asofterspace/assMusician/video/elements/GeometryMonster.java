@@ -139,8 +139,8 @@ public class GeometryMonster {
 		// while the shape guard is not on...
 		if (!shapeGuardOn) {
 
-			// ... once every 42 seconds, do something funny - that is, take on a preconfigured shape...
-			if (rand.nextInt(MusicGenerator.frameRate * 42) == 0) {
+			// ... once every 32 seconds, do something funny - that is, take on a preconfigured shape...
+			if (rand.nextInt(MusicGenerator.frameRate * 32) == 0) {
 				int shape = rand.nextInt(8);
 				int robin = 0;
 				double posX = width / 4.0;
