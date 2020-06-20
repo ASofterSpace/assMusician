@@ -501,25 +501,42 @@ public class MusicGenerator {
 		// are always the max of the actual (abs) data in there! so that we don't have to think
 		// about regular wubbelings!
 
-		int soundPixPerSec = 128;
-		int soundPixelLen = millisToChannelPos(1000) / soundPixPerSec;
+		int soundPixPerWindow = 128;
+		int soundPixelWindowMS = 500;
+		int soundPixelLen = millisToChannelPos(soundPixelWindowMS) / soundPixPerWindow;
 
-		debugLog.add("  :: sound pixels per second: " + soundPixPerSec);
-		debugLog.add("  :: sound pixel length: " + (1000.0 / soundPixPerSec) + " ms");
+		debugLog.add("  :: window length: " + soundPixelWindowMS + " ms");
+		debugLog.add("  :: sound pixels per window: " + soundPixPerWindow);
+		debugLog.add("  :: sound pixel length: " + ((soundPixelWindowMS * 1.0) / soundPixPerWindow) + " ms");
 		debugLog.add("  :: sound pixel length: " + soundPixelLen + " pos");
 		debugLog.add("  :: input wave length: " + wavDataLeft.length + " pos");
 		int[] absLeft = new int[(wavDataLeft.length / soundPixelLen) + 1];
 		debugLog.add("  :: output abs sound pixels: " + absLeft.length + " spx");
 
-		debugLog.add("  :: settings abs sound pixels to zero");
+		debugLog.add("  :: setting abs sound pixels to zero");
 		for (int i = 0; i < absLeft.length; i++) {
 			absLeft[i] = 0;
 		}
 
-		debugLog.add("  :: settings abs sound pixels to max of abs input data");
+		debugLog.add("  :: setting abs sound pixels to max of abs input data");
 		for (int i = 0; i < wavDataLeft.length; i++) {
 			absLeft[i / soundPixelLen] = Math.max(absLeft[i / soundPixelLen], Math.abs(wavDataLeft[i]));
 		}
+
+		debugLog.add("  :: smoothening abs sound pixels");
+		int[] absLeftSmooth = new int[absLeft.length];
+		for (int i = 0; i < absLeft.length; i++) {
+			if (i < 2) {
+				absLeftSmooth[i] = (absLeft[i] + absLeft[i+1] + absLeft[i+2]) / 3;
+				continue;
+			}
+			if (i >= absLeft.length - 2) {
+				absLeftSmooth[i] = (absLeft[i-2] + absLeft[i-1] + absLeft[i]) / 3;
+				continue;
+			}
+			absLeftSmooth[i] = (absLeft[i-2] + absLeft[i-1] + absLeft[i] + absLeft[i+1] + absLeft[i+2]) / 5;
+		}
+		absLeft = absLeftSmooth;
 
 		debugLog.add("  :: determining abs sound pixel stats");
 		int absMin = Integer.MAX_VALUE;
@@ -562,7 +579,7 @@ public class MusicGenerator {
 		debugLog.add("  :: detected abs 75%: " + abs75);
 		debugLog.add("  :: detected abs 80%: " + abs80);
 
-		int windowSize = soundPixPerSec;
+		int windowSize = soundPixPerWindow;
 		int windowHalfSize = windowSize / 2;
 		debugLog.add("  :: sliding a " + windowSize + " spx window over the array to find maxima");
 
@@ -626,6 +643,8 @@ public class MusicGenerator {
 				qual += (10.0 * curMaxVal) / absLocal50;
 				// get 20 points for the start distance being twice as short as the end distance
 				qual += (10.0 * distToEnd) / distToStart;
+				// get 5 points for this value being above 50% of the overall max value
+				qual += (10.0 * curMaxVal) / absMax;
 				absMaxPos.setQuality(qual);
 
 				absMaxPos.setOrigPosition(curMaxPos * soundPixelLen);
@@ -820,7 +839,7 @@ public class MusicGenerator {
 
 		debugLog.add("  :: best abs max: " + bestAbsMax);
 		debugLog.add("  :: best alignment quality: " + bestAlignmentQuality);
-		beatGenny.generateBeatsFor(bestAbsMax, absMaxPositions, wavDataLeft.length, generatedBeatDistance, uncertaintyFrontSetting, uncertaintyBackSetting);
+		beatGenny.generateBeatsFor(bestAbsMax, absMaxPositionsTemporalOrdered, wavDataLeft.length, generatedBeatDistance, uncertaintyFrontSetting, uncertaintyBackSetting);
 		List<Integer> bpmBasedBeats = beatGenny.getBeats();
 
 
