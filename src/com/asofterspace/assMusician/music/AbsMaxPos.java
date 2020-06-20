@@ -42,4 +42,9 @@ public class AbsMaxPos {
 	public void setOrigPosition(int origPosition) {
 		this.origPosition = origPosition;
 	}
+
+	@Override
+	public String toString() {
+		return "abs max pos " + getPos() + " with quality " + getQuality();
+	}
 }
