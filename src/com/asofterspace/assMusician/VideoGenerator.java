@@ -315,7 +315,8 @@ public class VideoGenerator {
 
 			// left HUD
 			img.drawText(""+lastLength, (64 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
-			img.drawLine(0, (height * 102) / 1080, (int) (width * 0.098), (height * 102) / 1080, blue);
+			img.drawLine((19 * width) / 1920, (height * 102) / 1080, (int) (width * 0.098), (height * 102) / 1080, blue);
+			img.drawLine((19 * width) / 1920, (height * 102) / 1080, 0, ((height * 102) / 1080) + ((19 * width) / 1920), blue);
 			if (drawAllWhite) {
 				img.draw(textLengthWhite, (15 * width) / 1920, (109 * height) / 1080);
 			} else {
@@ -333,7 +334,8 @@ public class VideoGenerator {
 				img.draw(curText, (15 * width) / 1920, (232 * height) / 1080);
 			}
 			img.drawText(""+lastJitterieness, (310 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
-			img.drawLine(0, (height * 348) / 1080, (int) (width * 0.098), (height * 348) / 1080, blue);
+			img.drawLine((19 * width) / 1920, (height * 348) / 1080, (int) (width * 0.098), (height * 348) / 1080, blue);
+			img.drawLine((19 * width) / 1920, (height * 102) / 1080, 0, ((height * 102) / 1080) - ((19 * width) / 1920), blue);
 			if (drawAllWhite) {
 				img.draw(textJitterienessWhite, (15 * width) / 1920, (355 * height) / 1080);
 			} else {
