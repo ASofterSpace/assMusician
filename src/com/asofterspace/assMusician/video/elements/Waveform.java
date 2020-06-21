@@ -8,7 +8,7 @@ import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.music.SoundData;
 
-import java.util.List;
+import java.util.Map;
 
 
 public class Waveform {
@@ -92,7 +92,7 @@ public class Waveform {
 
 	public void drawOnImageRotated(Image img, int horzPos, int top, int bottom, double widthModifier,
 		int step, int totalFrameAmount, ColorRGB foregroundColor, ColorRGB midgroundColor, ColorRGB highlightColor,
-		List<DrumSoundAtPos> addedDrumSounds) {
+		Map<Integer, DrumSoundAtPos> addedDrumSoundMap) {
 
 		int[] leftData = soundData.getLeftData();
 		int[] rightData = soundData.getRightData();
@@ -104,6 +104,9 @@ public class Waveform {
 		for (int y = 0; y < height; y++) {
 			int loudMax = 0;
 			int loudMin = 0;
+
+			DrumSoundAtPos drumSound = null;
+
 			for (long i = (long) ((step + ((y - (height/2.0)) / timeDilationParameter)) * (long) leftData.length) / totalFrameAmount; i < (long) ((step + ((y + 1 - (height/2.0)) / timeDilationParameter)) * (long) leftData.length) / totalFrameAmount; i++) {
 				int offset = (int) i;
 				if ((offset >= 0) && (offset < leftData.length)) {
@@ -120,51 +123,86 @@ public class Waveform {
 						loudMin = rightData[offset];
 					}
 				}
+				// for each y we only want to get one drum sound, even if there would be several
+				// (but there really, REALLY should not be ^^) - we want this so that we can, AFTER
+				// finding the loudMax and therefore the left of the wave, right-align the text next
+				// to it...
+				if (drumSound == null) {
+					drumSound = addedDrumSoundMap.get(offset);
+				}
 			}
+
+			boolean lineDrawn = false;
+			ColorRGB textColor = midgroundColor;
+
 			// 64 is the vertical height in both (!) directions off zero in which we want to show the waveform
 			// 8*16*16*16 is the maximum positive value that is possible as loudness
 			int left = horzPos - (int)((loudMax * 64 * widthModifier) / (8*16*16*16));
 			int mid = horzPos;
 			int right = horzPos - (int)((loudMin * 64 * widthModifier) / (8*16*16*16));
 
-			int fadeLen = height / 32;
+			int fadeLen = height / 8;
 			double fadeLenDouble = fadeLen;
 
 			// at the top and bottom, fade in the waveform
 			if (y < fadeLen) {
-				img.drawLine(mid, y+top, right, y+top, ColorRGB.intermix(midgroundColor, new ColorRGB(0, 0, 0), y / fadeLenDouble));
+				textColor = ColorRGB.intermix(midgroundColor, new ColorRGB(0, 0, 0), y / fadeLenDouble);
+				img.drawLine(mid, y+top, right, y+top, textColor);
 				img.drawLine(left, y+top, mid, y+top, ColorRGB.intermix(foregroundColor, new ColorRGB(0, 0, 0), y / fadeLenDouble));
-				continue;
+				lineDrawn = true;
 			}
 			if (y > height - fadeLen) {
-				img.drawLine(mid, y+top, right, y+top, ColorRGB.intermix(midgroundColor, new ColorRGB(0, 0, 0), (height - y) / fadeLenDouble));
+				textColor = ColorRGB.intermix(midgroundColor, new ColorRGB(0, 0, 0), (height - y) / fadeLenDouble);
+				img.drawLine(mid, y+top, right, y+top, textColor);
 				img.drawLine(left, y+top, mid, y+top, ColorRGB.intermix(foregroundColor, new ColorRGB(0, 0, 0), (height - y) / fadeLenDouble));
-				continue;
+				lineDrawn = true;
 			}
 
 			// show a light spot in the middle
+			fadeLen = height / 32;
+			fadeLenDouble = fadeLen;
+
 			int halfHeight = height / 2;
 
 			if ((y > halfHeight - fadeLen) && (y < halfHeight)) {
-				img.drawLine(mid, y+top, right, y+top, ColorRGB.intermix(midgroundColor, highlightColor, (halfHeight - y) / fadeLenDouble));
+				textColor = ColorRGB.intermix(midgroundColor, highlightColor, (halfHeight - y) / fadeLenDouble);
+				img.drawLine(mid, y+top, right, y+top, textColor);
 				img.drawLine(left, y+top, mid, y+top, ColorRGB.intermix(foregroundColor, highlightColor, (halfHeight - y) / fadeLenDouble));
-				continue;
+				lineDrawn = true;
 			}
 
 			if (y == halfHeight) {
+				textColor = highlightColor;
 				img.drawLine(left, y+top, right, y+top, highlightColor);
-				continue;
+				lineDrawn = true;
 			}
 
 			if ((y > halfHeight) && (y < halfHeight + fadeLen)) {
-				img.drawLine(mid, y+top, right, y+top, ColorRGB.intermix(midgroundColor, highlightColor, (y - halfHeight) / fadeLenDouble));
+				textColor = ColorRGB.intermix(midgroundColor, highlightColor, (y - halfHeight) / fadeLenDouble);
+				img.drawLine(mid, y+top, right, y+top, textColor);
 				img.drawLine(left, y+top, mid, y+top, ColorRGB.intermix(foregroundColor, highlightColor, (y - halfHeight) / fadeLenDouble));
-				continue;
+				lineDrawn = true;
 			}
 
 			// for all other pixels, just show the waveform regularly
-			img.drawLine(mid, y+top, right, y+top, midgroundColor);
-			img.drawLine(left, y+top, mid, y+top, foregroundColor);
+			if (!lineDrawn) {
+				img.drawLine(mid, y+top, right, y+top, midgroundColor);
+				img.drawLine(left, y+top, mid, y+top, foregroundColor);
+			}
+
+			if (drumSound != null) {
+				int fontHeight = 18;
+				String waveFormAnnotation = "beat";
+				if (drumSound.getBeatPattern() > 0) {
+					waveFormAnnotation = "drum #" + drumSound.getBeatPattern();
+				}
+
+				// draw the annotation
+				img.drawText(waveFormAnnotation, y+top-(fontHeight/2), left - 32, null, null, "Neuropol", fontHeight, true, textColor);
+
+				// draw a line between the annotation and the waveform
+				img.drawLine(left - 24, y+top, left - 8, y+top, textColor);
+			}
 		}
 	}
 

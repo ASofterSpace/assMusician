@@ -1145,12 +1145,12 @@ public class MusicGenerator {
 
 			switch (drumSound.getBeatPattern()) {
 				case 13:
-					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat, 3*baseLoudness);
-					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat + ((2 * curBeatLen) / 8), 2*baseLoudness);
-					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat + ((4 * curBeatLen) / 8), 3*baseLoudness);
+					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat, 0.8*baseLoudness);
+					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat + ((2 * curBeatLen) / 8), 0.6*baseLoudness);
+					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat + ((4 * curBeatLen) / 8), 0.8*baseLoudness);
 					break;
 				case 12:
-					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat, 3*baseLoudness);
+					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat, 0.8*baseLoudness);
 					break;
 				case 3:
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);

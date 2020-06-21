@@ -50,6 +50,15 @@ public class VideoGenerator {
 		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle,
 		int framesPerFourier, int[][] fouriers, List<DrumSoundAtPos> addedDrumSounds, List<String> debugLog) {
 
+		debugLog.add(": Pre-Processing Video Data");
+
+		debugLog.add("  :: generating drum sound map containing " + addedDrumSounds.size() + " entries");
+
+		Map<Integer, DrumSoundAtPos> addedDrumSoundMap = new HashMap<>();
+		for (DrumSoundAtPos drumSound : addedDrumSounds) {
+			addedDrumSoundMap.put(drumSound.getBeatPos(), drumSound);
+		}
+
 		debugLog.add(": Starting Frame Generation");
 
 		System.out.println("");
@@ -280,7 +289,7 @@ public class VideoGenerator {
 			}
 
 			// right waveform in the background
-			origWaveform.drawOnImageRotated(img, (int)(width*0.8), (int)(height*0.06), (int)(height*0.8), 2.0, step, totalFrameAmount, darkBlue, darkerBlue, blue, addedDrumSounds);
+			origWaveform.drawOnImageRotated(img, (int)(width*0.8), (int)(height*0.06), (int)(height*0.8), 2.0, step, totalFrameAmount, darkBlue, darkerBlue, blue, addedDrumSoundMap);
 
 			// title
 			Image textTitle = Image.createTextImage(songTitle, "Neuropol", 29, true, blue, trueBlack);
