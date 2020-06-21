@@ -100,6 +100,8 @@ public class Waveform {
 
 		// how much do we want to zoom in on time?
 		int timeDilationParameter = 4;
+		int lastLeft = horzPos;
+		int lastLastLeft = horzPos;
 
 		for (int y = 0; y < height; y++) {
 			int loudMax = 0;
@@ -197,12 +199,24 @@ public class Waveform {
 					waveFormAnnotation = "drum #" + drumSound.getBeatPattern();
 				}
 
+				int minLeft = left;
+				if (lastLeft < minLeft) {
+					minLeft = lastLeft;
+				}
+				if (lastLastLeft < minLeft) {
+					minLeft = lastLastLeft;
+				}
+
 				// draw the annotation
-				img.drawText(waveFormAnnotation, y+top-(fontHeight/2), left - 32, null, null, "Neuropol", fontHeight, true, textColor);
+				int textHeight = Image.getTextHeight("Neuropol", fontHeight);
+				img.drawText(waveFormAnnotation, y+top-(textHeight/2), minLeft - 32, null, null, "Neuropol", fontHeight, true, textColor);
 
 				// draw a line between the annotation and the waveform
-				img.drawLine(left - 24, y+top, left - 8, y+top, textColor);
+				img.drawLine(minLeft - 24, y+top, minLeft - 8, y+top, textColor);
 			}
+
+			lastLastLeft = lastLeft;
+			lastLeft = left;
 		}
 	}
 
