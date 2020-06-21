@@ -1023,4 +1023,50 @@ public class Krass {
 		Collections.sort(bpmBasedBeats);
 		*/
 
+
+
+		/*
+
+			switch (useDrumSounds) {
+				case 1:
+
+
+					break;
+				case 2:
+					beat.setChanged(true);
+					switch (instrumentRing) {
+						case 0:
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
+							break;
+						case 1:
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
+							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
+							break;
+						case 2:
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), 2*baseLoudness);
+							break;
+						case 3:
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 4*baseLoudness);
+							break;
+						case 4:
+							break;
+						case 5:
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
+							addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), 2*baseLoudness);
+							instrumentRing = -1;
+							break;
+					}
+					break;
+			}
+
+			instrumentRing++;
+			*/
 }

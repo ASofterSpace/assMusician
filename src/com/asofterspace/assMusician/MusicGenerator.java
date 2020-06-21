@@ -5,6 +5,7 @@ package com.asofterspace.assMusician;
 
 import com.asofterspace.assMusician.music.AbsMaxPos;
 import com.asofterspace.assMusician.music.BeatGenerator;
+import com.asofterspace.assMusician.music.DrumSoundAtPos;
 import com.asofterspace.assMusician.video.elements.Waveform;
 import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.DefaultImageFile;
@@ -232,7 +233,7 @@ public class MusicGenerator {
 		wavImgFile.assign(wavGraphImg);
 		wavImgFile.save();
 
-		addDrumsBasedOnBeats(drumBeats, debugLog);
+		List<DrumSoundAtPos> addedDrumSounds = addDrumsBasedOnBeats(drumBeats, debugLog);
 
 		debugLog.add("Song Finalization");
 		debugLog.add(": Start Post-Processing");
@@ -425,7 +426,7 @@ public class MusicGenerator {
 			wavGraphImg.setAbsoluteDataPoints(wavData);
 
 			vidGenny.generateVideoBasedOnBeats(drumBeats, totalFrameAmount, width, height, wavGraphImg,
-				origWaveform, newWaveform, songTitle, framesPerFourier, fouriers, debugLog);
+				origWaveform, newWaveform, songTitle, framesPerFourier, fouriers, addedDrumSounds, debugLog);
 		}
 
 		// splice the generated audio together with the generated video
@@ -1015,7 +1016,7 @@ public class MusicGenerator {
 		return dividend / divisor;
 	}
 
-	private void addDrumsBasedOnBeats(List<Beat> beats, List<String> debugLog) {
+	private List<DrumSoundAtPos> addDrumsBasedOnBeats(List<Beat> beats, List<String> debugLog) {
 
 		debugLog.add("Starting Drum Addition");
 
@@ -1030,8 +1031,6 @@ public class MusicGenerator {
 		}
 		graphImg.setDataColor(new ColorRGB(0, 0, 255));
 		graphImg.setAbsoluteDataPoints(wavData);
-
-		int instrumentRing = 0;
 
 		BeatStats stats = new BeatStats(beats);
 
@@ -1054,6 +1053,8 @@ public class MusicGenerator {
 		debugLog.add("  :: max jigglieness: " + stats.getMaxJigglieness());
 
 		debugLog.add(": Starting Drum Sound Addition");
+
+		List<DrumSoundAtPos> drumSounds = new ArrayList<>();
 
 		for (int b = 0; b < beats.size(); b++) {
 			Beat beat = beats.get(b);
@@ -1091,79 +1092,94 @@ public class MusicGenerator {
 				drumPatternIndicator = Math.min(prevPrevDrumPatternIndicator, nextDrumPatternIndicator);
 			}
 
-			switch (useDrumSounds) {
-				case 1:
-					// we have encountered the following jigglienesses in the wild:
-					//  26 .. singing with nearly no instruments
-					// 169 .. loud singing with some instruments
-					// 201 .. full blast! :D
-					if (drumPatternIndicator > 196) {
-						addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
-						addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
-						addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
-						addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
-						addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
-						addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((5 * curBeatLen) / 8), baseLoudness);
-						addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((6 * curBeatLen) / 8), baseLoudness);
-						beat.setChanged(true);
-					} else {
-						if (drumPatternIndicator > 128) {
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 1.25*baseLoudness);
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
-							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
-							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
-							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
-							beat.setChanged(true);
-						} else {
-							if (drumPatternIndicator > 96) {
-								addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
-								addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
-								beat.setChanged(true);
-							}
-						}
-					}
-					break;
-				case 2:
-					beat.setChanged(true);
-					switch (instrumentRing) {
-						case 0:
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
-							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
-							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
-							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
-							break;
-						case 1:
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
-							addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
-							addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
-							addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
-							break;
-						case 2:
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), 2*baseLoudness);
-							break;
-						case 3:
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 4*baseLoudness);
-							break;
-						case 4:
-							break;
-						case 5:
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
-							addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), 2*baseLoudness);
-							instrumentRing = -1;
-							break;
-					}
-					break;
+			// we have encountered the following jigglienesses in the wild:
+			//  26 .. singing with nearly no instruments
+			// 169 .. loud singing with some instruments
+			// 201 .. full blast! :D
+			if (drumPatternIndicator > 196) {
+				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 3));
+				beat.setChanged(true);
+			} else if (drumPatternIndicator > 128) {
+				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 2));
+				beat.setChanged(true);
+			} else if (drumPatternIndicator > 96) {
+				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 1));
+				beat.setChanged(true);
+			} else {
+				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 0));
+			}
+		}
+
+		for (int i = 0; i < drumSounds.size(); i++) {
+
+			DrumSoundAtPos curSound = drumSounds.get(i);
+			DrumSoundAtPos nextSound = null;
+			if (i + 1 < drumSounds.size()) {
+				nextSound = drumSounds.get(i + 1);
 			}
 
-			instrumentRing++;
+			// if we are coming from a lot of drum-ness...
+			if (curSound.getBeatPattern() == 3) {
+				// ... and going over to less drum-ness...
+				if ((nextSound == null) || (nextSound.getBeatPattern() == 0)) {
+					// ... then make a nice big bang in the end!
+					curSound.setBeatPattern(13);
+				}
+			}
+
+			// if we are coming from a lot of drum-ness...
+			if (curSound.getBeatPattern() == 2) {
+				// ... and going over to less drum-ness...
+				if ((nextSound == null) || (nextSound.getBeatPattern() == 0)) {
+					// ... then make a nice big bang in the end!
+					curSound.setBeatPattern(12);
+				}
+			}
+		}
+
+		for (DrumSoundAtPos drumSound : drumSounds) {
+
+			int curBeat = drumSound.getBeatPos();
+			double baseLoudness = drumSound.getBaseLoudness();
+			int curBeatLen = drumSound.getBeatLength();
+
+			switch (drumSound.getBeatPattern()) {
+				case 13:
+					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat, 3*baseLoudness);
+					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat + ((2 * curBeatLen) / 8), 2*baseLoudness);
+					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat + ((4 * curBeatLen) / 8), 3*baseLoudness);
+					break;
+				case 12:
+					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat, 3*baseLoudness);
+					break;
+				case 3:
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((5 * curBeatLen) / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((6 * curBeatLen) / 8), baseLoudness);
+					break;
+				case 2:
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat, 1.25*baseLoudness);
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
+					break;
+				case 1:
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
+					break;
+			}
 		}
 
 		DefaultImageFile wavImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_stats.png");
 		wavImgFile.assign(graphImg);
 		wavImgFile.save();
+
+		return drumSounds;
 	}
 
 	private long getDrumPatternIndicatorFor(List<Beat> beats, int beatNum, BeatStats stats) {

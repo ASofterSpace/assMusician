@@ -3,6 +3,7 @@
  */
 package com.asofterspace.assMusician;
 
+import com.asofterspace.assMusician.music.DrumSoundAtPos;
 import com.asofterspace.assMusician.video.elements.GeometryMonster;
 import com.asofterspace.assMusician.video.elements.Star;
 import com.asofterspace.assMusician.video.elements.StreetElement;
@@ -47,7 +48,7 @@ public class VideoGenerator {
 	//   like during the opening credits of the movie Deja Vu
 	public void generateVideoBasedOnBeats(List<Beat> beats, int totalFrameAmount, int width, int height,
 		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle,
-		int framesPerFourier, int[][] fouriers, List<String> debugLog) {
+		int framesPerFourier, int[][] fouriers, List<DrumSoundAtPos> addedDrumSounds, List<String> debugLog) {
 
 		debugLog.add(": Starting Frame Generation");
 
@@ -229,6 +230,7 @@ public class VideoGenerator {
 			}
 			geoBlue = blue;
 			ColorRGB darkBlue = ColorRGB.intermix(black, blue, 0.5);
+			ColorRGB darkerBlue = ColorRGB.intermix(black, darkBlue, 0.5);
 
 			int ssCI = step - startColorInversion;
 			boolean drawAllWhite = false;
@@ -255,7 +257,6 @@ public class VideoGenerator {
 
 			// background
 			Image img = new Image(width, height, black);
-			img.setLineWidth(3);
 
 			// debug log
 			int fontHeight = 16;
@@ -278,6 +279,9 @@ public class VideoGenerator {
 				img.drawText(debugLog.get(i), top, null, null, left, "Neuropol", fontHeight, true, textCol);
 			}
 
+			// right waveform in the background
+			origWaveform.drawOnImageRotated(img, (int)(width*0.8), (int)(height*0.06), (int)(height*0.8), 2.0, step, totalFrameAmount, darkBlue, darkerBlue, blue, addedDrumSounds);
+
 			// title
 			Image textTitle = Image.createTextImage(songTitle, "Neuropol", 29, true, blue, trueBlack);
 			int titleX = (width - textTitle.getWidth()) / 2;
@@ -290,6 +294,7 @@ public class VideoGenerator {
 			}
 
 			// horizon
+			img.setLineWidth(3);
 			img.drawLine(0, height/2, width-1, height/2, blue);
 			// street
 			img.drawLine(width/2, height/2, width/4, height-1, blue);
