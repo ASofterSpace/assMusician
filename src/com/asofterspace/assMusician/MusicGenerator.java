@@ -1065,6 +1065,8 @@ public class MusicGenerator {
 		drumSoundTally.put(1, 0);
 		drumSoundTally.put(2, 0);
 		drumSoundTally.put(3, 0);
+		drumSoundTally.put(12, 0);
+		drumSoundTally.put(13, 0);
 
 		for (int b = 0; b < beats.size(); b++) {
 			Beat beat = beats.get(b);
@@ -1077,7 +1079,6 @@ public class MusicGenerator {
 				divOr255(255 * beat.getLength(), stats.getMaxLength()),
 				divOr255(255 * beat.getJigglieness(), stats.getMaxJigglieness())
 			));
-
 
 			double baseLoudness = (7.5 * beat.getLoudness()) / 25797;
 
@@ -1102,32 +1103,75 @@ public class MusicGenerator {
 				drumPatternIndicator = Math.min(prevPrevDrumPatternIndicator, nextDrumPatternIndicator);
 			}
 
-			// we have encountered the following jigglienesses in the wild:
-			//  26 .. singing with nearly no instruments
-			// 169 .. loud singing with some instruments
-			// 201 .. full blast! :D
-			if (drumPatternIndicator > 196) {
-				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 3));
-				beat.setChanged(true);
-				drumSoundTally.put(3, drumSoundTally.get(3) + 1);
-			} else if (drumPatternIndicator > 128) {
-				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 2));
-				beat.setChanged(true);
-				drumSoundTally.put(2, drumSoundTally.get(2) + 1);
-			} else if (drumPatternIndicator > 96) {
-				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 1));
-				beat.setChanged(true);
-				drumSoundTally.put(1, drumSoundTally.get(1) + 1);
-			} else {
-				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 0));
-				drumSoundTally.put(0, drumSoundTally.get(0) + 1);
+			drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, (int) drumPatternIndicator));
+		}
+
+		// we have encountered the following jigglienesses in the wild:
+		//  2600 .. singing with nearly no instruments
+		// 16900 .. loud singing with some instruments
+		// 20100 .. full blast! :D
+
+		// however, we want to prevent the whole song from being played as constantly full blast drums...
+		// so instead, let's adjust the levels down a bit if we notice that too many drum sounds go so far up!
+
+		int pattern3startsAbove = 19600;
+		int pattern2startsAbove = 12800;
+		int pattern1startsAbove = 9600;
+
+		debugLog.add("  :: normalizing beat pattern indicators across entire song");
+		debugLog.add("    ::: pattern 1 originally above " + pattern1startsAbove);
+		debugLog.add("    ::: pattern 2 originally above " + pattern2startsAbove);
+		debugLog.add("    ::: pattern 3 originally above " + pattern3startsAbove);
+
+		List<DrumSoundAtPos> actuallyPlayedDrumSounds = new ArrayList<>();
+		for (DrumSoundAtPos drumSound : drumSounds) {
+			if (drumSound.getDrumPatternIndicator() > pattern1startsAbove) {
+				actuallyPlayedDrumSounds.add(drumSound);
 			}
 		}
 
-		debugLog.add("  :: determined " + drumSoundTally.get(0) + " beats without drums");
-		debugLog.add("  :: determined " + drumSoundTally.get(1) + " beats with drum pattern 1");
-		debugLog.add("  :: determined " + drumSoundTally.get(2) + " beats with drum pattern 2");
-		debugLog.add("  :: determined " + drumSoundTally.get(3) + " beats with drum pattern 3");
+		// sort by drum pattern indicator, ascending
+		Collections.sort(actuallyPlayedDrumSounds, new Comparator<DrumSoundAtPos>() {
+			public int compare(DrumSoundAtPos a, DrumSoundAtPos b) {
+				return a.getDrumPatternIndicator() - b.getDrumPatternIndicator();
+			}
+		});
+
+		// ensure that at least 75% of all drum sounds are below pattern 3 (so pattern 3 starts at 75% or higher)
+		if (actuallyPlayedDrumSounds.get((3 * actuallyPlayedDrumSounds.size()) / 4).getDrumPatternIndicator() > pattern3startsAbove) {
+			pattern3startsAbove = actuallyPlayedDrumSounds.get((3 * actuallyPlayedDrumSounds.size()) / 4).getDrumPatternIndicator();
+		}
+
+		// ensure that at least 50% of all drum sounds are below pattern 2 (so pattern 2 starts at 50% or higher)
+		if (actuallyPlayedDrumSounds.get(actuallyPlayedDrumSounds.size() / 2).getDrumPatternIndicator() > pattern2startsAbove) {
+			pattern2startsAbove = actuallyPlayedDrumSounds.get(actuallyPlayedDrumSounds.size() / 2).getDrumPatternIndicator();
+		}
+
+		debugLog.add("    ::: pattern 1 now above " + pattern1startsAbove);
+		debugLog.add("    ::: pattern 2 now above " + pattern2startsAbove);
+		debugLog.add("    ::: pattern 3 now above " + pattern3startsAbove);
+
+		for (int i = 0; i < drumSounds.size(); i++) {
+
+			DrumSoundAtPos curSound = drumSounds.get(i);
+		}
+
+		debugLog.add("  :: converting beat pattern indicators into beat patterns");
+
+		for (int i = 0; i < drumSounds.size(); i++) {
+
+			DrumSoundAtPos curSound = drumSounds.get(i);
+
+			if (curSound.getDrumPatternIndicator() > pattern3startsAbove) {
+				curSound.setBeatPattern(3);
+			} else if (curSound.getDrumPatternIndicator() > pattern2startsAbove) {
+				curSound.setBeatPattern(2);
+			} else if (curSound.getDrumPatternIndicator() > pattern1startsAbove) {
+				curSound.setBeatPattern(1);
+			} else {
+				curSound.setBeatPattern(0);
+			}
+		}
 
 		debugLog.add("  :: adjusting beat patterns based on pattern environment");
 
@@ -1156,15 +1200,30 @@ public class MusicGenerator {
 					curSound.setBeatPattern(12);
 				}
 			}
+
+			drumSoundTally.put(curSound.getBeatPattern(), curSound.getBeatPattern() + 1);
 		}
+
+		debugLog.add("    ::: determined " + drumSoundTally.get(0) + " beats without drums");
+		debugLog.add("    ::: determined " + drumSoundTally.get(1) + " beats with drum pattern 1");
+		debugLog.add("    ::: determined " + drumSoundTally.get(2) + " beats with drum pattern 2");
+		debugLog.add("    ::: determined " + drumSoundTally.get(3) + " beats with drum pattern 3");
+		debugLog.add("    ::: determined " + drumSoundTally.get(12) + " beats with drum pattern 12");
+		debugLog.add("    ::: determined " + drumSoundTally.get(13) + " beats with drum pattern 13");
 
 		debugLog.add("  :: adding actual drum sounds to the audio tracks");
 
-		for (DrumSoundAtPos drumSound : drumSounds) {
+		for (int i = 0; i < drumSounds.size(); i++) {
+
+			DrumSoundAtPos drumSound = drumSounds.get(i);
 
 			int curBeat = drumSound.getBeatPos();
 			double baseLoudness = drumSound.getBaseLoudness();
 			int curBeatLen = drumSound.getBeatLength();
+
+			if (drumSound.getBeatPattern() > 0) {
+				beats.get(i).setChanged(true);
+			}
 
 			switch (drumSound.getBeatPattern()) {
 				/*
@@ -1224,7 +1283,7 @@ public class MusicGenerator {
 			return 0;
 		}
 
-		long baseJigglieness = divOr255(255 * beats.get(beatNum).getJigglieness(), stats.getMaxJigglieness());
+		long baseJigglieness = divOr255(25500 * beats.get(beatNum).getJigglieness(), stats.getMaxJigglieness());
 
 		// if we are much quieter than maximum, then we will use this factor to reduce the drumPatternIndicator...
 		double relativeLoudnessFactor = 2 * beats.get(beatNum).getLoudness() / stats.getMaxLoudness();

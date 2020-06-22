@@ -12,14 +12,16 @@ public class DrumSoundAtPos {
 
 	private double baseLoudness;
 
-	private int beatPattern;
+	private int drumPatternIndicator;
+
+	private int beatPattern = 0;
 
 
-	public DrumSoundAtPos(int beatPos, int beatLength, double baseLoudness, int beatPattern) {
+	public DrumSoundAtPos(int beatPos, int beatLength, double baseLoudness, int drumPatternIndicator) {
 		this.beatPos = beatPos;
 		this.beatLength = beatLength;
 		this.baseLoudness = baseLoudness;
-		this.beatPattern = beatPattern;
+		this.drumPatternIndicator = drumPatternIndicator;
 	}
 
 	public int getBeatPos() {
@@ -44,6 +46,14 @@ public class DrumSoundAtPos {
 
 	public void setBaseLoudness(double baseLoudness) {
 		this.baseLoudness = baseLoudness;
+	}
+
+	public int getDrumPatternIndicator() {
+		return drumPatternIndicator;
+	}
+
+	public void setDrumPatternIndicator(int drumPatternIndicator) {
+		this.drumPatternIndicator = drumPatternIndicator;
 	}
 
 	public int getBeatPattern() {
