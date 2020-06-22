@@ -145,6 +145,13 @@ public class VideoGenerator {
 
 		debugLog.add("{end log}");
 
+		List<String> newDebugLog = new ArrayList<>();
+		for (String line : debugLog) {
+			line = line.toLowerCase();
+			line = line.replaceAll("ing ", " ");
+			newDebugLog.add(line);
+		}
+
 		for (int step = 0; step < totalFrameAmount; step++) {
 
 			firstChanged = false;
@@ -335,7 +342,7 @@ public class VideoGenerator {
 			}
 			img.drawText(""+lastJitterieness, (310 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
 			img.drawLine((19 * width) / 1920, (height * 348) / 1080, (int) (width * 0.098), (height * 348) / 1080, blue);
-			img.drawLine((19 * width) / 1920, (height * 102) / 1080, 0, ((height * 102) / 1080) - ((19 * width) / 1920), blue);
+			img.drawLine((19 * width) / 1920, (height * 348) / 1080, 0, ((height * 348) / 1080) - ((19 * width) / 1920), blue);
 			if (drawAllWhite) {
 				img.draw(textJitterienessWhite, (15 * width) / 1920, (355 * height) / 1080);
 			} else {

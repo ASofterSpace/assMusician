@@ -67,7 +67,7 @@ public class BeatGenerator {
 				(absMaxPositions.get(maxPosI).getOrigPosition() > i + uncertaintyBack)) {
 				maxPosI--;
 			}
-			if (maxPosI < 1) {
+			if (maxPosI < 0) {
 				insertedUnalignedBeats++;
 			} else {
 				if ((absMaxPositions.get(maxPosI).getOrigPosition() <= i + uncertaintyBack) &&
@@ -76,15 +76,15 @@ public class BeatGenerator {
 						(absMaxPositions.get(maxPosI).getOrigPosition() > i)) {
 						maxPosI--;
 					}
-					if (maxPosI < 1) {
+					if (maxPosI < 0) {
 						insertedUnalignedBeats++;
 					} else {
 						AbsMaxPos alignTo = absMaxPositions.get(maxPosI);
-						if (maxPosI > 0) {
-							if (i - absMaxPositions.get(maxPosI).getOrigPosition() < absMaxPositions.get(maxPosI-1).getOrigPosition() - i) {
-								alignTo = absMaxPositions.get(maxPosI);
+						if (maxPosI + 1 < absMaxPositions.size()) {
+							if (absMaxPositions.get(maxPosI + 1).getOrigPosition() - i < i - absMaxPositions.get(maxPosI).getOrigPosition()) {
+								alignTo = absMaxPositions.get(maxPosI+1);
 							} else {
-								alignTo = absMaxPositions.get(maxPosI-1);
+								alignTo = absMaxPositions.get(maxPosI);
 							}
 						}
 						i = alignTo.getOrigPosition();

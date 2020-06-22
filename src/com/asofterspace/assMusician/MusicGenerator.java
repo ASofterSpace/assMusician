@@ -860,6 +860,10 @@ public class MusicGenerator {
 		beatGenny.generateBeatsFor(bestAbsMax, absMaxPositionsTemporalOrdered, wavDataLeft.length, bestGeneratedBeatDistance, uncertaintyFrontSetting, uncertaintyBackSetting);
 		List<Integer> bpmBasedBeats = beatGenny.getBeats();
 
+		debugLog.add("  :: adding detected beats to debug graph");
+		for (Integer beatPos : bpmBasedBeats) {
+			wavGraphImg.drawVerticalLineAt(beatPos, new ColorRGB(0, 255, 0));
+		}
 
 		// ALGORITHM 3.7
 
@@ -1056,6 +1060,12 @@ public class MusicGenerator {
 
 		List<DrumSoundAtPos> drumSounds = new ArrayList<>();
 
+		Map<Integer, Integer> drumSoundTally = new HashMap<>();
+		drumSoundTally.put(0, 0);
+		drumSoundTally.put(1, 0);
+		drumSoundTally.put(2, 0);
+		drumSoundTally.put(3, 0);
+
 		for (int b = 0; b < beats.size(); b++) {
 			Beat beat = beats.get(b);
 
@@ -1099,16 +1109,27 @@ public class MusicGenerator {
 			if (drumPatternIndicator > 196) {
 				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 3));
 				beat.setChanged(true);
+				drumSoundTally.put(3, drumSoundTally.get(3) + 1);
 			} else if (drumPatternIndicator > 128) {
 				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 2));
 				beat.setChanged(true);
+				drumSoundTally.put(2, drumSoundTally.get(2) + 1);
 			} else if (drumPatternIndicator > 96) {
 				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 1));
 				beat.setChanged(true);
+				drumSoundTally.put(1, drumSoundTally.get(1) + 1);
 			} else {
 				drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, 0));
+				drumSoundTally.put(0, drumSoundTally.get(0) + 1);
 			}
 		}
+
+		debugLog.add("  :: determined " + drumSoundTally.get(0) + " beats without drums");
+		debugLog.add("  :: determined " + drumSoundTally.get(1) + " beats with drum pattern 1");
+		debugLog.add("  :: determined " + drumSoundTally.get(2) + " beats with drum pattern 2");
+		debugLog.add("  :: determined " + drumSoundTally.get(3) + " beats with drum pattern 3");
+
+		debugLog.add("  :: adjusting beat patterns based on pattern environment");
 
 		for (int i = 0; i < drumSounds.size(); i++) {
 
@@ -1137,6 +1158,8 @@ public class MusicGenerator {
 			}
 		}
 
+		debugLog.add("  :: adding actual drum sounds to the audio tracks");
+
 		for (DrumSoundAtPos drumSound : drumSounds) {
 
 			int curBeat = drumSound.getBeatPos();
@@ -1144,6 +1167,7 @@ public class MusicGenerator {
 			int curBeatLen = drumSound.getBeatLength();
 
 			switch (drumSound.getBeatPattern()) {
+				/*
 				case 13:
 					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat, 0.8*baseLoudness);
 					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat + ((2 * curBeatLen) / 8), 0.6*baseLoudness);
@@ -1151,6 +1175,18 @@ public class MusicGenerator {
 					break;
 				case 12:
 					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat, 0.8*baseLoudness);
+					break;
+				*/
+				case 13:
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2.5*baseLoudness);
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 1.25*baseLoudness);
+					addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 1.5*baseLoudness);
+					break;
+				case 12:
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
 					break;
 				case 3:
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
