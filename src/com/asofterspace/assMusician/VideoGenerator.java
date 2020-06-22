@@ -151,6 +151,7 @@ public class VideoGenerator {
 			line = line.replaceAll("ing ", " ");
 			newDebugLog.add(line);
 		}
+		debugLog = newDebugLog;
 
 		for (int step = 0; step < totalFrameAmount; step++) {
 
