@@ -1137,9 +1137,9 @@ public class MusicGenerator {
 			}
 		});
 
-		// ensure that at least 75% of all drum sounds are below pattern 3 (so pattern 3 starts at 75% or higher)
-		if (actuallyPlayedDrumSounds.get((3 * actuallyPlayedDrumSounds.size()) / 4).getDrumPatternIndicator() > pattern3startsAbove) {
-			pattern3startsAbove = actuallyPlayedDrumSounds.get((3 * actuallyPlayedDrumSounds.size()) / 4).getDrumPatternIndicator();
+		// ensure that at least 80% of all drum sounds are below pattern 3 (so pattern 3 starts at 80% or higher)
+		if (actuallyPlayedDrumSounds.get((4 * actuallyPlayedDrumSounds.size()) / 5).getDrumPatternIndicator() > pattern3startsAbove) {
+			pattern3startsAbove = actuallyPlayedDrumSounds.get((4 * actuallyPlayedDrumSounds.size()) / 5).getDrumPatternIndicator();
 		}
 
 		// ensure that at least 50% of all drum sounds are below pattern 2 (so pattern 2 starts at 50% or higher)
