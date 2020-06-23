@@ -6,6 +6,7 @@ package com.asofterspace.assMusician.video.elements;
 import com.asofterspace.assMusician.MusicGenerator;
 import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.Image;
+import com.asofterspace.toolbox.music.Beat;
 import com.asofterspace.toolbox.utils.Line;
 import com.asofterspace.toolbox.utils.Point;
 
@@ -60,7 +61,8 @@ public class GeometryMonster {
 	// and divide it into lines of same colors... and we would need to ensure we are not breaking anyone's
 	// copyright in taking their images as input for the process
 	public void drawOnImage(Image img, int width, int height, int step, int totalFrameAmount, double currentLoudnessScaled,
-		ColorRGB color, ColorRGB baseColor, boolean firstChanged, boolean curChanged, boolean encounteredChanged) {
+		ColorRGB color, ColorRGB baseColor, boolean firstChanged, boolean curChanged, boolean encounteredChanged,
+		Beat curBeat) {
 
 		if (lines.size() < 1) {
 			GeometryLine newLine = new GeometryLine(0, 1);
@@ -479,6 +481,12 @@ public class GeometryMonster {
 					if (point.getTarget().getY() > minY + scaledH) {
 						resetTarget = true;
 					}
+				}
+
+				// let's try this - we reset the targets for all points on all beats... so that the geo monster
+				// is dancing? humm... maybe? :D
+				if (curBeat != null) {
+					resetTarget = true;
 				}
 
 				if (resetTarget) {
