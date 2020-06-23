@@ -15,14 +15,17 @@ public class StreetElement {
 
 	private int startFrame;
 
+	private boolean important;
+
 	// if we have 25 frames per second, we want to show the animation for 50 frames, such that it is
 	// visible for 2 seconds
 	private int FRAME_LENGTH = MusicGenerator.frameRate * 2;
 
 
-	public StreetElement(int arrivalFrame) {
+	public StreetElement(int arrivalFrame, boolean important) {
 		this.arrivalFrame = arrivalFrame;
 		this.startFrame = arrivalFrame - FRAME_LENGTH;
+		this.important = important;
 	}
 
 	public void drawOnImage(Image img, int width, int height, int step, ColorRGB color) {
@@ -41,6 +44,10 @@ public class StreetElement {
 
 		if ((height/2) + (int)movBy >= height) {
 			return;
+		}
+
+		if (important) {
+			color = ColorRGB.intermix(new ColorRGB(255, 255, 255), color, 0.5);
 		}
 
 		img.drawLine((width/2)-(int)((movByPerc*width)/4), (height/2) + (int)movBy, (width/2)+(int)((movByPerc*width)/4), (height/2) + (int)movBy, color);

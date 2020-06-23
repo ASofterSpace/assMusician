@@ -53,7 +53,13 @@ public class GeometryMonster {
 	// TODO :: add even more fun-ness (e.g. the geometry monster transforming into breakout blocks and then
 	// a ball and paddle playing, or transforming into space invaders that all looks like the geometry monster
 	// and attack, or even transforming into Game of Life somehow... ^^)
-	public void drawOnImage(Image img, int width, int height, int step, double currentLoudnessScaled,
+	// TODO :: for each song, load in a picture (some picture, any picture ^^), and make it so that the geo-
+	// metry monster goes backwards in time such that in the end of the song the picture appears, but before
+	// over the whole duration of the song it was just lines flying around, slowly changing colors, moving,
+	// maybe one by one slowly into place... but for that, we would need to be able to take an arbitrary image
+	// and divide it into lines of same colors... and we would need to ensure we are not breaking anyone's
+	// copyright in taking their images as input for the process
+	public void drawOnImage(Image img, int width, int height, int step, int totalFrameAmount, double currentLoudnessScaled,
 		ColorRGB color, ColorRGB baseColor, boolean firstChanged, boolean curChanged, boolean encounteredChanged) {
 
 		if (lines.size() < 1) {
@@ -136,12 +142,12 @@ public class GeometryMonster {
 
 		// TODO :: as another fun thing, every once in a while, rotate the entire geometry monster? :D
 
-		// while the shape guard is not on...
-		if (!shapeGuardOn) {
+		// while the shape guard is not on and we are not in the last 16th of the song...
+		if ((!shapeGuardOn) && (step < ((15 * totalFrameAmount) / 16))) {
 
 			// ... once every 32 seconds, do something funny - that is, take on a preconfigured shape...
 			if (rand.nextInt(MusicGenerator.frameRate * 32) == 0) {
-				int shape = rand.nextInt(9);
+				int shape = rand.nextInt(10);
 				int robin = 0;
 				double posX = width / 4.0;
 				double posY = height / 4.0;
@@ -383,7 +389,7 @@ public class GeometryMonster {
 						break;
 
 					// four-legged starfish
-					default:
+					case 8:
 						if (points.size() < 9) {
 							break;
 						}
@@ -420,6 +426,22 @@ public class GeometryMonster {
 									break;
 							}
 							robin++;
+						}
+						break;
+
+					// circle
+					default:
+						if (points.size() < 2) {
+							break;
+						}
+						activateShapeGuard();
+						double radius = (0.8 * height) / 2;
+						double midX = width / 2.0;
+						double midY = height / 2.0;
+						for (int p = 0; p < points.size(); p++) {
+							GeometryPoint point = points.get(p);
+							double angle = (2.0 * Math.PI * p) / points.size();
+							point.setTarget(new Point<Double, Double>(midX + radius * Math.sin(angle), midY + radius * Math.cos(angle)));
 						}
 						break;
 				}

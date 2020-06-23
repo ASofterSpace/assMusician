@@ -46,7 +46,7 @@ public class VideoGenerator {
 	// like, they are there (and stay there for a second or so) and then the actual stuff fades in?
 	// * add blocks that are moving around, zooming here, staying a while, zooming there, staying a while,
 	//   like during the opening credits of the movie Deja Vu
-	public void generateVideoBasedOnBeats(List<Beat> beats, int totalFrameAmount, int width, int height,
+	public void generateVideoBasedOnBeats(List<Beat> beats, List<Integer> addedSounds, int totalFrameAmount, int width, int height,
 		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle,
 		int framesPerFourier, int[][] fouriers, List<DrumSoundAtPos> addedDrumSounds, List<String> debugLog) {
 
@@ -76,7 +76,10 @@ public class VideoGenerator {
 		}
 		List<StreetElement> streetElements = new ArrayList<>();
 		for (Beat beat : beats) {
-			streetElements.add(new StreetElement(musicGen.beatToFrame(beat)));
+			streetElements.add(new StreetElement(musicGen.beatToFrame(beat), false));
+		}
+		for (Integer addedSound : addedSounds) {
+			streetElements.add(new StreetElement(musicGen.millisToFrame(musicGen.channelPosToMillis(addedSound)), true));
 		}
 		debugLog.add("  :: " + beats.size() + " street elements");
 		GeometryMonster geometryMonster = new GeometryMonster(width, height);
@@ -149,6 +152,7 @@ public class VideoGenerator {
 		for (String line : debugLog) {
 			line = line.toLowerCase();
 			line = line.replaceAll("ing ", " ");
+			line = line.replaceAll(" assmusician ", " assMusician ");
 			newDebugLog.add(line);
 		}
 		debugLog = newDebugLog;
@@ -352,7 +356,7 @@ public class VideoGenerator {
 				img.draw(curText, (15 * width) / 1920, (355 * height) / 1080);
 			}
 
-			geometryMonster.drawOnImage(img, width, height, step, currentLoudnessScaled, blue, geoBlue, firstChanged, curChanged, encounteredChanged);
+			geometryMonster.drawOnImage(img, width, height, step, totalFrameAmount, currentLoudnessScaled, blue, geoBlue, firstChanged, curChanged, encounteredChanged);
 
 			img.setLineWidth(1);
 

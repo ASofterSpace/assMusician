@@ -121,6 +121,7 @@ public class MusicGenerator {
 		List<String> debugLog = new ArrayList<>();
 
 		debugLog.add("{start log}");
+		debugLog.add(Utils.getFullProgramIdentifierWithDate());
 
 		debugLog.add("Song Analysis");
 		debugLog.add(": Load Audio");
@@ -1372,6 +1373,8 @@ public class MusicGenerator {
 			fadeDataLeft[i+pos] += (int) (wavVolume * newMono[i]);
 			fadeDataRight[i+pos] += (int) (wavVolume * newMono[i]);
 		}
+
+		addedSounds.add(samplePos);
 	}
 
 	/*
@@ -1425,7 +1428,7 @@ public class MusicGenerator {
 		return (int) ((posInMillis * byteRate) / (1000 * bytesPerSample * NUM_OF_CHANNELS));
 	}
 
-	private int channelPosToMillis(long channelPos) {
+	public int channelPosToMillis(long channelPos) {
 		long NUM_OF_CHANNELS = 2;
 		return (int) ((channelPos * 1000 * bytesPerSample * NUM_OF_CHANNELS) / byteRate);
 	}
@@ -1434,7 +1437,7 @@ public class MusicGenerator {
 		return millisToFrame(channelPosToMillis(wavDataLeft.length));
 	}
 
-	private int millisToFrame(int millis) {
+	public int millisToFrame(int millis) {
 		return (millis * frameRate) / 1000;
 	}
 
