@@ -428,7 +428,7 @@ public class MusicGenerator {
 			wavGraphImg.setDataColor(new ColorRGB(0, 0, 255));
 			wavGraphImg.setAbsoluteDataPoints(wavData);
 
-			vidGenny.generateVideoBasedOnBeats(drumBeats, totalFrameAmount, width, height, wavGraphImg,
+			vidGenny.generateVideoBasedOnBeats(drumBeats, addedSounds, totalFrameAmount, width, height, wavGraphImg,
 				origWaveform, newWaveform, songTitle, framesPerFourier, fouriers, addedDrumSounds, debugLog);
 		}
 
