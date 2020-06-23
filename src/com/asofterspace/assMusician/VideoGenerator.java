@@ -141,6 +141,9 @@ public class VideoGenerator {
 		long lastLoudness = 0;
 		long lastJitterieness = 0;
 
+		int beatNum = 0;
+		int drawBeatForSteps = 0;
+
 		boolean encounteredFirstChanged = false;
 		boolean encounteredChanged = false;
 		boolean firstChanged = false;
@@ -324,6 +327,46 @@ public class VideoGenerator {
 			for (StreetElement el : streetElements) {
 				el.drawOnImage(img, width, height, step, blue);
 			}
+
+			// left bottom beat indicator
+			drawBeatForSteps--;
+			if (curBeat != null) {
+				drawBeatForSteps = 16;
+				beatNum++;
+			}
+			ColorRGB beat32col = darkerBlue;
+			ColorRGB beat16col = darkerBlue;
+			ColorRGB beat8col = darkerBlue;
+			ColorRGB beat4col = darkerBlue;
+			ColorRGB beat2col = darkerBlue;
+			ColorRGB beat1col = darkerBlue;
+			if (drawBeatForSteps > 0) {
+				if (beatNum % 32 == 0) {
+					beat32col = blue;
+				}
+				if (beatNum % 16 == 0) {
+					beat16col = blue;
+				}
+				if (beatNum % 8 == 0) {
+					beat8col = blue;
+				}
+				if (beatNum % 4 == 0) {
+					beat4col = blue;
+				}
+				if (beatNum % 2 == 0) {
+					beat2col = blue;
+				}
+				beat1col = blue;
+			}
+
+			int beatIndicaLeft = (68 * width) / 1920;
+			int beatIndicaRight = (148 * width) / 1920;
+			img.drawRectangle(beatIndicaLeft, (601 * height) / 1080, beatIndicaRight, (633 * height) / 1080, beat32col);
+			img.drawRectangle(beatIndicaLeft, (642 * height) / 1080, beatIndicaRight, (674 * height) / 1080, beat16col);
+			img.drawRectangle(beatIndicaLeft, (683 * height) / 1080, beatIndicaRight, (715 * height) / 1080, beat8col);
+			img.drawRectangle(beatIndicaLeft, (724 * height) / 1080, beatIndicaRight, (756 * height) / 1080, beat4col);
+			img.drawRectangle(beatIndicaLeft, (765 * height) / 1080, beatIndicaRight, (797 * height) / 1080, beat2col);
+			img.drawRectangle(beatIndicaLeft, (806 * height) / 1080, beatIndicaRight, (838 * height) / 1080, beat1col);
 
 			// left HUD
 			img.drawText(""+lastLength, (64 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
