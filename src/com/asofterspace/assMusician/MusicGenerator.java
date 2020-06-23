@@ -67,6 +67,7 @@ public class MusicGenerator {
 
 	private int fourierLen;
 	private int[][] fouriers;
+	private List<Integer> addedSounds;
 
 	private int graphImageHeight = 256;
 	private GraphImage wavGraphImg;
@@ -119,6 +120,7 @@ public class MusicGenerator {
 	public void addDrumsToSong(File originalSong) {
 
 		List<String> debugLog = new ArrayList<>();
+		addedSounds = new ArrayList<>();
 
 		debugLog.add("{start log}");
 		debugLog.add(Utils.getFullProgramIdentifierWithDate());
