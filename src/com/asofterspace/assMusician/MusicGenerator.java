@@ -1114,14 +1114,48 @@ public class MusicGenerator {
 		// 16900 .. loud singing with some instruments
 		// 20100 .. full blast! :D
 
-		// however, we want to prevent the whole song from being played as constantly full blast drums...
-		// so instead, let's adjust the levels down a bit if we notice that too many drum sounds go so far up!
-
 		int pattern3startsAbove = 19600;
 		int pattern2startsAbove = 12800;
 		int pattern1startsAbove = 9600;
 
-		debugLog.add("  :: normalizing beat pattern indicators across entire song");
+		// first of all, we want to prevent the whole song from being played drumless, so we will lower the
+		// level at which drums are introduced if necessary
+
+		debugLog.add("  :: normalizing beat pattern indicators up across entire song");
+		debugLog.add("    ::: pattern 1 originally above " + pattern1startsAbove);
+		debugLog.add("    ::: pattern 2 originally above " + pattern2startsAbove);
+		debugLog.add("    ::: pattern 3 originally above " + pattern3startsAbove);
+
+		List<DrumSoundAtPos> allDrumSounds = new ArrayList<>();
+		for (DrumSoundAtPos drumSound : drumSounds) {
+			allDrumSounds.add(drumSound);
+		}
+
+		// sort by drum pattern indicator, ascending
+		Collections.sort(allDrumSounds, new Comparator<DrumSoundAtPos>() {
+			public int compare(DrumSoundAtPos a, DrumSoundAtPos b) {
+				return a.getDrumPatternIndicator() - b.getDrumPatternIndicator();
+			}
+		});
+
+		// ensure that at least 45% of all drum sounds are above pattern 1 (so pattern 1 starts at 55% or lower)
+		if (allDrumSounds.get((allDrumSounds.size() * 55) / 100).getDrumPatternIndicator() < pattern1startsAbove) {
+			pattern1startsAbove = allDrumSounds.get((allDrumSounds.size() * 55) / 100).getDrumPatternIndicator();
+		}
+
+		// ensure that at least 10% of all drum sounds are above pattern 2 (so pattern 2 starts at 90% or lower)
+		if (allDrumSounds.get((allDrumSounds.size() * 90) / 100).getDrumPatternIndicator() < pattern2startsAbove) {
+			pattern2startsAbove = allDrumSounds.get((allDrumSounds.size() * 90) / 100).getDrumPatternIndicator();
+		}
+
+		debugLog.add("    ::: pattern 1 now above " + pattern1startsAbove);
+		debugLog.add("    ::: pattern 2 now above " + pattern2startsAbove);
+		debugLog.add("    ::: pattern 3 now above " + pattern3startsAbove);
+
+		// however, we want to prevent the whole song from being played as constantly full blast drums...
+		// so instead, let's adjust the levels down a bit if we notice that too many drum sounds go so far up!
+
+		debugLog.add("  :: normalizing beat pattern indicators down across entire song");
 		debugLog.add("    ::: pattern 1 originally above " + pattern1startsAbove);
 		debugLog.add("    ::: pattern 2 originally above " + pattern2startsAbove);
 		debugLog.add("    ::: pattern 3 originally above " + pattern3startsAbove);
@@ -1204,7 +1238,7 @@ public class MusicGenerator {
 				}
 			}
 
-			drumSoundTally.put(curSound.getBeatPattern(), curSound.getBeatPattern() + 1);
+			drumSoundTally.put(curSound.getBeatPattern(), drumSoundTally.get(curSound.getBeatPattern()) + 1);
 		}
 
 		debugLog.add("    ::: determined " + drumSoundTally.get(0) + " beats without drums");
