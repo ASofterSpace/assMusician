@@ -23,6 +23,7 @@ public class GeometryMonster {
 	private Random rand;
 	private boolean shapeGuardOn = false;
 	private int shapeGuardStillOnFor = 0;
+	private int beatNum;
 
 
 	public GeometryMonster(int width, int height) {
@@ -36,6 +37,8 @@ public class GeometryMonster {
 		points.add(bottomPoint);
 
 		rand = new Random();
+
+		beatNum = 0;
 	}
 
 	// TODO :: maybe give different nodes (or edges?) different colors - maybe just slightly different,
@@ -63,6 +66,10 @@ public class GeometryMonster {
 	public void drawOnImage(Image img, int width, int height, int step, int totalFrameAmount, double currentLoudnessScaled,
 		ColorRGB color, ColorRGB baseColor, boolean firstChanged, boolean curChanged, boolean encounteredChanged,
 		Beat curBeat) {
+
+		if (curBeat != null) {
+			beatNum++;
+		}
 
 		if (lines.size() < 1) {
 			GeometryLine newLine = new GeometryLine(0, 1);
@@ -483,9 +490,9 @@ public class GeometryMonster {
 					}
 				}
 
-				// let's try this - we reset the targets for all points on all beats... so that the geo monster
-				// is dancing? humm... maybe? :D
-				if (curBeat != null) {
+				// let's try this - we reset the targets for all points on every fourth beat...
+				// so that the geo monster is dancing? humm... maybe? :D
+				if ((curBeat != null) && (beatNum % 4 == 0)) {
 					resetTarget = true;
 				}
 
