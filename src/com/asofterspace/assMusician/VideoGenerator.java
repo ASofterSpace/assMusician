@@ -82,7 +82,9 @@ public class VideoGenerator {
 			streetElements.add(new StreetElement(musicGen.millisToFrame(musicGen.channelPosToMillis(addedSound)), true));
 		}
 		debugLog.add("  :: " + beats.size() + " street elements");
+
 		GeometryMonster geometryMonster = new GeometryMonster(width, height);
+		debugLog.add("  :: 1 geometry monster");
 
 		// a map from frame number to beat detected there
 		Map<Integer, Beat> beatMap = new HashMap<>();
@@ -149,6 +151,23 @@ public class VideoGenerator {
 		boolean firstChanged = false;
 		boolean curChanged = false;
 
+		// set up debug log movements - a bit of wobbling to the left and / or right
+		// by mapping from vertical location to horizontal displacement
+		int debugLogFontHeight = 16;
+		int debugLogTextHeight = Image.getTextHeight("Neuropol", debugLogFontHeight);
+
+		Map<Integer, Integer> debugLogWobblings = new HashMap<>();
+		for (int y = - debugLogTextHeight; y < height; y++) {
+			debugLogWobblings.put(y, 0);
+		}
+		Map<Integer, Integer> debugLogPerturbations = new HashMap<>();
+		int perturbationAmount = 16;
+		int perturbationWidth = width / 64;
+		debugLog.add("  :: introducing " + perturbationAmount + " lateral log perturbations");
+		for (int i = 0; i < perturbationAmount; i++) {
+			debugLogPerturbations.add(rand.nextInteger(height), rand.nextInteger(perturbationWidth));
+		}
+
 		debugLog.add("{end log}");
 
 		List<String> newDebugLog = new ArrayList<>();
@@ -167,6 +186,31 @@ public class VideoGenerator {
 
 			if ((step > 0) && (step % 1000 == 0)) {
 				System.out.println("We are at frame " + step + "...");
+			}
+
+			// once per second
+			if (step % MusicGenerator.frameRate == 0) {
+				// adjust debug log perturbations
+				Map<Integer, Integer> newDebugLogPerturbations = new HashMap<>();
+				for (Map.Entry<Integer, Integer> entry : debugLogPerturbations.entrySet()) {
+					Integer yPos = entry.getKey();
+					Integer perturb = entry.getValue();
+					newDebugLogPerturbations.put(yPos + rand.nextInt(9) - 4, perturb + rand.nextInt(9) - 4);
+				}
+				debugLogPerturbations = newDebugLogPerturbations;
+				// adjust debug log positions based on perturbations
+				for (int y = - debugLogTextHeight; y < height; y++) {
+					debugLogWobblings.put(y, 0);
+				}
+				for (Map.Entry<Integer, Integer> entry : debugLogPerturbations.entrySet()) {
+					Integer yPos = entry.getKey();
+					Integer perturb = entry.getValue();
+					for (int y = yPos - perturb; y < yPos + perturb; y++) {
+						if (debugLogWobblings.get(y) != null) {
+							debugLogWobblings.put(y, debugLogWobblings.get(y) + perturb - Math.abs(y - yPos));
+						}
+					}
+				}
 			}
 
 			// is there a beat right at this location?
@@ -283,13 +327,11 @@ public class VideoGenerator {
 			Image img = new Image(width, height, black);
 
 			// debug log
-			int fontHeight = 16;
-			int textHeight = Image.getTextHeight("Neuropol", fontHeight);
-			int overallScrollHeight = (debugLog.size() * textHeight) + height;
+			int overallScrollHeight = (debugLog.size() * debugLogTextHeight) + height;
 			for (int i = 0; i < debugLog.size(); i++) {
-				int top = (i*textHeight) + height - ((step * overallScrollHeight) / totalFrameAmount);
+				int top = (i*debugLogTextHeight) + height - ((step * overallScrollHeight) / totalFrameAmount);
 				int left = (11 * width) / 100;
-				if (top < -textHeight) {
+				if (top < -debugLogTextHeight) {
 					continue;
 				}
 				if (top > height) {
@@ -297,10 +339,10 @@ public class VideoGenerator {
 				}
 				int highlightArea = 2 * height / 3;
 				ColorRGB textCol = darkBlue;
-				if ((top > highlightArea) && (top <= highlightArea + textHeight)) {
+				if ((top > highlightArea) && (top <= highlightArea + debugLogTextHeight)) {
 					textCol = blue;
 				}
-				img.drawText(debugLog.get(i), top, null, null, left, "Neuropol", fontHeight, true, textCol);
+				img.drawText(debugLog.get(i), top, null, null, left + debugLogWobblings.get(top), "Neuropol", debugLogFontHeight, true, textCol);
 			}
 
 			// right waveform in the background
