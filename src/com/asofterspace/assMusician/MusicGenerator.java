@@ -808,7 +808,7 @@ public class MusicGenerator {
 		double bpm = largestBucketBpm / (BUCKET_ACCURACY_FACTOR*1000.0);
 
 		debugLog.add("  :: " + bucketAmount + " buckets used");
-		debugLog.add("  :: largest bucket containing " + largestBucketContentAmount + " values");
+		debugLog.add("  :: largest bucket contains " + largestBucketContentAmount + " values");
 		debugLog.add("  :: largest bucket value: " + largestBucketBpm);
 		debugLog.add("  :: bpm based on largest bucket: " + bpm);
 		int generatedBeatDistance = millisToChannelPos((long) ((1000*60) / bpm));
@@ -1320,10 +1320,13 @@ public class MusicGenerator {
 			return 0;
 		}
 
-		long baseJigglieness = divOr255(25500 * beats.get(beatNum).getJigglieness(), stats.getMaxJigglieness());
+		long baseJigglieness = 25500 * beats.get(beatNum).getJigglieness();
+		if (stats.getMaxJigglieness() != 0) {
+			baseJigglieness = baseJigglieness / stats.getMaxJigglieness();
+		}
 
 		// if we are much quieter than maximum, then we will use this factor to reduce the drumPatternIndicator...
-		double relativeLoudnessFactor = 2 * beats.get(beatNum).getLoudness() / stats.getMaxLoudness();
+		double relativeLoudnessFactor = 2.0 * beats.get(beatNum).getLoudness() / stats.getMaxLoudness();
 		if (relativeLoudnessFactor > 1.0) {
 			// ... however, we will NOT use the loudness to increase the drumPatternIndicator!
 			relativeLoudnessFactor = 1.0;

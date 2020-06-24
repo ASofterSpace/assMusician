@@ -492,8 +492,13 @@ public class GeometryMonster {
 
 				// let's try this - we reset the targets for all points on every beat...
 				// so that the geo monster is dancing :D
+				boolean keepSameQuarter = false;
 				if (curBeat != null) {
 					resetTarget = true;
+					// in case of just dancing with the beat, we want to keep the next target
+					// in the same quarter as the current target was, so that the geo monster
+					// can still expand to full(ish) size :)
+					keepSameQuarter = true;
 				}
 
 				if (resetTarget) {
@@ -508,6 +513,32 @@ public class GeometryMonster {
 					double posY = height / 2.0;
 					if (scaledH > 0) {
 						posY = minY + rand.nextInt(scaledH);
+					}
+
+					if (keepSameQuarter) {
+						Point<Double, Double> oldTarget = point.getTarget();
+						if (oldTarget != null) {
+							if (posX < width / 2.0) {
+								if (oldTarget.getX() > width / 2.0) {
+									posX = width - posX;
+								}
+							}
+							if (posX > width / 2.0) {
+								if (oldTarget.getX() < width / 2.0) {
+									posX = width - posX;
+								}
+							}
+							if (posY < height / 2.0) {
+								if (oldTarget.getY() > height / 2.0) {
+									posY = height - posY;
+								}
+							}
+							if (posY > height / 2.0) {
+								if (oldTarget.getY() < height / 2.0) {
+									posY = height - posY;
+								}
+							}
+						}
 					}
 
 					point.setTarget(new Point<Double, Double>(posX, posY));

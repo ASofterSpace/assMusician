@@ -173,6 +173,8 @@ public class VideoGenerator {
 		List<String> newDebugLog = new ArrayList<>();
 		for (String line : debugLog) {
 			line = line.toLowerCase();
+			line = line.replaceAll("setting ", "set ");
+			line = line.replaceAll("normalizing ", "normalize ");
 			line = line.replaceAll("ing ", " ");
 			line = line.replaceAll(" assmusician ", " assMusician ");
 			newDebugLog.add(line);
