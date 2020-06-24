@@ -199,7 +199,7 @@ public class VideoGenerator {
 				}
 				debugLogPerturbations = newDebugLogPerturbations;
 				// adjust debug log positions based on perturbations
-				for (int y = - debugLogTextHeight; y < height; y++) {
+				for (int y = - debugLogTextHeight; y <= height; y++) {
 					debugLogWobblings.put(y, 0);
 				}
 				for (Map.Entry<Integer, Integer> entry : debugLogPerturbations.entrySet()) {
