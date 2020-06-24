@@ -162,7 +162,7 @@ public class VideoGenerator {
 		}
 		Map<Integer, Integer> debugLogPerturbations = new HashMap<>();
 		int perturbationAmount = 16;
-		int perturbationWidth = width / 16;
+		int perturbationWidth = width / 64;
 		debugLog.add("  :: introducing " + perturbationAmount + " lateral log perturbations");
 		for (int i = 0; i < perturbationAmount; i++) {
 			debugLogPerturbations.put(rand.nextInt(height), rand.nextInt(perturbationWidth));
