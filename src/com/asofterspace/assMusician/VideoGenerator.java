@@ -165,7 +165,7 @@ public class VideoGenerator {
 		int perturbationWidth = width / 64;
 		debugLog.add("  :: introducing " + perturbationAmount + " lateral log perturbations");
 		for (int i = 0; i < perturbationAmount; i++) {
-			debugLogPerturbations.add(rand.nextInteger(height), rand.nextInteger(perturbationWidth));
+			debugLogPerturbations.put(rand.nextInt(height), rand.nextInt(perturbationWidth));
 		}
 
 		debugLog.add("{end log}");

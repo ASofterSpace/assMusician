@@ -490,9 +490,9 @@ public class GeometryMonster {
 					}
 				}
 
-				// let's try this - we reset the targets for all points on every fourth beat...
-				// so that the geo monster is dancing? humm... maybe? :D
-				if ((curBeat != null) && (beatNum % 4 == 0)) {
+				// let's try this - we reset the targets for all points on every beat...
+				// so that the geo monster is dancing :D
+				if (curBeat != null) {
 					resetTarget = true;
 				}
 
@@ -517,7 +517,7 @@ public class GeometryMonster {
 
 		// move all the points towards their targets
 		for (GeometryPoint point : points) {
-			point.moveToTarget((width * stepDifference) / 25);
+			point.moveToTarget((width * stepDifference) / 16);
 		}
 
 		// keep the shape guard activated as long as not all points have moved to their designated targets
