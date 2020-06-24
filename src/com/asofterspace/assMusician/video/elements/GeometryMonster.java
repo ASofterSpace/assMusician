@@ -464,9 +464,7 @@ public class GeometryMonster {
 						}
 						activateShapeGuard();
 						for (GeometryPoint point : points) {
-							if (robin % robinMax == 0) {
-								point.setTarget(robinTargets.get(robin));
-							}
+							point.setTarget(robinTargets.get(robin % robinMax));
 							robin++;
 						}
 						break;
