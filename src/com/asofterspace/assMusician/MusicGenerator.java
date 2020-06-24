@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 
 public class MusicGenerator {
@@ -841,9 +842,13 @@ public class MusicGenerator {
 		int uncertaintyFrontSetting = 1;
 		int uncertaintyBackSetting = 1;
 
+		Random rand = new Random();
+
 		for (Integer curGeneratedBeatDistance : generatedBeatDistances) {
-			debugLog.add("  :: uncertainty front setting: " + uncertaintyFrontSetting + " / 10");
-			debugLog.add("  :: uncertainty back setting: " + uncertaintyBackSetting + " / 10");
+			if (rand.nextInt(64) == 0) {
+				debugLog.add("  :: uncertainty front setting: " + uncertaintyFrontSetting + " / 10");
+				debugLog.add("  :: uncertainty back setting: " + uncertaintyBackSetting + " / 10");
+			}
 			debugLog.add("  :: generated beat distance: " + curGeneratedBeatDistance + " pos");
 
 			for (int i = absMaxPositions.size() / 2; i < absMaxPositions.size(); i++) {
