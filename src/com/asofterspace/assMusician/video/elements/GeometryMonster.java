@@ -154,10 +154,12 @@ public class GeometryMonster {
 		// while the shape guard is not on and we are not in the last 16th of the song...
 		if ((!shapeGuardOn) && (step < ((15 * totalFrameAmount) / 16))) {
 
-			// ... once every 32 seconds, do something funny - that is, take on a preconfigured shape...
-			if (rand.nextInt(MusicGenerator.frameRate * 32) == 0) {
-				int shape = rand.nextInt(10);
+			// ... once every 24 seconds, do something funny - that is, take on a preconfigured shape...
+			if (rand.nextInt(MusicGenerator.frameRate * 24) == 0) {
+				int shape = rand.nextInt(14);
 				int robin = 0;
+				double midX = width / 2.0;
+				double midY = height / 2.0;
 				double posX = width / 4.0;
 				double posY = height / 4.0;
 				double posX45 = (45 * width) / 100.0;
@@ -439,18 +441,33 @@ public class GeometryMonster {
 						break;
 
 					// circle
-					default:
+					case 9:
+					case 10:
 						if (points.size() < 2) {
 							break;
 						}
 						activateShapeGuard();
 						double radius = (0.8 * height) / 2;
-						double midX = width / 2.0;
-						double midY = height / 2.0;
 						for (int p = 0; p < points.size(); p++) {
 							GeometryPoint point = points.get(p);
 							double angle = (2.0 * Math.PI * p) / points.size();
 							point.setTarget(new Point<Double, Double>(midX + radius * Math.sin(angle), midY + radius * Math.cos(angle)));
+						}
+						break;
+
+					// random nonsense
+					default:
+						int robinMax = rand.nextInt(16);
+						List<Point<Double, Double>> robinTargets = new ArrayList<>();
+						for (int i = 0; i < robinMax; i++) {
+							robinTargets.add(new Point<Double, Double>(1.0*rand.nextInt(width), 1.0*rand.nextInt(height)));
+						}
+						activateShapeGuard();
+						for (GeometryPoint point : points) {
+							if (robin % robinMax == 0) {
+								point.setTarget(robinTargets.get(robin));
+							}
+							robin++;
 						}
 						break;
 				}
