@@ -1071,6 +1071,8 @@ public class MusicGenerator {
 		drumSoundTally.put(12, 0);
 		drumSoundTally.put(13, 0);
 
+		debugLog.add("  :: Iterate over Beats");
+
 		for (int b = 0; b < beats.size(); b++) {
 			Beat beat = beats.get(b);
 
@@ -1083,7 +1085,17 @@ public class MusicGenerator {
 				divOr255(255 * beat.getJigglieness(), stats.getMaxJigglieness())
 			));
 
-			double baseLoudness = (7.5 * beat.getLoudness()) / 25797;
+			// we want to make the drums as loud as the surrounding song...
+			long beatLoudness = beat.getLoudness();
+			// ... but not louder than 10k, so that we are not too loud for anyone to hear the singer
+			// in an audio file that was all the way loudness-amplified to the max
+			if (beatLoudness > 8000) {
+				beatLoudness = 8000 + ((beatLoudness - 8000) / 2);
+			}
+			if (beatLoudness > 10000) {
+				beatLoudness = 10000;
+			}
+			double baseLoudness = (7.5 * beatLoudness) / 25797;
 
 			long nextNextDrumPatternIndicator = getDrumPatternIndicatorFor(beats, b + 2, stats);
 			long nextDrumPatternIndicator = getDrumPatternIndicatorFor(beats, b + 1, stats);
@@ -1104,6 +1116,14 @@ public class MusicGenerator {
 			}
 			if ((prevPrevDrumPatternIndicator > drumPatternIndicator) && (nextDrumPatternIndicator > drumPatternIndicator)) {
 				drumPatternIndicator = Math.min(prevPrevDrumPatternIndicator, nextDrumPatternIndicator);
+			}
+
+			if (b % 8 == 0) {
+				debugLog.add("    ::: [" + b + "] drum pattern indicator: " + drumPatternIndicator);
+				debugLog.add("    ::: [" + b + "] beat length: " + beat.getLength());
+				debugLog.add("    ::: [" + b + "] beat loudness: " + beat.getLoudness());
+				debugLog.add("    ::: [" + b + "] beat jigglieness: " + beat.getJigglieness());
+				debugLog.add("    ::: [" + b + "] base loudness: " + baseLoudness);
 			}
 
 			drumSounds.add(new DrumSoundAtPos(curBeat, curBeatLen, baseLoudness, (int) drumPatternIndicator));
