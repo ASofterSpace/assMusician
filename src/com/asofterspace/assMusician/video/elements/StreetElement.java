@@ -47,11 +47,13 @@ public class StreetElement {
 		}
 
 		if (important) {
+			// full width, light color
 			color = ColorRGB.intermix(new ColorRGB(255, 255, 255), color, 0.5);
+			img.drawLine((width/2)-(int)((movByPerc*width)/4), (height/2) + (int)movBy, (width/2)+(int)((movByPerc*width)/4), (height/2) + (int)movBy, color);
 		} else {
+			// half width, dark color
 			color = ColorRGB.intermix(new ColorRGB(0, 0, 0), color, 0.5);
+			img.drawLine((width/2)-(int)((movByPerc*width)/8), (height/2) + (int)movBy, (width/2)+(int)((movByPerc*width)/8), (height/2) + (int)movBy, color);
 		}
-
-		img.drawLine((width/2)-(int)((movByPerc*width)/4), (height/2) + (int)movBy, (width/2)+(int)((movByPerc*width)/4), (height/2) + (int)movBy, color);
 	}
 }
