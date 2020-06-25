@@ -85,6 +85,8 @@ public class VideoGenerator {
 
 		GeometryMonster geometryMonster = new GeometryMonster(width, height);
 		debugLog.add("  :: 1 geometry monster");
+		int geoMaxSecondsBetweenShapes = 32;
+		debugLog.add("    ::: max time between special shapes: " + (1000*geoMaxSecondsBetweenShapes) + " ms");
 
 		// a map from frame number to beat detected there
 		Map<Integer, Beat> beatMap = new HashMap<>();
@@ -175,6 +177,7 @@ public class VideoGenerator {
 			line = line.toLowerCase();
 			line = line.replaceAll("setting ", "set ");
 			line = line.replaceAll("normalizing ", "normalize ");
+			line = line.replaceAll("generating ", "generate ");
 			line = line.replaceAll("ing ", " ");
 			line = line.replaceAll(" assmusician ", " assMusician ");
 			newDebugLog.add(line);
@@ -443,7 +446,9 @@ public class VideoGenerator {
 				img.draw(curText, (15 * width) / 1920, (355 * height) / 1080);
 			}
 
-			geometryMonster.drawOnImage(img, width, height, step, totalFrameAmount, currentLoudnessScaled, blue, geoBlue, firstChanged, curChanged, encounteredChanged, curBeat);
+			// geo monster
+			geometryMonster.drawOnImage(img, width, height, step, totalFrameAmount, currentLoudnessScaled, blue, geoBlue,
+				firstChanged, curChanged, encounteredChanged, curBeat, geoMaxSecondsBetweenShapes);
 
 			img.setLineWidth(1);
 

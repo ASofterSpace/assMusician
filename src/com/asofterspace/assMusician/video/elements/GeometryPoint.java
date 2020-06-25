@@ -10,13 +10,25 @@ public class GeometryPoint extends Point<Double, Double> {
 
 	private Point<Double, Double> target;
 
+	private int id;
+
+	private static int idCounter = 0;
+
 
 	public GeometryPoint(Double x, Double y) {
 		super(x, y);
+
+		id = idCounter;
+
+		idCounter++;
 	}
 
 	public GeometryPoint(GeometryPoint other) {
 		super(other.getX(), other.getY());
+
+		id = idCounter;
+
+		idCounter++;
 	}
 
 	public Point<Double, Double> getTarget() {
@@ -81,6 +93,25 @@ public class GeometryPoint extends Point<Double, Double> {
 		if (targetDone >= 2) {
 			target = null;
 		}
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (other instanceof GeometryPoint) {
+			GeometryPoint otherGeometryPoint = (GeometryPoint) other;
+			if (this.id == otherGeometryPoint.id) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return this.id;
 	}
 
 }

@@ -12,8 +12,10 @@ public class GeometryLine extends Pair<Integer, Integer> {
 	private ColorRGB color;
 
 
-	public GeometryLine(Integer left, Integer right) {
+	public GeometryLine(Integer left, Integer right, ColorRGB color) {
 		super(left, right);
+
+		setColor(color);
 	}
 
 	public ColorRGB getColor() {

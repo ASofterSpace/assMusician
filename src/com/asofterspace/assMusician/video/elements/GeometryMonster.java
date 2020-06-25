@@ -8,6 +8,7 @@ import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.music.Beat;
 import com.asofterspace.toolbox.utils.Line;
+import com.asofterspace.toolbox.utils.Pair;
 import com.asofterspace.toolbox.utils.Point;
 
 import java.awt.Color;
@@ -24,6 +25,7 @@ public class GeometryMonster {
 	private boolean shapeGuardOn = false;
 	private int shapeGuardStillOnFor = 0;
 	private int beatNum;
+	private int lastShapeGuardStop;
 
 
 	public GeometryMonster(int width, int height) {
@@ -39,6 +41,8 @@ public class GeometryMonster {
 		rand = new Random();
 
 		beatNum = 0;
+
+		lastShapeGuardStop = 0;
 	}
 
 	// TODO :: maybe give different nodes (or edges?) different colors - maybe just slightly different,
@@ -65,15 +69,14 @@ public class GeometryMonster {
 	// copyright in taking their images as input for the process
 	public void drawOnImage(Image img, int width, int height, int step, int totalFrameAmount, double currentLoudnessScaled,
 		ColorRGB color, ColorRGB baseColor, boolean firstChanged, boolean curChanged, boolean encounteredChanged,
-		Beat curBeat) {
+		Beat curBeat, int maxSecondsBetweenShapes) {
 
 		if (curBeat != null) {
 			beatNum++;
 		}
 
 		if (lines.size() < 1) {
-			GeometryLine newLine = new GeometryLine(0, 1);
-			newLine.setColor(baseColor);
+			GeometryLine newLine = new GeometryLine(0, 1, baseColor);
 			lines.add(newLine);
 		}
 
@@ -95,6 +98,98 @@ public class GeometryMonster {
 				}
 			}
 			line.setColor(newColor);
+		}
+
+		// if we have more than two points and the shape guard is not on
+		// (during which time many points overlap anyway)...
+		if ((points.size() > 2) && !shapeGuardOn) {
+
+			// ... and if a bit of randomness is happening...
+			int pointMergeRand = 8;
+			if (step % pointMergeRand == 0) {
+
+				// ... then get a list of all points that get drawn on the same pixel
+				List<Pair<Integer, Integer>> samePixPoints = new ArrayList<>();
+				for (int i = 0; i < points.size(); i++) {
+					for (int j = 0; j < i; j++) {
+						if (((int) (double) points.get(i).getX() == (int) (double) points.get(j).getX()) &&
+							((int) (double) points.get(i).getY() == (int) (double) points.get(j).getY())) {
+							samePixPoints.add(new Pair<Integer, Integer>(i, j));
+						}
+					}
+				}
+
+				// and merge one of these pairs, also merging their lines
+				if (samePixPoints.size() > 0) {
+					Pair<Integer, Integer> mergePair = samePixPoints.get(rand.nextInt(samePixPoints.size()));
+					int removePointIndex = mergePair.getLeft();
+					int keepPointIndex = mergePair.getRight();
+
+					// move lines from the merge point to the keep point
+					List<GeometryLine> newLines = new ArrayList<>();
+					for (GeometryLine line : lines) {
+						int left = line.getLeft();
+						int right = line.getRight();
+						if (left == removePointIndex) {
+							left = keepPointIndex;
+						}
+						if (right == removePointIndex) {
+							right = keepPointIndex;
+						}
+						newLines.add(new GeometryLine(left, right, line.getColor()));
+					}
+					lines = newLines;
+
+					// adjust indexing around the removed point index
+					newLines = new ArrayList<>();
+					for (GeometryLine line : lines) {
+						int left = line.getLeft();
+						int right = line.getRight();
+						if (left > removePointIndex) {
+							left--;
+						}
+						if (right > removePointIndex) {
+							right--;
+						}
+						newLines.add(new GeometryLine(left, right, line.getColor()));
+					}
+					lines = newLines;
+
+					// remove duplicate lines
+					newLines = new ArrayList<>();
+					for (GeometryLine line : lines) {
+						int left = line.getLeft();
+						int right = line.getRight();
+						boolean keepThisLine = true;
+						for (GeometryLine newLine : newLines) {
+							int newLeft = newLine.getLeft();
+							int newRight = newLine.getRight();
+							if ((left == newLeft) && (right == newRight)) {
+								keepThisLine = false;
+								break;
+							}
+						}
+						// also remove lines going from a point to itself, which might happen if we merge
+						// a point with a different point that has a line going to it
+						if (left == right) {
+							keepThisLine = false;
+						}
+						if (keepThisLine) {
+							newLines.add(new GeometryLine(left, right, line.getColor()));
+						}
+					}
+					lines = newLines;
+
+					// actually remove the remove point
+					List<GeometryPoint> newPoints = new ArrayList<>();
+					for (int i = 0; i < points.size(); i++) {
+						if (i != removePointIndex) {
+							newPoints.add(points.get(i));
+						}
+					}
+					points = newPoints;
+				}
+			}
 		}
 
 		// after we encountered the first drum sound that we added...
@@ -134,16 +229,14 @@ public class GeometryMonster {
 					GeometryLine duplicatedLine = affectedLines.get(rand.nextInt(affectedLines.size()));
 					GeometryLine newLine1 = null;
 					if ((int) duplicatedLine.getLeft() == splitPointIndex) {
-						newLine1 = new GeometryLine(duplicatedLine.getRight(), newPointIndex);
+						newLine1 = new GeometryLine(duplicatedLine.getRight(), newPointIndex, duplicatedLine.getColor());
 					} else {
-						newLine1 = new GeometryLine(duplicatedLine.getLeft(), newPointIndex);
+						newLine1 = new GeometryLine(duplicatedLine.getLeft(), newPointIndex, duplicatedLine.getColor());
 					}
-					newLine1.setColor(duplicatedLine.getColor());
 					lines.add(newLine1);
 
 					// add a line between the old point and the new point
-					GeometryLine newLine2 = new GeometryLine(splitPointIndex, newPointIndex);
-					newLine2.setColor(duplicatedLine.getColor());
+					GeometryLine newLine2 = new GeometryLine(splitPointIndex, newPointIndex, duplicatedLine.getColor());
 					lines.add(newLine2);
 				}
 			}
@@ -154,9 +247,18 @@ public class GeometryMonster {
 		// while the shape guard is not on and we are not in the last 16th of the song...
 		if ((!shapeGuardOn) && (step < ((15 * totalFrameAmount) / 16))) {
 
-			// ... once every 24 seconds, do something funny - that is, take on a preconfigured shape...
-			if (rand.nextInt(MusicGenerator.frameRate * 24) == 0) {
+			// ... once every X seconds, do something funny - that is, take on a preconfigured shape...
+			// (we have X*frameRate as basis, but subtract the time since the last shape guard start to make it
+			// more likely for a funny shape to happen if the last funny shape is already a while ago)
+			int shapeRandMax = (MusicGenerator.frameRate * maxSecondsBetweenShapes) - (step - lastShapeGuardStop);
+			int shapeRand = 0;
+			if (shapeRandMax > 1) {
+				shapeRand = rand.nextInt(shapeRandMax);
+			}
+			System.out.println("Geo monster frame " + step + " out of " + totalFrameAmount + " shape rand: " + shapeRand + " (frames since last shape guard: " + (step - lastShapeGuardStop) + ")");
+			if (shapeRand == 0) {
 				int shape = rand.nextInt(14);
+				System.out.println("Geo monster going into shape " + shape + "!");
 				int robin = 0;
 				double midX = width / 2.0;
 				double midY = height / 2.0;
@@ -460,7 +562,10 @@ public class GeometryMonster {
 						int robinMax = 4 + rand.nextInt(8);
 						List<Point<Double, Double>> robinTargets = new ArrayList<>();
 						for (int i = 0; i < robinMax; i++) {
-							robinTargets.add(new Point<Double, Double>(1.0*rand.nextInt(width), 1.0*rand.nextInt(height)));
+							robinTargets.add(new Point<Double, Double>(
+								(width/10)+(1.0*rand.nextInt((8*width)/10)),
+								(height/10)+(1.0*rand.nextInt((8*height)/10))
+							));
 						}
 						activateShapeGuard();
 						for (GeometryPoint point : points) {
@@ -577,6 +682,7 @@ public class GeometryMonster {
 			shapeGuardStillOnFor--;
 			if (shapeGuardStillOnFor < 0) {
 				shapeGuardOn = false;
+				lastShapeGuardStop = step;
 			}
 		}
 

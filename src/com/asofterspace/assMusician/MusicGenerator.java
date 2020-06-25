@@ -1168,6 +1168,11 @@ public class MusicGenerator {
 			pattern1startsAbove = allDrumSounds.get((allDrumSounds.size() * 40) / 100).getDrumPatternIndicator();
 		}
 
+		// ensure that at least 20% of all drum sounds are below pattern 1 (so pattern 1 starts at 20% or higher)
+		if (allDrumSounds.get((allDrumSounds.size()) / 5).getDrumPatternIndicator() > pattern1startsAbove) {
+			pattern1startsAbove = allDrumSounds.get((allDrumSounds.size()) / 5).getDrumPatternIndicator();
+		}
+
 		// ensure that at least 10% of all drum sounds are above pattern 2 (so pattern 2 starts at 90% or lower)
 		if (allDrumSounds.get((allDrumSounds.size() * 90) / 100).getDrumPatternIndicator() < pattern2startsAbove) {
 			pattern2startsAbove = allDrumSounds.get((allDrumSounds.size() * 90) / 100).getDrumPatternIndicator();
@@ -1266,12 +1271,12 @@ public class MusicGenerator {
 			drumSoundTally.put(curSound.getBeatPattern(), drumSoundTally.get(curSound.getBeatPattern()) + 1);
 		}
 
-		debugLog.add("    ::: determined " + drumSoundTally.get(0) + " beats without drums");
-		debugLog.add("    ::: determined " + drumSoundTally.get(1) + " beats with drum pattern 1");
-		debugLog.add("    ::: determined " + drumSoundTally.get(2) + " beats with drum pattern 2");
-		debugLog.add("    ::: determined " + drumSoundTally.get(3) + " beats with drum pattern 3");
-		debugLog.add("    ::: determined " + drumSoundTally.get(12) + " beats with drum pattern 12");
-		debugLog.add("    ::: determined " + drumSoundTally.get(13) + " beats with drum pattern 13");
+		debugLog.add("    ::: determined " + drumSoundTally.get(0) + " / " + drumSounds.size() + " beats without drums");
+		debugLog.add("    ::: determined " + drumSoundTally.get(1) + " / " + drumSounds.size() + " beats with drum pattern 1");
+		debugLog.add("    ::: determined " + drumSoundTally.get(2) + " / " + drumSounds.size() + " beats with drum pattern 2");
+		debugLog.add("    ::: determined " + drumSoundTally.get(3) + " / " + drumSounds.size() + " beats with drum pattern 3");
+		debugLog.add("    ::: determined " + drumSoundTally.get(12) + " / " + drumSounds.size() + " beats with drum pattern 12");
+		debugLog.add("    ::: determined " + drumSoundTally.get(13) + " / " + drumSounds.size() + " beats with drum pattern 13");
 
 		debugLog.add("  :: adding actual drum sounds to the audio tracks");
 
