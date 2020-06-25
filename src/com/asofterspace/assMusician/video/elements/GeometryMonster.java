@@ -457,7 +457,7 @@ public class GeometryMonster {
 
 					// random nonsense
 					default:
-						int robinMax = rand.nextInt(16);
+						int robinMax = 4 + rand.nextInt(8);
 						List<Point<Double, Double>> robinTargets = new ArrayList<>();
 						for (int i = 0; i < robinMax; i++) {
 							robinTargets.add(new Point<Double, Double>(1.0*rand.nextInt(width), 1.0*rand.nextInt(height)));
