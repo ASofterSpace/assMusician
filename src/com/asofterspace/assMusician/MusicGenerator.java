@@ -23,6 +23,7 @@ import com.asofterspace.toolbox.music.SoundData;
 import com.asofterspace.toolbox.music.WavFile;
 import com.asofterspace.toolbox.utils.CallbackWithString;
 import com.asofterspace.toolbox.utils.DateUtils;
+import com.asofterspace.toolbox.utils.MathUtils;
 import com.asofterspace.toolbox.Utils;
 
 import java.util.ArrayList;
@@ -1069,12 +1070,6 @@ public class MusicGenerator {
 		List<DrumSoundAtPos> drumSounds = new ArrayList<>();
 
 		Map<Integer, Integer> drumSoundTally = new HashMap<>();
-		drumSoundTally.put(0, 0);
-		drumSoundTally.put(1, 0);
-		drumSoundTally.put(2, 0);
-		drumSoundTally.put(3, 0);
-		drumSoundTally.put(12, 0);
-		drumSoundTally.put(13, 0);
 
 		debugLog.add("  :: Iterate over Beats");
 
@@ -1139,17 +1134,21 @@ public class MusicGenerator {
 		// 16900 .. loud singing with some instruments
 		// 20100 .. full blast! :D
 
-		int pattern3startsAbove = 19600;
-		int pattern2startsAbove = 12800;
-		int pattern1startsAbove = 9600;
+		int pattern5startsAbove = 19600;
+		int pattern4startsAbove = 12800;
+		int pattern3startsAbove = 11200;
+		int pattern2startsAbove = 9600;
+		int pattern1startsAbove = 8200;
 
 		// first of all, we want to prevent the whole song from being played drumless, so we will lower the
 		// level at which drums are introduced if necessary
 
-		debugLog.add("  :: normalizing beat pattern indicators up across entire song");
+		debugLog.add("  :: pre-normalizing beat pattern indicator 1");
 		debugLog.add("    ::: pattern 1 originally above " + pattern1startsAbove);
 		debugLog.add("    ::: pattern 2 originally above " + pattern2startsAbove);
 		debugLog.add("    ::: pattern 3 originally above " + pattern3startsAbove);
+		debugLog.add("    ::: pattern 4 originally above " + pattern4startsAbove);
+		debugLog.add("    ::: pattern 5 originally above " + pattern5startsAbove);
 
 		List<DrumSoundAtPos> allDrumSounds = new ArrayList<>();
 		for (DrumSoundAtPos drumSound : drumSounds) {
@@ -1163,6 +1162,10 @@ public class MusicGenerator {
 			}
 		});
 
+		// ensure that:
+		// pattern 1 starts between 20% and 60%
+		debugLog.add("    ::: pre-normalizing #1 to start between 20% and 60% of all beats");
+
 		// ensure that at least 60% of all drum sounds are above pattern 1 (so pattern 1 starts at 40% or lower)
 		if (allDrumSounds.get((allDrumSounds.size() * 40) / 100).getDrumPatternIndicator() < pattern1startsAbove) {
 			pattern1startsAbove = allDrumSounds.get((allDrumSounds.size() * 40) / 100).getDrumPatternIndicator();
@@ -1173,22 +1176,10 @@ public class MusicGenerator {
 			pattern1startsAbove = allDrumSounds.get((allDrumSounds.size()) / 5).getDrumPatternIndicator();
 		}
 
-		// ensure that at least 10% of all drum sounds are above pattern 2 (so pattern 2 starts at 90% or lower)
-		if (allDrumSounds.get((allDrumSounds.size() * 90) / 100).getDrumPatternIndicator() < pattern2startsAbove) {
-			pattern2startsAbove = allDrumSounds.get((allDrumSounds.size() * 90) / 100).getDrumPatternIndicator();
-		}
-
-		debugLog.add("    ::: pattern 1 now above " + pattern1startsAbove);
-		debugLog.add("    ::: pattern 2 now above " + pattern2startsAbove);
-		debugLog.add("    ::: pattern 3 now above " + pattern3startsAbove);
-
 		// however, we want to prevent the whole song from being played as constantly full blast drums...
 		// so instead, let's adjust the levels down a bit if we notice that too many drum sounds go so far up!
 
-		debugLog.add("  :: normalizing beat pattern indicators down across entire song");
-		debugLog.add("    ::: pattern 1 originally above " + pattern1startsAbove);
-		debugLog.add("    ::: pattern 2 originally above " + pattern2startsAbove);
-		debugLog.add("    ::: pattern 3 originally above " + pattern3startsAbove);
+		debugLog.add("  :: normalizing other beat pattern indicators");
 
 		List<DrumSoundAtPos> actuallyPlayedDrumSounds = new ArrayList<>();
 		for (DrumSoundAtPos drumSound : drumSounds) {
@@ -1204,19 +1195,60 @@ public class MusicGenerator {
 			}
 		});
 
-		// ensure that at least 80% of all drum sounds are below pattern 3 (so pattern 3 starts at 80% or higher)
-		if (actuallyPlayedDrumSounds.get((4 * actuallyPlayedDrumSounds.size()) / 5).getDrumPatternIndicator() > pattern3startsAbove) {
-			pattern3startsAbove = actuallyPlayedDrumSounds.get((4 * actuallyPlayedDrumSounds.size()) / 5).getDrumPatternIndicator();
+		// ensure that:
+		// pattern 2 starts between 5% and 15%
+		// pattern 3 starts between 30% and 80%
+		// pattern 4 starts between 50% and 90%
+		// pattern 5 starts between 80% and 100% (if it is at 100%, it will be completely missing from a quiet song)
+
+		debugLog.add("    ::: normalizing #2 to start between 5% and 15% of beats with drums");
+
+		// ensure that at least 5% of all drum sounds are below pattern 2 (so pattern 2 starts at 5% or higher)
+		if (actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 5) / 100).getDrumPatternIndicator() > pattern2startsAbove) {
+			pattern2startsAbove = actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 5) / 100).getDrumPatternIndicator();
 		}
 
-		// ensure that at least 50% of all drum sounds are below pattern 2 (so pattern 2 starts at 50% or higher)
-		if (actuallyPlayedDrumSounds.get(actuallyPlayedDrumSounds.size() / 2).getDrumPatternIndicator() > pattern2startsAbove) {
-			pattern2startsAbove = actuallyPlayedDrumSounds.get(actuallyPlayedDrumSounds.size() / 2).getDrumPatternIndicator();
+		// ensure that at least 15% of all drum sounds are above pattern 2 (so pattern 2 starts at 15% or lower)
+		if (actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 15) / 100).getDrumPatternIndicator() < pattern2startsAbove) {
+			pattern2startsAbove = actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 15) / 100).getDrumPatternIndicator();
+		}
+
+		debugLog.add("    ::: normalizing #3 to start between 30% and 80% of beats with drums");
+
+		// ensure that at least 30% of all drum sounds are below pattern 3 (so pattern 3 starts at 30% or higher)
+		if (actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 30) / 100).getDrumPatternIndicator() > pattern3startsAbove) {
+			pattern3startsAbove = actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 30) / 100).getDrumPatternIndicator();
+		}
+
+		// ensure that at least 20% of all drum sounds are above pattern 3 (so pattern 3 starts at 80% or lower)
+		if (actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 80) / 100).getDrumPatternIndicator() < pattern3startsAbove) {
+			pattern3startsAbove = actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 80) / 100).getDrumPatternIndicator();
+		}
+
+		debugLog.add("    ::: normalizing #4 to start between 40% and 90% of beats with drums");
+
+		// ensure that at least 40% of all drum sounds are below pattern 4 (so pattern 4 starts at 40% or higher)
+		if (actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 40) / 100).getDrumPatternIndicator() > pattern4startsAbove) {
+			pattern4startsAbove = actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 40) / 100).getDrumPatternIndicator();
+		}
+
+		// ensure that at least 10% of all drum sounds are above pattern 4 (so pattern 4 starts at 90% or lower)
+		if (actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 90) / 100).getDrumPatternIndicator() < pattern4startsAbove) {
+			pattern4startsAbove = actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 90) / 100).getDrumPatternIndicator();
+		}
+
+		debugLog.add("    ::: normalizing #5 to start above 80% of beats with drums");
+
+		// ensure that at least 80% of all drum sounds are below pattern 5 (so pattern 5 starts at 80% or higher)
+		if (actuallyPlayedDrumSounds.get((4 * actuallyPlayedDrumSounds.size()) / 5).getDrumPatternIndicator() > pattern5startsAbove) {
+			pattern5startsAbove = actuallyPlayedDrumSounds.get((4 * actuallyPlayedDrumSounds.size()) / 5).getDrumPatternIndicator();
 		}
 
 		debugLog.add("    ::: pattern 1 now above " + pattern1startsAbove);
 		debugLog.add("    ::: pattern 2 now above " + pattern2startsAbove);
 		debugLog.add("    ::: pattern 3 now above " + pattern3startsAbove);
+		debugLog.add("    ::: pattern 4 now above " + pattern4startsAbove);
+		debugLog.add("    ::: pattern 5 now above " + pattern5startsAbove);
 
 		for (int i = 0; i < drumSounds.size(); i++) {
 
@@ -1229,7 +1261,11 @@ public class MusicGenerator {
 
 			DrumSoundAtPos curSound = drumSounds.get(i);
 
-			if (curSound.getDrumPatternIndicator() > pattern3startsAbove) {
+			if (curSound.getDrumPatternIndicator() > pattern5startsAbove) {
+				curSound.setBeatPattern(5);
+			} else if (curSound.getDrumPatternIndicator() > pattern4startsAbove) {
+				curSound.setBeatPattern(4);
+			} else if (curSound.getDrumPatternIndicator() > pattern3startsAbove) {
 				curSound.setBeatPattern(3);
 			} else if (curSound.getDrumPatternIndicator() > pattern2startsAbove) {
 				curSound.setBeatPattern(2);
@@ -1251,32 +1287,34 @@ public class MusicGenerator {
 			}
 
 			// if we are coming from a lot of drum-ness...
-			if (curSound.getBeatPattern() == 3) {
+			if (curSound.getBeatPattern() == 5) {
 				// ... and going over to less drum-ness...
 				if ((nextSound == null) || (nextSound.getBeatPattern() == 0)) {
 					// ... then make a nice big bang in the end!
-					curSound.setBeatPattern(13);
+					curSound.setBeatPattern(15);
 				}
 			}
 
 			// if we are coming from a lot of drum-ness...
-			if (curSound.getBeatPattern() == 2) {
+			if (curSound.getBeatPattern() == 4) {
 				// ... and going over to less drum-ness...
 				if ((nextSound == null) || (nextSound.getBeatPattern() == 0)) {
 					// ... then make a nice big bang in the end!
-					curSound.setBeatPattern(12);
+					curSound.setBeatPattern(14);
 				}
 			}
 
-			drumSoundTally.put(curSound.getBeatPattern(), drumSoundTally.get(curSound.getBeatPattern()) + 1);
+			drumSoundTally.put(curSound.getBeatPattern(), MathUtils.zeroIfNull(drumSoundTally.get(curSound.getBeatPattern())) + 1);
 		}
 
-		debugLog.add("    ::: determined " + drumSoundTally.get(0) + " / " + drumSounds.size() + " beats without drums");
-		debugLog.add("    ::: determined " + drumSoundTally.get(1) + " / " + drumSounds.size() + " beats with drum pattern 1");
-		debugLog.add("    ::: determined " + drumSoundTally.get(2) + " / " + drumSounds.size() + " beats with drum pattern 2");
-		debugLog.add("    ::: determined " + drumSoundTally.get(3) + " / " + drumSounds.size() + " beats with drum pattern 3");
-		debugLog.add("    ::: determined " + drumSoundTally.get(12) + " / " + drumSounds.size() + " beats with drum pattern 12");
-		debugLog.add("    ::: determined " + drumSoundTally.get(13) + " / " + drumSounds.size() + " beats with drum pattern 13");
+		debugLog.add("    ::: determined " + MathUtils.zeroIfNull(drumSoundTally.get(0)) + " / " + drumSounds.size() + " beats without drums");
+		debugLog.add("    ::: determined " + MathUtils.zeroIfNull(drumSoundTally.get(1)) + " / " + drumSounds.size() + " beats with drum pattern 1");
+		debugLog.add("    ::: determined " + MathUtils.zeroIfNull(drumSoundTally.get(2)) + " / " + drumSounds.size() + " beats with drum pattern 2");
+		debugLog.add("    ::: determined " + MathUtils.zeroIfNull(drumSoundTally.get(3)) + " / " + drumSounds.size() + " beats with drum pattern 3");
+		debugLog.add("    ::: determined " + MathUtils.zeroIfNull(drumSoundTally.get(4)) + " / " + drumSounds.size() + " beats with drum pattern 4");
+		debugLog.add("    ::: determined " + MathUtils.zeroIfNull(drumSoundTally.get(5)) + " / " + drumSounds.size() + " beats with drum pattern 5");
+		debugLog.add("    ::: determined " + MathUtils.zeroIfNull(drumSoundTally.get(14)) + " / " + drumSounds.size() + " beats with drum pattern 14");
+		debugLog.add("    ::: determined " + MathUtils.zeroIfNull(drumSoundTally.get(15)) + " / " + drumSounds.size() + " beats with drum pattern 15");
 
 		debugLog.add("  :: adding actual drum sounds to the audio tracks");
 
@@ -1303,18 +1341,19 @@ public class MusicGenerator {
 					addFadedWavMono(WAV_SMALL_F_TIMPANI, curBeat, 0.8*baseLoudness);
 					break;
 				*/
-				case 13:
+				case 15:
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2.5*baseLoudness);
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
 					addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), 1.25*baseLoudness);
 					addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
 					addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), 1.5*baseLoudness);
 					break;
-				case 12:
+				case 14:
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
 					break;
-				case 3:
+				case 5:
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat, baseLoudness);
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
 					addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
@@ -1323,16 +1362,24 @@ public class MusicGenerator {
 					addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((5 * curBeatLen) / 8), baseLoudness);
 					addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((6 * curBeatLen) / 8), baseLoudness);
 					break;
-				case 2:
+				case 4:
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat, 1.25*baseLoudness);
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat + (curBeatLen / 8), baseLoudness);
 					addFadedWavMono(WAV_TOM2_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
 					addFadedWavMono(WAV_TOM3_DRUM, curBeat + ((3 * curBeatLen) / 8), baseLoudness);
 					addFadedWavMono(WAV_TOM4_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
 					break;
-				case 1:
+				case 3:
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat, 1.5*baseLoudness);
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((2 * curBeatLen) / 8), baseLoudness);
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
+					break;
+				case 2:
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
 					addFadedWavMono(WAV_TOM1_DRUM, curBeat + ((4 * curBeatLen) / 8), baseLoudness);
+					break;
+				case 1:
+					addFadedWavMono(WAV_TOM1_DRUM, curBeat, 2*baseLoudness);
 					break;
 			}
 		}

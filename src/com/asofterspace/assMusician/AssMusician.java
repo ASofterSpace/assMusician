@@ -14,8 +14,8 @@ import java.awt.GraphicsEnvironment;
 public class AssMusician {
 
 	public final static String PROGRAM_TITLE = "assMusician";
-	public final static String VERSION_NUMBER = "0.0.2.4(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "27. May 2020 - 25. June 2020";
+	public final static String VERSION_NUMBER = "0.0.2.5(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "27. May 2020 - 26. June 2020";
 
 	/*
 	Kalli asked for some details, so here they are:
