@@ -12,7 +12,7 @@ import java.util.List;
 
 public class FourierWorker implements Runnable {
 
-	private boolean keepRunning = true;
+	private boolean keepRunning;
 
 	private SoundData soundData;
 
@@ -34,6 +34,8 @@ public class FourierWorker implements Runnable {
 		this.results = new ArrayList<>();
 
 		this.fourierMax = 0;
+
+		this.keepRunning = true;
 
 		this.currentlyWorking = false;
 	}

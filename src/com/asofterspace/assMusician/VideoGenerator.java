@@ -8,6 +8,7 @@ import com.asofterspace.assMusician.video.elements.GeometryMonster;
 import com.asofterspace.assMusician.video.elements.Star;
 import com.asofterspace.assMusician.video.elements.StreetElement;
 import com.asofterspace.assMusician.video.elements.Waveform;
+import com.asofterspace.assMusician.workers.ImgSaveWorker;
 import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.DefaultImageFile;
 import com.asofterspace.toolbox.images.GraphImage;
@@ -168,6 +169,19 @@ public class VideoGenerator {
 		debugLog.add("  :: introducing " + perturbationAmount + " lateral log perturbations");
 		for (int i = 0; i < perturbationAmount; i++) {
 			debugLogPerturbations.put(rand.nextInt(height), rand.nextInt(perturbationWidth));
+		}
+
+		debugLog.add("  :: starting " + MusicGenerator.workerThreadAmount + " workers");
+
+		List<ImgSaveWorker> imgSaveWorkers = new ArrayList<>();
+
+		for (int w = 0; w < MusicGenerator.workerThreadAmount; w++) {
+			System.out.println("Starting Img Save worker #" + w + "...");
+			debugLog.add("    ::: starting worker #" + w);
+			ImgSaveWorker worker = new ImgSaveWorker();
+			imgSaveWorkers.add(worker);
+			Thread workerThread = new Thread(worker);
+			workerThread.start();
 		}
 
 		debugLog.add("{end log}");
@@ -504,15 +518,42 @@ public class VideoGenerator {
 				img.drawLine((  x + 3*newX) / 4, 4*y  , width+1, 4*y  , blue);
 			}
 
-			DefaultImageFile curImgFile = new DefaultImageFile(
-				workDir.getAbsoluteDirname() + "/pic" + StrUtils.leftPad0(step, 5) + ".png"
-			);
 			// fade in from black
 			if (step < totalFrameAmount / 100) {
 				img.intermix(trueBlack, (float) (step / (totalFrameAmount / 100.0)));
 			}
-			curImgFile.assign(img);
-			curImgFile.save();
+
+			workerFindLoop:
+			while (true) {
+				for (int w = 0; w < imgSaveWorkers.size(); w++) {
+					ImgSaveWorker worker = imgSaveWorkers.get(w);
+					if (!worker.isBusy()) {
+						worker.workOn(img, workDir.getAbsoluteDirname() + "/pic" + StrUtils.leftPad0(step, 5) + ".png");
+						break workerFindLoop;
+					}
+				}
+				Utils.sleep(1000);
+			}
+		}
+
+		System.out.println("Waiting until all workers are done...");
+
+		boolean allDone = false;
+		while (!allDone) {
+			allDone = true;
+			for (ImgSaveWorker worker : imgSaveWorkers) {
+				if (worker.isBusy()) {
+					allDone = false;
+					break;
+				}
+			}
+			Utils.sleep(1000);
+		}
+
+		System.out.println("Stopping all workers...");
+
+		for (ImgSaveWorker worker : imgSaveWorkers) {
+			worker.stop();
 		}
 
 		DefaultImageFile doneWaveFile = new DefaultImageFile(workDir, "waveform_upon_video_done.png");

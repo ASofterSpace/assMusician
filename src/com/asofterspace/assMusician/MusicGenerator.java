@@ -376,7 +376,7 @@ public class MusicGenerator {
 				fourierNum++;
 			}
 
-			debugLog.add("  :: starting the workers");
+			debugLog.add("  :: starting " + workerThreadAmount + " workers");
 
 			List<FourierWorker> fourierWorkers = new ArrayList<>();
 
