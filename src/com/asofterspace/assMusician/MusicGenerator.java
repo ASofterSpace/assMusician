@@ -7,6 +7,9 @@ import com.asofterspace.assMusician.music.AbsMaxPos;
 import com.asofterspace.assMusician.music.BeatGenerator;
 import com.asofterspace.assMusician.music.DrumSoundAtPos;
 import com.asofterspace.assMusician.video.elements.Waveform;
+import com.asofterspace.assMusician.workers.FourierInstruction;
+import com.asofterspace.assMusician.workers.FourierResult;
+import com.asofterspace.assMusician.workers.FourierWorker;
 import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.DefaultImageFile;
 import com.asofterspace.toolbox.images.GraphDataPoint;
@@ -84,7 +87,7 @@ public class MusicGenerator {
 	// we interweave 2 Fouriers, meaning that instead of doing one, then the next,
 	// we do one, then one from half until half of next, then next, then one from half of next until half of next next
 	// TODO :: actually do this!
-	public final static int interwovenFouriers = 2;
+	// public final static int interwovenFouriers = 2;
 	/**/
 	/*
 	public final static int width = 640;
@@ -94,6 +97,7 @@ public class MusicGenerator {
 	private final static boolean skipVideo = false;
 	private final static boolean reuseExistingVideo = false;
 	private final static int useDrumSounds = 1;
+	public final static int workerThreadAmount = 8;
 
 
 	public MusicGenerator(Database database, Directory inputDir, Directory outputDir) {
@@ -344,7 +348,8 @@ public class MusicGenerator {
 
 			debugLog.add(": Fourier Analysis");
 
-			debugLog.add("  :: frame per Fourier: " + framesPerFourier + " pos");
+			debugLog.add("  :: worker threads: " + workerThreadAmount);
+			debugLog.add("  :: frames per Fourier: " + framesPerFourier + " pos");
 			debugLog.add("  :: frame rate: " + frameRate);
 			fourierLen = millisToChannelPos((1000 * framesPerFourier) / frameRate);
 			debugLog.add("  :: Fourier length: " + fourierLen + " pos");
@@ -354,9 +359,11 @@ public class MusicGenerator {
 			debugLog.add("  :: Fourier amount: " + fourierAmount);
 			fouriers = new int[fourierAmount][];
 
-			while (true) {
-				System.out.println("Processed " + fourierNum + " / " + fourierAmount + " Fouriers, max so far: " + fourierMax + "...");
+			debugLog.add("  :: splitting up the work into instructions");
 
+			List<FourierInstruction> instructions = new ArrayList<>();
+
+			while (true) {
 				if ((fourierNum+1)*fourierLen >= wavSoundData.getLength()) {
 					break;
 				}
@@ -364,18 +371,77 @@ public class MusicGenerator {
 					break;
 				}
 
-				int[] fourier = wavSoundData.getSmallFourier(fourierNum*fourierLen, (fourierNum+1)*fourierLen);
+				instructions.add(new FourierInstruction(fourierNum, fourierLen));
 
-				for (int k = 0; k < fourier.length / 2; k++) {
-					if (fourier[k] > fourierMax) {
-						fourierMax = fourier[k];
+				fourierNum++;
+			}
+
+			debugLog.add("  :: starting the workers");
+
+			List<FourierWorker> fourierWorkers = new ArrayList<>();
+
+			for (int w = 0; w < workerThreadAmount; w++) {
+				System.out.println("Starting Fourier worker #" + w + "...");
+				debugLog.add("    ::: starting worker #" + w);
+				FourierWorker worker = new FourierWorker(wavSoundData.copy());
+				fourierWorkers.add(worker);
+				Thread workerThread = new Thread(worker);
+				workerThread.start();
+			}
+
+			debugLog.add("  :: handing the instructions out to the workers");
+
+			int curInst = 0;
+			int handoutAmount = 64;
+			while (curInst < instructions.size()) {
+				for (int w = 0; w < fourierWorkers.size(); w++) {
+					FourierWorker worker = fourierWorkers.get(w);
+					if (!worker.isBusy()) {
+						List<FourierInstruction> curInstructions = new ArrayList<>();
+						for (int i = 0; i < handoutAmount; i++) {
+							if (curInst >= instructions.size()) {
+								break;
+							}
+							curInstructions.add(instructions.get(curInst));
+							curInst++;
+						}
+						System.out.println("Handing out " + curInstructions.size() + " instructions to worker #" + w + " (" + curInst + " / " + instructions.size() + ")...");
+						worker.workOn(curInstructions);
 					}
 				}
+				Utils.sleep(1000);
+			}
 
-				fouriers[fourierNum] = fourier;
+			debugLog.add("  :: waiting until all workers are done");
 
-				if (fourierNum % (fourierAmount / 32) == 0) {
-					debugLog.add("    ::: [" + fourierNum + "] Fourier max: " + fourierMax);
+			boolean allDone = false;
+			while (!allDone) {
+				allDone = true;
+				for (FourierWorker worker : fourierWorkers) {
+					if (worker.isBusy()) {
+						allDone = false;
+						break;
+					}
+				}
+				Utils.sleep(1000);
+			}
+
+			debugLog.add("  :: gathering the results from the workers");
+
+			for (FourierWorker worker : fourierWorkers) {
+
+				if (worker.getFourierMax() > fourierMax) {
+					fourierMax = worker.getFourierMax();
+				}
+
+				List<FourierResult> results = worker.getResults();
+
+				for (FourierResult result : results) {
+					fouriers[result.getFourierNum()] = result.getFourier();
+
+					if (result.getFourierNum() % (fourierAmount / 32) == 0) {
+						debugLog.add("    ::: [" + result.getFourierNum() + "] Fourier max: " + fourierMax);
+					}
 				}
 
 				/*
@@ -393,8 +459,12 @@ public class MusicGenerator {
 				fourierImgFile.assign(fourierImg);
 				fourierImgFile.save();
 				*/
+			}
 
-				fourierNum++;
+			debugLog.add("  :: stopping Fourier workers");
+
+			for (FourierWorker worker : fourierWorkers) {
+				worker.stop();
 			}
 
 			debugLog.add("  :: Fourier max: " + fourierMax);

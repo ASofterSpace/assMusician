@@ -176,6 +176,9 @@ public class VideoGenerator {
 		for (String line : debugLog) {
 			line = line.toLowerCase();
 			line = line.replaceAll("setting ", "set ");
+			line = line.replaceAll("splitting ", "split ");
+			line = line.replaceAll("using ", "use ");
+			line = line.replaceAll("stopping ", "stop ");
 			line = line.replaceAll("normalizing ", "normalize ");
 			line = line.replaceAll("generating ", "generate ");
 			line = line.replaceAll("ing ", " ");
