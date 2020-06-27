@@ -2,4 +2,4 @@
 
 cd `dirname "$0"`
 
-java -classpath "`dirname "$0"`/bin" -Xms16m -Xmx2048m com.asofterspace.assMusician.AssMusician "$@"
+java -classpath "`dirname "$0"`/bin" -Xms256m -Xmx8192m com.asofterspace.assMusician.AssMusician "$@"
