@@ -1157,13 +1157,13 @@ public class MusicGenerator {
 
 			// we want to make the drums as loud as the surrounding song...
 			long beatLoudness = beat.getLoudness();
-			// ... but not louder than 10k, so that we are not too loud for anyone to hear the singer
+			// ... but not louder than 12k, so that we are not too loud for anyone to hear the singer
 			// in an audio file that was all the way loudness-amplified to the max
 			if (beatLoudness > 8000) {
 				beatLoudness = 8000 + ((beatLoudness - 8000) / 2);
 			}
-			if (beatLoudness > 10000) {
-				beatLoudness = 10000;
+			if (beatLoudness > 12000) {
+				beatLoudness = 12000;
 			}
 			double baseLoudness = (7.5 * beatLoudness) / 25797;
 
@@ -1295,23 +1295,23 @@ public class MusicGenerator {
 			pattern3startsAbove = actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 80) / 100).getDrumPatternIndicator();
 		}
 
-		debugLog.add("    ::: normalizing #4 to start between 40% and 90% of beats with drums");
+		debugLog.add("    ::: normalizing #4 to start between 60% and 95% of beats with drums");
 
-		// ensure that at least 40% of all drum sounds are below pattern 4 (so pattern 4 starts at 40% or higher)
-		if (actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 40) / 100).getDrumPatternIndicator() > pattern4startsAbove) {
-			pattern4startsAbove = actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 40) / 100).getDrumPatternIndicator();
+		// ensure that at least 60% of all drum sounds are below pattern 4 (so pattern 4 starts at 60% or higher)
+		if (actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 60) / 100).getDrumPatternIndicator() > pattern4startsAbove) {
+			pattern4startsAbove = actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 60) / 100).getDrumPatternIndicator();
 		}
 
-		// ensure that at least 10% of all drum sounds are above pattern 4 (so pattern 4 starts at 90% or lower)
-		if (actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 90) / 100).getDrumPatternIndicator() < pattern4startsAbove) {
-			pattern4startsAbove = actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 90) / 100).getDrumPatternIndicator();
+		// ensure that at least 5% of all drum sounds are above pattern 4 (so pattern 4 starts at 95% or lower)
+		if (actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 95) / 100).getDrumPatternIndicator() < pattern4startsAbove) {
+			pattern4startsAbove = actuallyPlayedDrumSounds.get((actuallyPlayedDrumSounds.size() * 95) / 100).getDrumPatternIndicator();
 		}
 
-		debugLog.add("    ::: normalizing #5 to start above 80% of beats with drums");
+		debugLog.add("    ::: normalizing #5 to start above 85% of beats with drums");
 
-		// ensure that at least 80% of all drum sounds are below pattern 5 (so pattern 5 starts at 80% or higher)
-		if (actuallyPlayedDrumSounds.get((4 * actuallyPlayedDrumSounds.size()) / 5).getDrumPatternIndicator() > pattern5startsAbove) {
-			pattern5startsAbove = actuallyPlayedDrumSounds.get((4 * actuallyPlayedDrumSounds.size()) / 5).getDrumPatternIndicator();
+		// ensure that at least 85% of all drum sounds are below pattern 5 (so pattern 5 starts at 85% or higher)
+		if (actuallyPlayedDrumSounds.get((85 * actuallyPlayedDrumSounds.size()) / 100).getDrumPatternIndicator() > pattern5startsAbove) {
+			pattern5startsAbove = actuallyPlayedDrumSounds.get((85 * actuallyPlayedDrumSounds.size()) / 100).getDrumPatternIndicator();
 		}
 
 		debugLog.add("    ::: pattern 1 now above " + pattern1startsAbove);
