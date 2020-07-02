@@ -193,6 +193,7 @@ public class VideoGenerator {
 			line = line.replaceAll("splitting ", "split ");
 			line = line.replaceAll("using ", "use ");
 			line = line.replaceAll("stopping ", "stop ");
+			line = line.replaceAll("clipping ", "clip ");
 			line = line.replaceAll("normalizing ", "normalize ");
 			line = line.replaceAll("generating ", "generate ");
 			line = line.replaceAll("ing ", " ");

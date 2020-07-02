@@ -1168,6 +1168,12 @@ public class MusicGenerator {
 			if (beatLoudness > 18000) {
 				beatLoudness = 18000;
 			}
+			if (b == 0) {
+				debugLog.add("    ::: Clipping beat loudness...");
+				debugLog.add("    ::: first cutoff: " + 9000);
+				debugLog.add("    ::: second cutoff: " + 15000);
+				debugLog.add("    ::: final cutoff: " + 18000);
+			}
 			double baseLoudness = (7.5 * beatLoudness) / 25797;
 
 			long nextNextDrumPatternIndicator = getDrumPatternIndicatorFor(beats, b + 2, stats);
