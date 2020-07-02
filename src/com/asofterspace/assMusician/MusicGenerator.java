@@ -1157,13 +1157,16 @@ public class MusicGenerator {
 
 			// we want to make the drums as loud as the surrounding song...
 			long beatLoudness = beat.getLoudness();
-			// ... but not louder than 12k, so that we are not too loud for anyone to hear the singer
+			// ... but not louder than 18k, so that we are not too loud for anyone to hear the singer
 			// in an audio file that was all the way loudness-amplified to the max
-			if (beatLoudness > 8000) {
-				beatLoudness = 8000 + ((beatLoudness - 8000) / 2);
+			if (beatLoudness > 9000) {
+				beatLoudness = 9000 + ((beatLoudness - 9000) / 2);
 			}
-			if (beatLoudness > 12000) {
-				beatLoudness = 12000;
+			if (beatLoudness > 15000) {
+				beatLoudness = 15000 + ((beatLoudness - 15000) / 2);
+			}
+			if (beatLoudness > 18000) {
+				beatLoudness = 18000;
 			}
 			double baseLoudness = (7.5 * beatLoudness) / 25797;
 
