@@ -315,6 +315,12 @@ public class VideoGenerator {
 				targetColorProgress = 0;
 				origBlue = targetBlue;
 				targetBlue = ColorRGB.randomColorfulBright();
+				int trials = 0;
+				int MAX_TRIALS = 128;
+				while ((trials < MAX_TRIALS) && origBlue.fastSimilar(targetBlue)) {
+					trials++;
+					targetBlue = ColorRGB.randomColorfulBright();
+				}
 				midBlue = ColorRGB.max(origBlue, targetBlue);
 				blue = origBlue;
 			}
