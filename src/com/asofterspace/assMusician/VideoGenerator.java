@@ -102,7 +102,7 @@ public class VideoGenerator {
 		ColorRGB origBlue = ColorRGB.randomColorfulBright();
 		debugLog.add("  :: first color: " + origBlue);
 		// the next target blue
-		ColorRGB targetBlue = ColorRGB.randomColorfulBright();
+		ColorRGB targetBlue = getNewColorfulColorThatIsNot(origBlue);
 		// the midpoint between original and target
 		ColorRGB midBlue = ColorRGB.max(origBlue, targetBlue);
 		debugLog.add("  :: first mid color: " + midBlue);
@@ -315,13 +315,7 @@ public class VideoGenerator {
 			} else {
 				targetColorProgress = 0;
 				origBlue = targetBlue;
-				targetBlue = ColorRGB.randomColorfulBright();
-				int trials = 0;
-				int MAX_TRIALS = 128;
-				while ((trials < MAX_TRIALS) && origBlue.fastSimilar(targetBlue)) {
-					trials++;
-					targetBlue = ColorRGB.randomColorfulBright();
-				}
+				targetBlue = getNewColorfulColorThatIsNot(origBlue);
 				midBlue = ColorRGB.max(origBlue, targetBlue);
 				blue = origBlue;
 			}
@@ -568,5 +562,20 @@ public class VideoGenerator {
 		doneWaveFile.save();
 
 		System.out.println("All " + totalFrameAmount + " frames generated!");
+	}
+
+	private ColorRGB getNewColorfulColorThatIsNot(ColorRGB origColor) {
+
+		ColorRGB result = ColorRGB.randomColorfulBright();
+
+		int trials = 0;
+		int MAX_TRIALS = 128;
+
+		while ((trials < MAX_TRIALS) && origColor.fastSimilar(result)) {
+			trials++;
+			result = ColorRGB.randomColorfulBright();
+		}
+
+		return result;
 	}
 }
