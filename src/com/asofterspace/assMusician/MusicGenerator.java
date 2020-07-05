@@ -791,6 +791,8 @@ public class MusicGenerator {
 		int BUCKET_ACCURACY_FACTOR = 1;
 		int MIN_BPM = 90;
 		int MAX_BPM = 180;
+		// int MIN_BPM = 45;
+		// int MAX_BPM = 90;
 		int LOOKBACK = 1;
 
 		debugLog.add("  :: bucket accuracy factor: " + BUCKET_ACCURACY_FACTOR);

@@ -266,6 +266,8 @@ public class GeometryMonster {
 				double posY = height / 4.0;
 				double posX45 = (45 * width) / 100.0;
 				double posY45 = (45 * height) / 100.0;
+				double posX33 = (33 * width) / 100.0;
+				double posY33 = (33 * height) / 100.0;
 
 				switch (shape) {
 
@@ -542,8 +544,45 @@ public class GeometryMonster {
 						}
 						break;
 
-					// circle
+					// plus sign
 					case 9:
+						if (points.size() < 8) {
+							break;
+						}
+						activateShapeGuard();
+						for (GeometryPoint point : points) {
+							switch (robin) {
+								case 0:
+									point.setTarget(new Point<Double, Double>(posX, posY33));
+									break;
+								case 1:
+									point.setTarget(new Point<Double, Double>(width - posX, posY33));
+									break;
+								case 2:
+									point.setTarget(new Point<Double, Double>(posX33, posY));
+									break;
+								case 3:
+									point.setTarget(new Point<Double, Double>(posX33, height - posY));
+									break;
+								case 4:
+									point.setTarget(new Point<Double, Double>(posX, height - posY33));
+									break;
+								case 5:
+									point.setTarget(new Point<Double, Double>(width - posX, height - posY33));
+									break;
+								case 6:
+									point.setTarget(new Point<Double, Double>(width - posX33, posY));
+									break;
+								default:
+									point.setTarget(new Point<Double, Double>(width - posX33, height - posY));
+									robin = -1;
+									break;
+							}
+							robin++;
+						}
+						break;
+
+					// circle
 					case 10:
 						if (points.size() < 2) {
 							break;
