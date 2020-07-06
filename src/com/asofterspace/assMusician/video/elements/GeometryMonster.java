@@ -257,7 +257,7 @@ public class GeometryMonster {
 			}
 			System.out.println("Geo monster frame " + step + " out of " + totalFrameAmount + " shape rand: " + shapeRand + " (frames since last shape guard: " + (step - lastShapeGuardStop) + ")");
 			if (shapeRand == 0) {
-				int shape = rand.nextInt(14);
+				int shape = rand.nextInt(17);
 				System.out.println("Geo monster going into shape " + shape + "!");
 				int robin = 0;
 				double midX = width / 2.0;
@@ -596,10 +596,80 @@ public class GeometryMonster {
 						}
 						break;
 
-					// random nonsense
-					default:
-						int robinMax = 4 + rand.nextInt(8);
+					// vert axial symmetrical random nonsense
+					case 11:
+					case 12:
+						int robinMax = 3 + rand.nextInt(3);
 						List<Point<Double, Double>> robinTargets = new ArrayList<>();
+						for (int i = 0; i < robinMax; i++) {
+							double curX = (width/10)+(1.0*rand.nextInt((8*width)/10));
+							double curY = (height/10)+(1.0*rand.nextInt((8*height)/10));
+							robinTargets.add(new Point<Double, Double>(
+								curX,
+								curY
+							));
+							robinTargets.add(new Point<Double, Double>(
+								width - curX,
+								curY
+							));
+						}
+						activateShapeGuard();
+						for (GeometryPoint point : points) {
+							point.setTarget(robinTargets.get(robin % robinTargets.size()));
+							robin++;
+						}
+						break;
+
+					// horz axial symmetrical random nonsense
+					case 13:
+						robinMax = 3 + rand.nextInt(3);
+						robinTargets = new ArrayList<>();
+						for (int i = 0; i < robinMax; i++) {
+							double curX = (width/10)+(1.0*rand.nextInt((8*width)/10));
+							double curY = (height/10)+(1.0*rand.nextInt((8*height)/10));
+							robinTargets.add(new Point<Double, Double>(
+								curX,
+								curY
+							));
+							robinTargets.add(new Point<Double, Double>(
+								curX,
+								height - curY
+							));
+						}
+						activateShapeGuard();
+						for (GeometryPoint point : points) {
+							point.setTarget(robinTargets.get(robin % robinTargets.size()));
+							robin++;
+						}
+						break;
+
+					// point symmetrical random nonsense
+					case 14:
+						robinMax = 3 + rand.nextInt(3);
+						robinTargets = new ArrayList<>();
+						for (int i = 0; i < robinMax; i++) {
+							double curX = (width/10)+(1.0*rand.nextInt((8*width)/10));
+							double curY = (height/10)+(1.0*rand.nextInt((8*height)/10));
+							robinTargets.add(new Point<Double, Double>(
+								curX,
+								curY
+							));
+							robinTargets.add(new Point<Double, Double>(
+								width - curX,
+								height - curY
+							));
+						}
+						activateShapeGuard();
+						for (GeometryPoint point : points) {
+							point.setTarget(robinTargets.get(robin % robinTargets.size()));
+							robin++;
+						}
+						break;
+
+					// completely random nonsense
+					default:
+						robinMax = 4 + rand.nextInt(8);
+						robinTargets = new ArrayList<>();
 						for (int i = 0; i < robinMax; i++) {
 							robinTargets.add(new Point<Double, Double>(
 								(width/10)+(1.0*rand.nextInt((8*width)/10)),
@@ -608,7 +678,7 @@ public class GeometryMonster {
 						}
 						activateShapeGuard();
 						for (GeometryPoint point : points) {
-							point.setTarget(robinTargets.get(robin % robinMax));
+							point.setTarget(robinTargets.get(robin % robinTargets.size()));
 							robin++;
 						}
 						break;
