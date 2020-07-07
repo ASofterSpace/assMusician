@@ -6,7 +6,7 @@ package com.asofterspace.assMusician.video.elements;
 import com.asofterspace.assMusician.music.DrumSoundAtPos;
 import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.Image;
-import com.asofterspace.toolbox.music.SoundData;
+import com.asofterspace.toolbox.sound.SoundData;
 
 import java.util.Map;
 

@@ -3,7 +3,7 @@
  */
 package com.asofterspace.assMusician.music;
 
-import com.asofterspace.toolbox.music.Beat;
+import com.asofterspace.toolbox.sound.Beat;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -6,7 +6,7 @@ package com.asofterspace.assMusician.video.elements;
 import com.asofterspace.assMusician.MusicGenerator;
 import com.asofterspace.toolbox.images.ColorRGB;
 import com.asofterspace.toolbox.images.Image;
-import com.asofterspace.toolbox.music.Beat;
+import com.asofterspace.toolbox.sound.Beat;
 import com.asofterspace.toolbox.utils.Line;
 import com.asofterspace.toolbox.utils.Pair;
 import com.asofterspace.toolbox.utils.Point;

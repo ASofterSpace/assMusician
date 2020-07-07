@@ -15,8 +15,8 @@ import com.asofterspace.toolbox.images.GraphImage;
 import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
-import com.asofterspace.toolbox.music.Beat;
-import com.asofterspace.toolbox.music.BeatStats;
+import com.asofterspace.toolbox.sound.Beat;
+import com.asofterspace.toolbox.sound.BeatStats;
 import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.Utils;
 
