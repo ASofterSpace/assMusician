@@ -13,7 +13,7 @@ cd toolbox
 md coders
 md images
 md io
-md music
+md sound
 md utils
 md web
 
@@ -23,7 +23,7 @@ copy "..\Toolbox-Java\src\com\asofterspace\toolbox\*.java" "src\com\asofterspace
 copy "..\Toolbox-Java\src\com\asofterspace\toolbox\coders\*.*" "src\com\asofterspace\toolbox\coders"
 copy "..\Toolbox-Java\src\com\asofterspace\toolbox\images\*.*" "src\com\asofterspace\toolbox\images"
 copy "..\Toolbox-Java\src\com\asofterspace\toolbox\io\*.*" "src\com\asofterspace\toolbox\io"
-copy "..\Toolbox-Java\src\com\asofterspace\toolbox\music\*.*" "src\com\asofterspace\toolbox\music"
+copy "..\Toolbox-Java\src\com\asofterspace\toolbox\sound\*.*" "src\com\asofterspace\toolbox\sound"
 copy "..\Toolbox-Java\src\com\asofterspace\toolbox\utils\*.*" "src\com\asofterspace\toolbox\utils"
 copy "..\Toolbox-Java\src\com\asofterspace\toolbox\web\*.*" "src\com\asofterspace\toolbox\web"
 
