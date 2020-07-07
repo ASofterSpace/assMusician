@@ -47,6 +47,7 @@ public class VideoGenerator {
 	// like, they are there (and stay there for a second or so) and then the actual stuff fades in?
 	// * add blocks that are moving around, zooming here, staying a while, zooming there, staying a while,
 	//   like during the opening credits of the movie Deja Vu
+	// * add the number of this song VERY BIGLY at the start, then fade it away (without leading zeroes though!)
 	public void generateVideoBasedOnBeats(List<Beat> beats, List<Integer> addedSounds, int totalFrameAmount, int width, int height,
 		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle,
 		int framesPerFourier, int[][] fouriers, List<DrumSoundAtPos> addedDrumSounds, List<String> debugLog) {
@@ -158,6 +159,12 @@ public class VideoGenerator {
 		// by mapping from vertical location to horizontal displacement
 		int debugLogFontHeight = 16;
 		int debugLogTextHeight = Image.getTextHeight("Neuropol", debugLogFontHeight);
+
+		// setup clock data
+		int clockFontSize = 30;
+		double clockIntermix = 0;
+		double clockIntermixChange = 1 / (2.0 * MusicGenerator.frameRate);
+		debugLog.add("  :: adding clocks with font size: " + clockFontSize);
 
 		Map<Integer, Integer> debugLogWobblings = new HashMap<>();
 		for (int y = - debugLogTextHeight; y < height; y++) {
@@ -368,6 +375,26 @@ public class VideoGenerator {
 				img.drawText(debugLog.get(i), top, null, null, left + debugLogWobblings.get(top), "Neuropol", debugLogFontHeight, true, textCol);
 			}
 
+			// clock at the top left: time we already played through
+			clockIntermix += clockIntermixChange;
+			if (clockIntermix > 1.0) {
+				clockIntermix = 1.0;
+				clockIntermixChange = - clockIntermixChange;
+			}
+			if (clockIntermix < 0.0) {
+				clockIntermix = 0.0;
+				clockIntermixChange = - clockIntermixChange;
+			}
+			int clockBorderDistance = (int)(width*0.008);
+			ColorRGB clockColor = ColorRGB.intermix(blue, darkBlue, clockIntermix);
+			int timePassedMS = (step * 1000) / MusicGenerator.frameRate;
+			img.drawText(timeToStr(timePassedMS), clockBorderDistance, null, null, clockBorderDistance, "Calibri", clockFontSize, true, clockColor);
+
+			// clock at the top right: time remaining
+			clockColor = ColorRGB.intermix(blue, darkBlue, 1 - clockIntermix);
+			int timeRemainingMS = ((totalFrameAmount - step) * 1000) / MusicGenerator.frameRate;
+			img.drawText(timeToStr(timeRemainingMS), clockBorderDistance, width - clockBorderDistance, null, null, "Calibri", clockFontSize, true, clockColor);
+
 			// right waveform in the background
 			origWaveform.drawOnImageRotated(img, (int)(width*0.8), (int)(height*0.06), (int)(height*0.8), 2.0, step, totalFrameAmount, darkBlue, darkerBlue, blue, addedDrumSoundMap);
 
@@ -434,34 +461,35 @@ public class VideoGenerator {
 			img.drawRectangle(beatIndicaLeft, (806 * height) / 1080, beatIndicaRight, (838 * height) / 1080, beat1col);
 
 			// left HUD
-			img.drawText(""+lastLength, (64 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
-			img.drawLine((19 * width) / 1920, (height * 102) / 1080, (int) (width * 0.098), (height * 102) / 1080, blue);
-			img.drawLine((19 * width) / 1920, (height * 102) / 1080, 0, ((height * 102) / 1080) + ((19 * width) / 1920), blue);
+			int hudOffset = (height * 46) / 1080;
+			img.drawText(""+lastLength, hudOffset + (64 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
+			img.drawLine((19 * width) / 1920, hudOffset + (height * 102) / 1080, (int) (width * 0.098), hudOffset + (height * 102) / 1080, blue);
+			img.drawLine((19 * width) / 1920, hudOffset + (height * 102) / 1080, 0, hudOffset + ((height * 102) / 1080) + ((19 * width) / 1920), blue);
 			if (drawAllWhite) {
-				img.draw(textLengthWhite, (15 * width) / 1920, (109 * height) / 1080);
+				img.draw(textLengthWhite, (15 * width) / 1920, hudOffset + (109 * height) / 1080);
 			} else {
 				Image curText = textLength.copy();
 				curText.multiply(blue);
-				img.draw(curText, (15 * width) / 1920, (109 * height) / 1080);
+				img.draw(curText, (15 * width) / 1920, hudOffset + (109 * height) / 1080);
 			}
-			img.drawText(""+lastLoudness, (187 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
-			img.drawLine(0, (height * 225) / 1080, (int) (width * 0.098), (height * 225) / 1080, blue);
+			img.drawText(""+lastLoudness, hudOffset + (187 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
+			img.drawLine(0, hudOffset + (height * 225) / 1080, (int) (width * 0.098), hudOffset + (height * 225) / 1080, blue);
 			if (drawAllWhite) {
-				img.draw(textLoudnessWhite, (15 * width) / 1920, (232 * height) / 1080);
+				img.draw(textLoudnessWhite, (15 * width) / 1920, hudOffset + (232 * height) / 1080);
 			} else {
 				Image curText = textLoudness.copy();
 				curText.multiply(blue);
-				img.draw(curText, (15 * width) / 1920, (232 * height) / 1080);
+				img.draw(curText, (15 * width) / 1920, hudOffset + (232 * height) / 1080);
 			}
-			img.drawText(""+lastJitterieness, (310 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
-			img.drawLine((19 * width) / 1920, (height * 348) / 1080, (int) (width * 0.098), (height * 348) / 1080, blue);
-			img.drawLine((19 * width) / 1920, (height * 348) / 1080, 0, ((height * 348) / 1080) - ((19 * width) / 1920), blue);
+			img.drawText(""+lastJitterieness, hudOffset + (310 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
+			img.drawLine((19 * width) / 1920, hudOffset + (height * 348) / 1080, (int) (width * 0.098), hudOffset + (height * 348) / 1080, blue);
+			img.drawLine((19 * width) / 1920, hudOffset + (height * 348) / 1080, 0, hudOffset + ((height * 348) / 1080) - ((19 * width) / 1920), blue);
 			if (drawAllWhite) {
-				img.draw(textJitterienessWhite, (15 * width) / 1920, (355 * height) / 1080);
+				img.draw(textJitterienessWhite, (15 * width) / 1920, hudOffset + (355 * height) / 1080);
 			} else {
 				Image curText = textJitterieness.copy();
 				curText.multiply(blue);
-				img.draw(curText, (15 * width) / 1920, (355 * height) / 1080);
+				img.draw(curText, (15 * width) / 1920, hudOffset + (355 * height) / 1080);
 			}
 
 			// geo monster
@@ -576,6 +604,18 @@ public class VideoGenerator {
 			result = ColorRGB.randomColorfulBright();
 		}
 
+		return result;
+	}
+
+	private String timeToStr(int timeInMS) {
+		int minutes = timeInMS / 60000;
+		timeInMS = timeInMS % 60000;
+		String result = ""+timeInMS;
+		while (result.length() < 5) {
+			result = "0" + result;
+		}
+		result = result.substring(0, result.length() - 3) + "." + result.substring(result.length() - 3);
+		result = minutes + ":" + result;
 		return result;
 	}
 }
