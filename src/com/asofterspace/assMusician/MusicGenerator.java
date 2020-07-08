@@ -1022,8 +1022,11 @@ public class MusicGenerator {
 		// add one far beyond the end so that we do not have to check for there being one all the time
 		bpmBasedBeats.add(1 + (wavDataLeft.length * 2));
 
+		List<Integer> curBeatValues = new ArrayList<>();
+
 		for (int i = 0; i < wavDataLeft.length; i++) {
 			int absVal = Math.abs(wavDataLeft[i]) + Math.abs(wavDataRight[i]);
+			curBeatValues.add(absVal);
 			int prevAbsVal = 0;
 			if (i > 0) {
 				prevAbsVal = Math.abs(wavDataLeft[i-1]) + Math.abs(wavDataRight[i-1]);
@@ -1046,12 +1049,25 @@ public class MusicGenerator {
 					int len = i - prevBeat.getPosition();
 					prevBeat.setLoudness(curBeatLoudness / len);
 					prevBeat.setJigglieness((jiggleModifier * curBeatJigglieness) / len);
+					int bvSize = curBeatValues.size();
+					// we compare the first 20 percent of the beat...
+					long first20Perc = 0;
+					for (int j = 0; j < (20 * bvSize) / 100; j++) {
+						first20Perc += curBeatValues.get(j);
+					}
+					// with 20 percent close to the end, but not right at the end (where the next beat starts!)
+					long last20Perc = 0;
+					for (int j = (70 * bvSize) / 100; j < (90 * bvSize) / 100; j++) {
+						last20Perc += curBeatValues.get(j);
+					}
+					prevBeat.setIntensity(divOr255(first20Perc * 255, last20Perc));
 					prevBeat.setLength(len);
 				}
 				beats.add(beat);
 				prevBeat = beat;
 				curBeatLoudness = 0;
 				curBeatJigglieness = 0;
+				curBeatValues = new ArrayList<>();
 				curBeat++;
 			}
 		}
@@ -1059,6 +1075,16 @@ public class MusicGenerator {
 			int len = wavDataLeft.length - prevBeat.getPosition();
 			prevBeat.setLoudness(curBeatLoudness / len);
 			prevBeat.setJigglieness((jiggleModifier * curBeatJigglieness) / len);
+			int bvSize = curBeatValues.size();
+			long first20Perc = 0;
+			for (int j = 0; j < (20 * bvSize) / 100; j++) {
+				first20Perc += curBeatValues.get(j);
+			}
+			long last20Perc = 0;
+			for (int j = (70 * bvSize) / 100; j < (90 * bvSize) / 100; j++) {
+				last20Perc += curBeatValues.get(j);
+			}
+			prevBeat.setIntensity(divOr255(first20Perc * 255, last20Perc));
 			prevBeat.setLength(len);
 		}
 

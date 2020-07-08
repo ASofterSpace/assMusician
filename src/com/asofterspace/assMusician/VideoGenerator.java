@@ -142,10 +142,16 @@ public class VideoGenerator {
 		textJitterieness.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
 		Image textJitterienessWhite = textJitterieness.copy();
 
+		DefaultImageFile textIntensityFile = new DefaultImageFile("video/intensity.png");
+		Image textIntensity = textIntensityFile.getImage();
+		textIntensity.resampleBy(MusicGenerator.width / (1920 * 4.5), MusicGenerator.width / (1920 * 4.5));
+		Image textIntensityWhite = textIntensity.copy();
+
 		double currentLoudnessScaled = 0;
 		int lastLength = 0;
 		long lastLoudness = 0;
 		long lastJitterieness = 0;
+		long lastIntensity = 0;
 
 		int beatNum = 0;
 		int drawBeatForSteps = 0;
@@ -265,6 +271,7 @@ public class VideoGenerator {
 				} else {
 					lastJitterieness = (curBeat.getJigglieness() * 255) / stats.getMaxJigglieness();
 				}
+				lastIntensity = curBeat.getIntensity();
 
 				int beatLookbackForFlicker = 20;
 				if (prevBeats.size() > beatLookbackForFlicker) {
@@ -461,35 +468,59 @@ public class VideoGenerator {
 			img.drawRectangle(beatIndicaLeft, (806 * height) / 1080, beatIndicaRight, (838 * height) / 1080, beat1col);
 
 			// left HUD
-			int hudOffset = (height * 46) / 1080;
-			img.drawText(""+lastLength, hudOffset + (64 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
-			img.drawLine((19 * width) / 1920, hudOffset + (height * 102) / 1080, (int) (width * 0.098), hudOffset + (height * 102) / 1080, blue);
-			img.drawLine((19 * width) / 1920, hudOffset + (height * 102) / 1080, 0, hudOffset + ((height * 102) / 1080) + ((19 * width) / 1920), blue);
+			int hudOffset = (height * 95) / 1080; // vertical start
+			int hudOffsetDiff = (height * 100) / 1080; // difference between stats
+			int hudLineOffset = (height * 38) / 1080;
+			int hudTextOffset = (height * 45) / 1080;
+			int hudLeft = (19 * width) / 1920;
+			int hudTextLeft = (15 * width) / 1920;
+			int hudRight = (int) (width * 0.098);
+
+			img.drawText(""+lastLength, hudOffset, null, null, hudLeft, "Neuropol", 29, true, blue);
+			img.drawLine(hudLeft, hudOffset + hudLineOffset, hudRight, hudOffset + hudLineOffset, blue);
+			img.drawLine(hudLeft, hudOffset + hudLineOffset, 0, hudOffset + hudLineOffset + hudLeft, blue);
 			if (drawAllWhite) {
-				img.draw(textLengthWhite, (15 * width) / 1920, hudOffset + (109 * height) / 1080);
+				img.draw(textLengthWhite, hudTextLeft, hudOffset + hudTextOffset);
 			} else {
 				Image curText = textLength.copy();
 				curText.multiply(blue);
-				img.draw(curText, (15 * width) / 1920, hudOffset + (109 * height) / 1080);
+				img.draw(curText, hudTextLeft, hudOffset + hudTextOffset);
 			}
-			img.drawText(""+lastLoudness, hudOffset + (187 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
-			img.drawLine(0, hudOffset + (height * 225) / 1080, (int) (width * 0.098), hudOffset + (height * 225) / 1080, blue);
+
+			hudOffset += hudOffsetDiff;
+			img.drawText(""+lastLoudness, hudOffset, null, null, hudLeft, "Neuropol", 29, true, blue);
+			img.drawLine(hudLeft, hudOffset + hudLineOffset, hudRight, hudOffset + hudLineOffset, blue);
+			img.drawLine(hudLeft, hudOffset + hudLineOffset, 0, hudOffset + hudLineOffset + (hudLeft / 2), blue);
 			if (drawAllWhite) {
-				img.draw(textLoudnessWhite, (15 * width) / 1920, hudOffset + (232 * height) / 1080);
+				img.draw(textLoudnessWhite, hudTextLeft, hudOffset + hudTextOffset);
 			} else {
 				Image curText = textLoudness.copy();
 				curText.multiply(blue);
-				img.draw(curText, (15 * width) / 1920, hudOffset + (232 * height) / 1080);
+				img.draw(curText, hudTextLeft, hudOffset + hudTextOffset);
 			}
-			img.drawText(""+lastJitterieness, hudOffset + (310 * height) / 1080, null, null, (19 * width) / 1920, "Neuropol", 29, true, blue);
-			img.drawLine((19 * width) / 1920, hudOffset + (height * 348) / 1080, (int) (width * 0.098), hudOffset + (height * 348) / 1080, blue);
-			img.drawLine((19 * width) / 1920, hudOffset + (height * 348) / 1080, 0, hudOffset + ((height * 348) / 1080) - ((19 * width) / 1920), blue);
+
+			hudOffset += hudOffsetDiff;
+			img.drawText(""+lastJitterieness, hudOffset, null, null, hudLeft, "Neuropol", 29, true, blue);
+			img.drawLine(hudLeft, hudOffset + hudLineOffset, hudRight, hudOffset + hudLineOffset, blue);
+			img.drawLine(hudLeft, hudOffset + hudLineOffset, 0, hudOffset + hudLineOffset - (hudLeft / 2), blue);
 			if (drawAllWhite) {
-				img.draw(textJitterienessWhite, (15 * width) / 1920, hudOffset + (355 * height) / 1080);
+				img.draw(textJitterienessWhite, hudTextLeft, hudOffset + hudTextOffset);
 			} else {
 				Image curText = textJitterieness.copy();
 				curText.multiply(blue);
-				img.draw(curText, (15 * width) / 1920, hudOffset + (355 * height) / 1080);
+				img.draw(curText, hudTextLeft, hudOffset + hudTextOffset);
+			}
+
+			hudOffset += hudOffsetDiff;
+			img.drawText(""+lastIntensity, hudOffset, null, null, hudLeft, "Neuropol", 29, true, blue);
+			img.drawLine(hudLeft, hudOffset + hudLineOffset, hudRight, hudOffset + hudLineOffset, blue);
+			img.drawLine(hudLeft, hudOffset + hudLineOffset, 0, hudOffset + hudLineOffset - hudLeft, blue);
+			if (drawAllWhite) {
+				img.draw(textIntensityWhite, hudTextLeft, hudOffset + hudTextOffset);
+			} else {
+				Image curText = textIntensity.copy();
+				curText.multiply(blue);
+				img.draw(curText, hudTextLeft, hudOffset + hudTextOffset);
 			}
 
 			// geo monster
