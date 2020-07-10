@@ -48,6 +48,8 @@ public class VideoGenerator {
 	// * add blocks that are moving around, zooming here, staying a while, zooming there, staying a while,
 	//   like during the opening credits of the movie Deja Vu
 	// * add the number of this song VERY BIGLY at the start, then fade it away (without leading zeroes though!)
+	// * add something like a "lasershow", e.g. a horizontal line that is connected to the origin with equidistant lines
+	//   and that moves up and down
 	public void generateVideoBasedOnBeats(List<Beat> beats, List<Integer> addedSounds, int totalFrameAmount, int width, int height,
 		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle,
 		int framesPerFourier, int[][] fouriers, List<DrumSoundAtPos> addedDrumSounds, List<String> debugLog) {
