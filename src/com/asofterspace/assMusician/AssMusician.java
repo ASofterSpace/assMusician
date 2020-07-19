@@ -1,5 +1,6 @@
 /**
- * Code created by A Softer Space, 2020
+ * Unlicensed code created by A Softer Space, 2020
+ * www.asofterspace.com/licenses/unlicense.txt
  */
 package com.asofterspace.assMusician;
 
@@ -14,8 +15,8 @@ import java.awt.GraphicsEnvironment;
 public class AssMusician {
 
 	public final static String PROGRAM_TITLE = "assMusician";
-	public final static String VERSION_NUMBER = "0.0.3.1(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "27. May 2020 - 8. July 2020";
+	public final static String VERSION_NUMBER = "0.0.3.2(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "27. May 2020 - 19. July 2020";
 
 	/*
 	Kalli asked for some details, so here they are:

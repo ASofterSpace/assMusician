@@ -1,5 +1,6 @@
 /**
- * Code created by A Softer Space, 2020
+ * Unlicensed code created by A Softer Space, 2020
+ * www.asofterspace.com/licenses/unlicense.txt
  */
 package com.asofterspace.assMusician;
 
@@ -50,6 +51,7 @@ public class VideoGenerator {
 	// * add the number of this song VERY BIGLY at the start, then fade it away (without leading zeroes though!)
 	// * add something like a "lasershow", e.g. a horizontal line that is connected to the origin with equidistant lines
 	//   and that moves up and down
+	//   (at first a horizontal top to bottom, but then also vertical left to right, etc.!)
 	public void generateVideoBasedOnBeats(List<Beat> beats, List<Integer> addedSounds, int totalFrameAmount, int width, int height,
 		GraphImage wavGraphImg, Waveform origWaveform, Waveform newWaveform, String songTitle,
 		int framesPerFourier, int[][] fouriers, List<DrumSoundAtPos> addedDrumSounds, List<String> debugLog) {
