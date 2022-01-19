@@ -4,26 +4,26 @@
  */
 package com.asofterspace.assMusician.video.elements;
 
-import com.asofterspace.toolbox.images.ColorRGB;
+import com.asofterspace.toolbox.images.ColorRGBA;
 import com.asofterspace.toolbox.utils.Pair;
 
 
 public class GeometryLine extends Pair<Integer, Integer> {
 
-	private ColorRGB color;
+	private ColorRGBA color;
 
 
-	public GeometryLine(Integer left, Integer right, ColorRGB color) {
+	public GeometryLine(Integer left, Integer right, ColorRGBA color) {
 		super(left, right);
 
 		setColor(color);
 	}
 
-	public ColorRGB getColor() {
+	public ColorRGBA getColor() {
 		return color;
 	}
 
-	public void setColor(ColorRGB color) {
+	public void setColor(ColorRGBA color) {
 		this.color = color;
 	}
 

@@ -5,7 +5,7 @@
 package com.asofterspace.assMusician.video.elements;
 
 import com.asofterspace.assMusician.music.DrumSoundAtPos;
-import com.asofterspace.toolbox.images.ColorRGB;
+import com.asofterspace.toolbox.images.ColorRGBA;
 import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.sound.SoundData;
 
@@ -22,7 +22,7 @@ public class Waveform {
 	}
 
 	public void drawOnImage(Image img, int width, int vertPos, int step, int totalFrameAmount,
-		ColorRGB foregroundColor, ColorRGB midgroundColor, ColorRGB highlightColor) {
+		ColorRGBA foregroundColor, ColorRGBA midgroundColor, ColorRGBA highlightColor) {
 
 		int[] leftData = soundData.getLeftData();
 		int[] rightData = soundData.getRightData();
@@ -60,8 +60,8 @@ public class Waveform {
 
 			// for the first ten pixels, fade in the waveform
 			if (x < leftOffset + fadeLen) {
-				img.drawLine(x, mid, x, bottom, ColorRGB.intermix(midgroundColor, new ColorRGB(0, 0, 0), (x - leftOffset) / fadeLenDouble));
-				img.drawLine(x, top, x, mid, ColorRGB.intermix(foregroundColor, new ColorRGB(0, 0, 0), (x - leftOffset) / fadeLenDouble));
+				img.drawLine(x, mid, x, bottom, ColorRGBA.intermix(midgroundColor, new ColorRGBA(0, 0, 0), (x - leftOffset) / fadeLenDouble));
+				img.drawLine(x, top, x, mid, ColorRGBA.intermix(foregroundColor, new ColorRGBA(0, 0, 0), (x - leftOffset) / fadeLenDouble));
 				continue;
 			}
 
@@ -69,8 +69,8 @@ public class Waveform {
 			int halfWidth = width / 2;
 
 			if ((x > halfWidth - fadeLen) && (x < halfWidth)) {
-				img.drawLine(x, mid, x, bottom, ColorRGB.intermix(midgroundColor, highlightColor, (halfWidth - x) / fadeLenDouble));
-				img.drawLine(x, top, x, mid, ColorRGB.intermix(foregroundColor, highlightColor, (halfWidth - x) / fadeLenDouble));
+				img.drawLine(x, mid, x, bottom, ColorRGBA.intermix(midgroundColor, highlightColor, (halfWidth - x) / fadeLenDouble));
+				img.drawLine(x, top, x, mid, ColorRGBA.intermix(foregroundColor, highlightColor, (halfWidth - x) / fadeLenDouble));
 				continue;
 			}
 
@@ -80,8 +80,8 @@ public class Waveform {
 			}
 
 			if ((x > halfWidth) && (x < halfWidth + fadeLen)) {
-				img.drawLine(x, mid, x, bottom, ColorRGB.intermix(midgroundColor, highlightColor, (x - halfWidth) / fadeLenDouble));
-				img.drawLine(x, top, x, mid, ColorRGB.intermix(foregroundColor, highlightColor, (x - halfWidth) / fadeLenDouble));
+				img.drawLine(x, mid, x, bottom, ColorRGBA.intermix(midgroundColor, highlightColor, (x - halfWidth) / fadeLenDouble));
+				img.drawLine(x, top, x, mid, ColorRGBA.intermix(foregroundColor, highlightColor, (x - halfWidth) / fadeLenDouble));
 				continue;
 			}
 
@@ -92,7 +92,7 @@ public class Waveform {
 	}
 
 	public void drawOnImageRotated(Image img, int horzPos, int top, int bottom, double widthModifier,
-		int step, int totalFrameAmount, ColorRGB foregroundColor, ColorRGB midgroundColor, ColorRGB highlightColor,
+		int step, int totalFrameAmount, ColorRGBA foregroundColor, ColorRGBA midgroundColor, ColorRGBA highlightColor,
 		Map<Integer, DrumSoundAtPos> addedDrumSoundMap) {
 
 		int[] leftData = soundData.getLeftData();
@@ -136,7 +136,7 @@ public class Waveform {
 			}
 
 			boolean lineDrawn = false;
-			ColorRGB textColor = midgroundColor;
+			ColorRGBA textColor = midgroundColor;
 
 			// 64 is the vertical height in both (!) directions off zero in which we want to show the waveform
 			// 8*16*16*16 is the maximum positive value that is possible as loudness
@@ -149,15 +149,15 @@ public class Waveform {
 
 			// at the top and bottom, fade in the waveform
 			if (y < fadeLen) {
-				textColor = ColorRGB.intermix(midgroundColor, new ColorRGB(0, 0, 0), y / fadeLenDouble);
+				textColor = ColorRGBA.intermix(midgroundColor, new ColorRGBA(0, 0, 0), y / fadeLenDouble);
 				img.drawLine(mid, y+top, right, y+top, textColor);
-				img.drawLine(left, y+top, mid, y+top, ColorRGB.intermix(foregroundColor, new ColorRGB(0, 0, 0), y / fadeLenDouble));
+				img.drawLine(left, y+top, mid, y+top, ColorRGBA.intermix(foregroundColor, new ColorRGBA(0, 0, 0), y / fadeLenDouble));
 				lineDrawn = true;
 			}
 			if (y > height - fadeLen) {
-				textColor = ColorRGB.intermix(midgroundColor, new ColorRGB(0, 0, 0), (height - y) / fadeLenDouble);
+				textColor = ColorRGBA.intermix(midgroundColor, new ColorRGBA(0, 0, 0), (height - y) / fadeLenDouble);
 				img.drawLine(mid, y+top, right, y+top, textColor);
-				img.drawLine(left, y+top, mid, y+top, ColorRGB.intermix(foregroundColor, new ColorRGB(0, 0, 0), (height - y) / fadeLenDouble));
+				img.drawLine(left, y+top, mid, y+top, ColorRGBA.intermix(foregroundColor, new ColorRGBA(0, 0, 0), (height - y) / fadeLenDouble));
 				lineDrawn = true;
 			}
 
@@ -168,9 +168,9 @@ public class Waveform {
 			int halfHeight = height / 2;
 
 			if ((y > halfHeight - fadeLen) && (y < halfHeight)) {
-				textColor = ColorRGB.intermix(midgroundColor, highlightColor, (halfHeight - y) / fadeLenDouble);
+				textColor = ColorRGBA.intermix(midgroundColor, highlightColor, (halfHeight - y) / fadeLenDouble);
 				img.drawLine(mid, y+top, right, y+top, textColor);
-				img.drawLine(left, y+top, mid, y+top, ColorRGB.intermix(foregroundColor, highlightColor, (halfHeight - y) / fadeLenDouble));
+				img.drawLine(left, y+top, mid, y+top, ColorRGBA.intermix(foregroundColor, highlightColor, (halfHeight - y) / fadeLenDouble));
 				lineDrawn = true;
 			}
 
@@ -181,9 +181,9 @@ public class Waveform {
 			}
 
 			if ((y > halfHeight) && (y < halfHeight + fadeLen)) {
-				textColor = ColorRGB.intermix(midgroundColor, highlightColor, (y - halfHeight) / fadeLenDouble);
+				textColor = ColorRGBA.intermix(midgroundColor, highlightColor, (y - halfHeight) / fadeLenDouble);
 				img.drawLine(mid, y+top, right, y+top, textColor);
-				img.drawLine(left, y+top, mid, y+top, ColorRGB.intermix(foregroundColor, highlightColor, (y - halfHeight) / fadeLenDouble));
+				img.drawLine(left, y+top, mid, y+top, ColorRGBA.intermix(foregroundColor, highlightColor, (y - halfHeight) / fadeLenDouble));
 				lineDrawn = true;
 			}
 

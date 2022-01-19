@@ -5,7 +5,7 @@
 package com.asofterspace.assMusician.video.elements;
 
 import com.asofterspace.assMusician.MusicGenerator;
-import com.asofterspace.toolbox.images.ColorRGB;
+import com.asofterspace.toolbox.images.ColorRGBA;
 import com.asofterspace.toolbox.images.Image;
 
 
@@ -29,7 +29,7 @@ public class StreetElement {
 		this.important = important;
 	}
 
-	public void drawOnImage(Image img, int width, int height, int step, ColorRGB color) {
+	public void drawOnImage(Image img, int width, int height, int step, ColorRGBA color) {
 		if (step < startFrame) {
 			return;
 		}
@@ -49,11 +49,11 @@ public class StreetElement {
 
 		if (important) {
 			// full width, light color
-			color = ColorRGB.intermix(new ColorRGB(255, 255, 255), color, 0.5);
+			color = ColorRGBA.intermix(new ColorRGBA(255, 255, 255), color, 0.5);
 			img.drawLine((width/2)-(int)((movByPerc*width)/4), (height/2) + (int)movBy, (width/2)+(int)((movByPerc*width)/4), (height/2) + (int)movBy, color);
 		} else {
 			// half width, dark color
-			color = ColorRGB.intermix(new ColorRGB(0, 0, 0), color, 0.5);
+			color = ColorRGBA.intermix(new ColorRGBA(0, 0, 0), color, 0.5);
 			img.drawLine((width/2)-(int)((movByPerc*width)/8), (height/2) + (int)movBy, (width/2)+(int)((movByPerc*width)/8), (height/2) + (int)movBy, color);
 		}
 	}

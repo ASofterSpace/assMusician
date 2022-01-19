@@ -10,7 +10,7 @@ import com.asofterspace.assMusician.video.elements.Star;
 import com.asofterspace.assMusician.video.elements.StreetElement;
 import com.asofterspace.assMusician.video.elements.Waveform;
 import com.asofterspace.assMusician.workers.ImgSaveWorker;
-import com.asofterspace.toolbox.images.ColorRGB;
+import com.asofterspace.toolbox.images.ColorRGBA;
 import com.asofterspace.toolbox.images.DefaultImageFile;
 import com.asofterspace.toolbox.images.GraphImage;
 import com.asofterspace.toolbox.images.Image;
@@ -100,22 +100,22 @@ public class VideoGenerator {
 			beatMap.put(musicGen.beatToFrame(beat), beat);
 		}
 
-		ColorRGB trueBlack = new ColorRGB(0, 0, 0);
-		ColorRGB trueWhite = new ColorRGB(255, 255, 255);
-		ColorRGB origBlack = new ColorRGB(0, 0, 0);
+		ColorRGBA trueBlack = new ColorRGBA(0, 0, 0);
+		ColorRGBA trueWhite = new ColorRGBA(255, 255, 255);
+		ColorRGBA origBlack = new ColorRGBA(0, 0, 0);
 		// the original blue
-		ColorRGB origBlue = ColorRGB.randomColorfulBright();
+		ColorRGBA origBlue = ColorRGBA.randomColorfulBright();
 		debugLog.add("  :: first color: " + origBlue);
 		// the next target blue
-		ColorRGB targetBlue = getNewColorfulColorThatIsNot(origBlue);
+		ColorRGBA targetBlue = getNewColorfulColorThatIsNot(origBlue);
 		// the midpoint between original and target
-		ColorRGB midBlue = ColorRGB.max(origBlue, targetBlue);
+		ColorRGBA midBlue = ColorRGBA.max(origBlue, targetBlue);
 		debugLog.add("  :: first mid color: " + midBlue);
 		debugLog.add("  :: first target color: " + targetBlue);
 		double targetColorProgress = 0;
 		// the original blue, again - but intermixed with the midpoint or target (as just "blue" will be),
 		// but NOT set to all white upon whiteout (different from how just "blue" behaves!)
-		ColorRGB geoBlue = origBlue;
+		ColorRGBA geoBlue = origBlue;
 
 		int startColorInversion = -10 * MusicGenerator.frameRate;
 
@@ -311,7 +311,7 @@ public class VideoGenerator {
 							if (nextBeatsAverageLoudness > 2 * lastBeatsAverageLoudness) {
 								// then start flickering for a while!
 								startColorInversion = step;
-								wavGraphImg.drawVerticalLineAt(curBeat.getPosition(), new ColorRGB(128, 255, 0));
+								wavGraphImg.drawVerticalLineAt(curBeat.getPosition(), new ColorRGBA(128, 255, 0));
 							}
 						}
 					}
@@ -320,26 +320,26 @@ public class VideoGenerator {
 				prevBeats.add(curBeat);
 			}
 
-			ColorRGB black = origBlack;
+			ColorRGBA black = origBlack;
 
 			// we want to change color twice, each color change goes to mid, then to the color, so we need 2*2 = 4
 			targetColorProgress += 4.0 / totalFrameAmount;
 
-			ColorRGB blue = origBlue;
+			ColorRGBA blue = origBlue;
 			if (targetColorProgress < 1) {
-				blue = ColorRGB.intermix(origBlue, midBlue, 1 - targetColorProgress);
+				blue = ColorRGBA.intermix(origBlue, midBlue, 1 - targetColorProgress);
 			} else if (targetColorProgress < 2) {
-				blue = ColorRGB.intermix(midBlue, targetBlue, 2 - targetColorProgress);
+				blue = ColorRGBA.intermix(midBlue, targetBlue, 2 - targetColorProgress);
 			} else {
 				targetColorProgress = 0;
 				origBlue = targetBlue;
 				targetBlue = getNewColorfulColorThatIsNot(origBlue);
-				midBlue = ColorRGB.max(origBlue, targetBlue);
+				midBlue = ColorRGBA.max(origBlue, targetBlue);
 				blue = origBlue;
 			}
 			geoBlue = blue;
-			ColorRGB darkBlue = ColorRGB.intermix(black, blue, 0.5);
-			ColorRGB darkerBlue = ColorRGB.intermix(black, darkBlue, 0.5);
+			ColorRGBA darkBlue = ColorRGBA.intermix(black, blue, 0.5);
+			ColorRGBA darkerBlue = ColorRGBA.intermix(black, darkBlue, 0.5);
 
 			int ssCI = step - startColorInversion;
 			boolean drawAllWhite = false;
@@ -356,7 +356,7 @@ public class VideoGenerator {
 				*/
 				// just flicker the foreground to white and back!
 				blue = trueWhite;
-				darkBlue = new ColorRGB(128, 128, 128);
+				darkBlue = new ColorRGBA(128, 128, 128);
 				drawAllWhite = true;
 			}
 
@@ -379,7 +379,7 @@ public class VideoGenerator {
 					break;
 				}
 				int highlightArea = 2 * height / 3;
-				ColorRGB textCol = darkBlue;
+				ColorRGBA textCol = darkBlue;
 				if ((top > highlightArea) && (top <= highlightArea + debugLogTextHeight)) {
 					textCol = blue;
 				}
@@ -397,12 +397,12 @@ public class VideoGenerator {
 				clockIntermixChange = - clockIntermixChange;
 			}
 			int clockBorderDistance = (int)(width*0.008);
-			ColorRGB clockColor = ColorRGB.intermix(blue, darkBlue, clockIntermix);
+			ColorRGBA clockColor = ColorRGBA.intermix(blue, darkBlue, clockIntermix);
 			int timePassedMS = (step * 1000) / MusicGenerator.frameRate;
 			img.drawText(timeToStr(timePassedMS), clockBorderDistance, null, null, clockBorderDistance, "Calibri", clockFontSize, true, clockColor);
 
 			// clock at the top right: time remaining
-			clockColor = ColorRGB.intermix(blue, darkBlue, 1 - clockIntermix);
+			clockColor = ColorRGBA.intermix(blue, darkBlue, 1 - clockIntermix);
 			int timeRemainingMS = ((totalFrameAmount - step) * 1000) / MusicGenerator.frameRate;
 			img.drawText(timeToStr(timeRemainingMS), clockBorderDistance, width - clockBorderDistance, null, null, "Calibri", clockFontSize, true, clockColor);
 
@@ -437,12 +437,12 @@ public class VideoGenerator {
 				drawBeatForSteps = 16;
 				beatNum++;
 			}
-			ColorRGB beat32col = darkerBlue;
-			ColorRGB beat16col = darkerBlue;
-			ColorRGB beat8col = darkerBlue;
-			ColorRGB beat4col = darkerBlue;
-			ColorRGB beat2col = darkerBlue;
-			ColorRGB beat1col = darkerBlue;
+			ColorRGBA beat32col = darkerBlue;
+			ColorRGBA beat16col = darkerBlue;
+			ColorRGBA beat8col = darkerBlue;
+			ColorRGBA beat4col = darkerBlue;
+			ColorRGBA beat2col = darkerBlue;
+			ColorRGBA beat1col = darkerBlue;
 			if (drawBeatForSteps > 0) {
 				if (beatNum % 32 == 0) {
 					beat32col = blue;
@@ -627,16 +627,16 @@ public class VideoGenerator {
 		System.out.println("All " + totalFrameAmount + " frames generated!");
 	}
 
-	private ColorRGB getNewColorfulColorThatIsNot(ColorRGB origColor) {
+	private ColorRGBA getNewColorfulColorThatIsNot(ColorRGBA origColor) {
 
-		ColorRGB result = ColorRGB.randomColorfulBright();
+		ColorRGBA result = ColorRGBA.randomColorfulBright();
 
 		int trials = 0;
 		int MAX_TRIALS = 128;
 
 		while ((trials < MAX_TRIALS) && origColor.fastSimilar(result)) {
 			trials++;
-			result = ColorRGB.randomColorfulBright();
+			result = ColorRGBA.randomColorfulBright();
 		}
 
 		return result;

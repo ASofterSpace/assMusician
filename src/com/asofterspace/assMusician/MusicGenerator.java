@@ -11,7 +11,7 @@ import com.asofterspace.assMusician.video.elements.Waveform;
 import com.asofterspace.assMusician.workers.FourierInstruction;
 import com.asofterspace.assMusician.workers.FourierResult;
 import com.asofterspace.assMusician.workers.FourierWorker;
-import com.asofterspace.toolbox.images.ColorRGB;
+import com.asofterspace.toolbox.images.ColorRGBA;
 import com.asofterspace.toolbox.images.DefaultImageFile;
 import com.asofterspace.toolbox.images.GraphDataPoint;
 import com.asofterspace.toolbox.images.GraphImage;
@@ -234,7 +234,7 @@ public class MusicGenerator {
 			wavData.add(new GraphDataPoint(position, wavInt));
 			position++;
 		}
-		wavGraphImg.setDataColor(new ColorRGB(0, 0, 255));
+		wavGraphImg.setDataColor(new ColorRGBA(0, 0, 255));
 		wavGraphImg.setAbsoluteDataPoints(wavData);
 		DefaultImageFile basicWavFile = new DefaultImageFile(workDir, "waveform_before.png");
 		basicWavFile.assign(wavGraphImg);
@@ -330,7 +330,7 @@ public class MusicGenerator {
 			wavData.add(new GraphDataPoint(position, wavInt));
 			position++;
 		}
-		wavGraphImg.setDataColor(new ColorRGB(0, 0, 255));
+		wavGraphImg.setDataColor(new ColorRGBA(0, 0, 255));
 		wavGraphImg.setAbsoluteDataPoints(wavData);
 		DefaultImageFile doneWaveFile = new DefaultImageFile(workDir, "waveform_upon_being_done.png");
 		doneWaveFile.assign(wavGraphImg);
@@ -474,7 +474,7 @@ public class MusicGenerator {
 				}
 				GraphImage fourierImg = new GraphImage();
 				fourierImg.setInnerWidthAndHeight(fourier.length/5, 512);
-				fourierImg.setDataColor(new ColorRGB(0, 0, 255));
+				fourierImg.setDataColor(new ColorRGBA(0, 0, 255));
 				fourierImg.setRelativeDataPoints(fourierData);
 				DefaultImageFile fourierImgFile = new DefaultImageFile(workDir, "waveform_fourier_" + fourierNum + ".png");
 				fourierImgFile.assign(fourierImg);
@@ -518,7 +518,7 @@ public class MusicGenerator {
 				wavData.add(new GraphDataPoint(position, wavInt));
 				position++;
 			}
-			wavGraphImg.setDataColor(new ColorRGB(0, 0, 255));
+			wavGraphImg.setDataColor(new ColorRGBA(0, 0, 255));
 			wavGraphImg.setAbsoluteDataPoints(wavData);
 
 			vidGenny.generateVideoBasedOnBeats(drumBeats, addedSounds, totalFrameAmount, width, height, wavGraphImg,
@@ -775,12 +775,12 @@ public class MusicGenerator {
 		List<Integer> maximumPositions = new ArrayList<>();
 		for (int i = 0; i < absMaxPositions.size() / 2; i++) {
 			AbsMaxPos absMaxPos = absMaxPositions.get(i);
-			wavGraphImg.drawVerticalLineAt(absMaxPos.getOrigPosition(), new ColorRGB(128, 128, 0));
+			wavGraphImg.drawVerticalLineAt(absMaxPos.getOrigPosition(), new ColorRGBA(128, 128, 0));
 		}
 		for (int i = absMaxPositions.size() / 2; i < absMaxPositions.size(); i++) {
 			AbsMaxPos absMaxPos = absMaxPositions.get(i);
 			maximumPositions.add(absMaxPos.getOrigPosition());
-			wavGraphImg.drawVerticalLineAt(absMaxPos.getOrigPosition(), new ColorRGB(255, 0, 0));
+			wavGraphImg.drawVerticalLineAt(absMaxPos.getOrigPosition(), new ColorRGBA(255, 0, 0));
 		}
 
 		debugLog.add("  :: converted the highest " + maximumPositions.size() + " values into maximum positions");
@@ -881,7 +881,7 @@ public class MusicGenerator {
 		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
 			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
 		}
-		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setDataColor(new ColorRGBA(0, 0, 255));
 		histogramImg.setAbsoluteDataPoints(histData);
 		DefaultImageFile histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_histogram_for_bpm.png");
 		histogramImgFile.assign(histogramImg);
@@ -964,7 +964,7 @@ public class MusicGenerator {
 
 		debugLog.add("  :: adding detected beats to debug graph");
 		for (Integer beatPos : bpmBasedBeats) {
-			wavGraphImg.drawVerticalLineAt(beatPos, new ColorRGB(0, 255, 0));
+			wavGraphImg.drawVerticalLineAt(beatPos, new ColorRGBA(0, 255, 0));
 		}
 
 		// ALGORITHM 3.7
@@ -998,15 +998,15 @@ public class MusicGenerator {
 		/*
 		graphWithFourierImg = new GraphImage();
 		graphWithFourierImg.setInnerWidthAndHeight(channelPosToMillis(wavDataLeft.length) / 100, graphImageHeight);
-		graphWithFourierImg.setDataColor(new ColorRGB(0, 0, 255));
+		graphWithFourierImg.setDataColor(new ColorRGBA(0, 0, 255));
 		graphWithFourierImg.setAbsoluteDataPoints(wavData);
 
 		for (Integer pos : maximumPositions) {
-			graphWithFourierImg.drawVerticalLineAt(pos, new ColorRGB(255, 0, 128));
+			graphWithFourierImg.drawVerticalLineAt(pos, new ColorRGBA(255, 0, 128));
 		}
 
 		for (Integer i : bpmBasedBeats) {
-			graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+			graphWithFourierImg.drawVerticalLineAt(i, new ColorRGBA(128, 255, 0));
 		}
 		wavImgFileFourier = new DefaultImageFile(workDir, "waveform_drum_extra_beat_addition_fourier_post_smoothen.png");
 		wavImgFileFourier.assign(graphWithFourierImg);
@@ -1015,15 +1015,15 @@ public class MusicGenerator {
 
 		GraphImage postSmoothImg = new GraphImage();
 		postSmoothImg.setInnerWidthAndHeight(channelPosToMillis(wavDataLeft.length) / 25, graphImageHeight);
-		postSmoothImg.setDataColor(new ColorRGB(0, 0, 255));
+		postSmoothImg.setDataColor(new ColorRGBA(0, 0, 255));
 		postSmoothImg.setAbsoluteDataPoints(wavData);
 
 		for (Integer pos : maximumPositions) {
-			postSmoothImg.drawVerticalLineAt(pos, new ColorRGB(255, 0, 128));
+			postSmoothImg.drawVerticalLineAt(pos, new ColorRGBA(255, 0, 128));
 		}
 
 		for (Integer i : bpmBasedBeats) {
-			postSmoothImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+			postSmoothImg.drawVerticalLineAt(i, new ColorRGBA(128, 255, 0));
 		}
 		DefaultImageFile postSmoothImgFile = new DefaultImageFile(workDir, "waveform_drum_post_smoothen.png");
 		postSmoothImgFile.assign(postSmoothImg);
@@ -1161,7 +1161,7 @@ public class MusicGenerator {
 			wavData.add(new GraphDataPoint(position, wavInt));
 			position++;
 		}
-		graphImg.setDataColor(new ColorRGB(0, 0, 255));
+		graphImg.setDataColor(new ColorRGBA(0, 0, 255));
 		graphImg.setAbsoluteDataPoints(wavData);
 
 		BeatStats stats = new BeatStats(beats);
@@ -1198,7 +1198,7 @@ public class MusicGenerator {
 			int curBeat = beat.getPosition();
 			int curBeatLen = beat.getLength();
 
-			graphImg.drawVerticalLineAt(beat.getPosition(), new ColorRGB(
+			graphImg.drawVerticalLineAt(beat.getPosition(), new ColorRGBA(
 				divOr255(255 * beat.getLoudness(), stats.getMaxLoudness()),
 				divOr255(255 * beat.getLength(), stats.getMaxLength()),
 				divOr255(255 * beat.getJigglieness(), stats.getMaxJigglieness())

@@ -289,7 +289,7 @@ public class Krass {
 		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
 			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
 		}
-		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setDataColor(new ColorRGBA(0, 0, 255));
 		histogramImg.setAbsoluteDataPoints(histData);
 		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_histogram_smoothened.png");
 		histogramImgFile.assign(histogramImg);
@@ -400,11 +400,11 @@ public class Krass {
 			wavData.add(new GraphDataPoint(position, wavInt));
 			position++;
 		}
-		graphWithFourierImg.setDataColor(new ColorRGB(0, 0, 255));
+		graphWithFourierImg.setDataColor(new ColorRGBA(0, 0, 255));
 		graphWithFourierImg.setAbsoluteDataPoints(wavData);
 
 		for (Integer pos : maximumPositions) {
-			graphWithFourierImg.drawVerticalLineAt(pos, new ColorRGB(255, 0, 128));
+			graphWithFourierImg.drawVerticalLineAt(pos, new ColorRGBA(255, 0, 128));
 		}
 
 		DefaultImageFile wavFourierImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_beats.png");
@@ -479,7 +479,7 @@ public class Krass {
 		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
 			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
 		}
-		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setDataColor(new ColorRGBA(0, 0, 255));
 		histogramImg.setAbsoluteDataPoints(histData);
 		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_histogram_for_bpm.png");
 		histogramImgFile.assign(histogramImg);
@@ -537,7 +537,7 @@ public class Krass {
 		for (Map.Entry<Integer, Integer> entry : bpmCandidates.entrySet()) {
 			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
 		}
-		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setDataColor(new ColorRGBA(0, 0, 255));
 		histogramImg.setAbsoluteDataPoints(histData);
 		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_histogram_for_bpm_smoothened.png");
 		histogramImgFile.assign(histogramImg);
@@ -635,7 +635,7 @@ public class Krass {
 			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
 		}
 		debugOut.add("  :: obtained " + beatLenCandidates.entrySet().size() + " buckets");
-		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setDataColor(new ColorRGBA(0, 0, 255));
 		histogramImg.setAbsoluteDataPoints(histData);
 		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_histogram_for_len_beats.png");
 		histogramImgFile.assign(histogramImg);
@@ -677,7 +677,7 @@ public class Krass {
 		for (Map.Entry<Integer, Integer> entry : beatLenCandidates.entrySet()) {
 			histData.add(new GraphDataPoint(entry.getKey(), entry.getValue()));
 		}
-		histogramImg.setDataColor(new ColorRGB(0, 0, 255));
+		histogramImg.setDataColor(new ColorRGBA(0, 0, 255));
 		histogramImg.setAbsoluteDataPoints(histData);
 		histogramImgFile = new DefaultImageFile(workDir, "waveform_drum_beat_plus_fourier_histogram_for_len_beats_smoothened.png");
 		histogramImgFile.assign(histogramImg);
@@ -723,7 +723,7 @@ public class Krass {
 	//	List<Beat> mayBeats = new ArrayList<>();
 		/*for (int i = 0; i < wavDataLeft.length; i += millisToChannelPos((long) ((1000*60) / bpm))) {
 			bpmBasedBeats.add(i);
-			wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
+			wavGraphImg.drawVerticalLineAt(i, new ColorRGBA(128, 128, 0));
 		}*/
 /*
 		int maxPosI = 0;
@@ -808,8 +808,8 @@ public class Krass {
 					Beat extraBeat = new Beat(extraI);
 					extraBeat.setIsAligned(false);
 					mayBeats.add(extraBeat);
-					wavGraphImg.drawVerticalLineAt(extraI, new ColorRGB(128, 196, 0));
-					// graphWithFourierImg.drawVerticalLineAt(extraI, new ColorRGB(128, 196, 0));
+					wavGraphImg.drawVerticalLineAt(extraI, new ColorRGBA(128, 196, 0));
+					// graphWithFourierImg.drawVerticalLineAt(extraI, new ColorRGBA(128, 196, 0));
 
 					actualGeneratedDistances[actualGeneratedI] = extraI - prevI;
 					prevI = extraI;
@@ -820,14 +820,14 @@ public class Krass {
 					insertedMidAlignedBeats++;
 				}
 				i = newI;
-				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
-				// graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+				wavGraphImg.drawVerticalLineAt(i, new ColorRGBA(128, 255, 0));
+				// graphWithFourierImg.drawVerticalLineAt(i, new ColorRGBA(128, 255, 0));
 				mayBeat.setPosition(i);
 				mayBeat.setIsAligned(true);
 				insertedAlignedBeats++;
 			} else {
-				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
-				// graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
+				wavGraphImg.drawVerticalLineAt(i, new ColorRGBA(128, 128, 0));
+				// graphWithFourierImg.drawVerticalLineAt(i, new ColorRGBA(128, 128, 0));
 				mayBeat.setIsAligned(false);
 				insertedUnalignedBeats++;
 			}
@@ -908,17 +908,17 @@ public class Krass {
 					Beat extraBeat = new Beat(extraI);
 					extraBeat.setIsAligned(false);
 					mayBeats.add(extraBeat);
-					wavGraphImg.drawVerticalLineAt(extraI, new ColorRGB(128, 196, 0));
-					graphWithFourierImg.drawVerticalLineAt(extraI, new ColorRGB(128, 196, 0));
+					wavGraphImg.drawVerticalLineAt(extraI, new ColorRGBA(128, 196, 0));
+					graphWithFourierImg.drawVerticalLineAt(extraI, new ColorRGBA(128, 196, 0));
 				}
 				i = newI;
-				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
-				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 255, 0));
+				wavGraphImg.drawVerticalLineAt(i, new ColorRGBA(128, 255, 0));
+				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGBA(128, 255, 0));
 				mayBeat.setPosition(i);
 				mayBeat.setIsAligned(true);
 			} else {
-				wavGraphImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
-				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGB(128, 128, 0));
+				wavGraphImg.drawVerticalLineAt(i, new ColorRGBA(128, 128, 0));
+				graphWithFourierImg.drawVerticalLineAt(i, new ColorRGBA(128, 128, 0));
 				mayBeat.setIsAligned(false);
 			}
 			mayBeats.add(mayBeat);

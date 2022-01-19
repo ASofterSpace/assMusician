@@ -5,7 +5,7 @@
 package com.asofterspace.assMusician.video.elements;
 
 import com.asofterspace.assMusician.MusicGenerator;
-import com.asofterspace.toolbox.images.ColorRGB;
+import com.asofterspace.toolbox.images.ColorRGBA;
 import com.asofterspace.toolbox.images.Image;
 import com.asofterspace.toolbox.sound.Beat;
 import com.asofterspace.toolbox.utils.Line;
@@ -69,7 +69,7 @@ public class GeometryMonster {
 	// and divide it into lines of same colors... and we would need to ensure we are not breaking anyone's
 	// copyright in taking their images as input for the process
 	public void drawOnImage(Image img, int width, int height, int step, int totalFrameAmount, double currentLoudnessScaled,
-		ColorRGB color, ColorRGB baseColor, boolean firstChanged, boolean curChanged, boolean encounteredChanged,
+		ColorRGBA color, ColorRGBA baseColor, boolean firstChanged, boolean curChanged, boolean encounteredChanged,
 		Beat curBeat, int maxSecondsBetweenShapes) {
 
 		if (curBeat != null) {
@@ -85,7 +85,7 @@ public class GeometryMonster {
 
 		// we want all lines to start slowly changing their colors, five times per second! :)
 		for (GeometryLine line : lines) {
-			ColorRGB newColor = line.getColor();
+			ColorRGBA newColor = line.getColor();
 			if (rand.nextInt(MusicGenerator.frameRate / 5) == 0) {
 				newColor = line.getColor().getSlightlyDifferent();
 			}
@@ -94,7 +94,7 @@ public class GeometryMonster {
 				newColor = line.getColor().getSlightlyDifferent();
 				counter++;
 				if (counter > 128) {
-					newColor = ColorRGB.intermix(baseColor, line.getColor(), 0.5);
+					newColor = ColorRGBA.intermix(baseColor, line.getColor(), 0.5);
 					break;
 				}
 			}
@@ -797,13 +797,13 @@ public class GeometryMonster {
 		}
 
 		boolean drawWhite = false;
-		ColorRGB white = new ColorRGB(255, 255, 255);
+		ColorRGBA white = new ColorRGBA(255, 255, 255);
 		if (color.equals(white)) {
 			drawWhite = true;
 		}
 
 		for (GeometryLine line : lines) {
-			ColorRGB lineColor = line.getColor();
+			ColorRGBA lineColor = line.getColor();
 			if (drawWhite) {
 				lineColor = white;
 			}
